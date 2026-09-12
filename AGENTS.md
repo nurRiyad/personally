@@ -24,4 +24,6 @@ Use the skills in `.agents/skills/` only when the task matches their purpose. Do
 - `shadcn` / `tailwind`: UI components or Tailwind styling.
 - `web-design-guidelines`: UI, accessibility, or UX review.
 
+For frontend UI work, always use a shadcn/ui component when a suitable component is available. Prefer native HTML and small local components when shadcn/ui does not provide a relevant component.
+
 If a task does not match one of these areas, work without loading a project-local skill. Always follow the skill's `SKILL.md` instructions when it is used.
