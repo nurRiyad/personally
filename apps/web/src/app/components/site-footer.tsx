@@ -25,8 +25,8 @@ export function SiteFooter() {
             Personally
           </Link>
           <p className="mt-3 text-sm leading-6 text-slate-500">
-            A thoughtful place to research your finances, assets, and
-            learning—then make better decisions.
+            A private workspace for your budget, assets, and learning—so every
+            next step feels easier to see.
           </p>
         </div>
 

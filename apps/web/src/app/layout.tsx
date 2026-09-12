@@ -1,7 +1,18 @@
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import './globals.css';
 import { SiteNavbar } from './components/site-navbar';
 import { SiteFooter } from './components/site-footer';
+
+export const metadata: Metadata = {
+  title: {
+    default: 'Personally | Your life, thoughtfully organized',
+    template: '%s | Personally',
+  },
+  description: 'A private workspace for your budget, assets, and learning.',
+  applicationName: 'Personally',
+  robots: { index: true, follow: true },
+};
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (

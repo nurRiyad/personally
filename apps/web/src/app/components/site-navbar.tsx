@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { ButtonLink } from '../../components/ui/button';
+import { MobileNavigation } from './mobile-navigation';
 
 const links = [
   ['/budget', 'Budget'],
@@ -9,7 +11,7 @@ const links = [
 export function SiteNavbar() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6 sm:px-8">
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-8">
         <Link
           href="/"
           className="text-lg font-semibold tracking-tight text-slate-950"
@@ -18,7 +20,7 @@ export function SiteNavbar() {
         </Link>
         <nav
           aria-label="Primary navigation"
-          className="flex items-center gap-5 text-sm"
+          className="hidden items-center gap-5 text-sm md:flex"
         >
           {links.map(([href, label]) => (
             <Link
@@ -29,13 +31,11 @@ export function SiteNavbar() {
               {label}
             </Link>
           ))}
-          <Link
-            href="/dashboard"
-            className="rounded-full bg-slate-950 px-4 py-2 font-medium text-white transition-colors hover:bg-slate-700"
-          >
+          <ButtonLink href="/dashboard" className="min-h-0 px-4 py-2">
             Dashboard
-          </Link>
+          </ButtonLink>
         </nav>
+        <MobileNavigation />
       </div>
     </header>
   );
