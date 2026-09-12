@@ -269,6 +269,18 @@ Future public pages such as:
 
 will use Next.js server/static rendering for SEO.
 
+### Public-page layout convention
+
+All public pages must use the shared centered content frame:
+
+```text
+mx-auto w-full max-w-6xl px-5 sm:px-8
+```
+
+This keeps public-page content aligned with the site header and footer. Inner
+text blocks may use a narrower maximum width when needed for readable line
+lengths, but their outer frame must remain `max-w-6xl`.
+
 ## Application
 
 Future pages such as:
