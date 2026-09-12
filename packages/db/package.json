@@ -9,11 +9,11 @@
     "db:reset:local": "rm -rf ../../.personally && pnpm db:migrate:local"
   },
   "dependencies": {
-    "drizzle-orm": "^0.39.3"
+    "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.30.4",
-    "wrangler": "^4.11.1",
-    "typescript": "^5.8.2"
+    "drizzle-kit": "^0.31.10",
+    "typescript": "^5.8.2",
+    "wrangler": "^4.11.1"
   }
 }

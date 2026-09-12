@@ -1,3 +1,5 @@
+import { BackButton } from '../components/back-button';
+
 const modules = [
   ['/budget', 'Monthly Budget'],
   ['/assets', 'Asset Management'],
@@ -12,6 +14,7 @@ export default function Dashboard() {
           <a href={href}>{name}</a>
         </p>
       ))}
+      <BackButton />
     </main>
   );
 }
