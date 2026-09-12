@@ -26,7 +26,11 @@ packages/
   workflows/    CI and production deployment
   ...           Copilot and pull request guidance
 docs/
-  PROJECT_FOUNDATION.md
+  ARCHITECTURE.md
+  DEPLOYMENT.md
+  DEVELOPMENT.md
+  QUALITY.md
+  SCOPE.md
 ```
 
 ## Getting started
@@ -45,7 +49,7 @@ The development servers run at:
 - Web: http://localhost:3000
 - API: http://localhost:8787
 
-Read [`docs/PROJECT_FOUNDATION.md`](./docs/PROJECT_FOUNDATION.md) for the full architecture and Phase 0 requirements.
+See [`AGENTS.md`](./AGENTS.md) for agent instructions and the relevant focused document in `docs/` for architecture, development, quality, deployment, or scope details.
 
 ## Useful commands
 
