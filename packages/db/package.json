@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply personally-local --local --config ../../apps/api/wrangler.jsonc",
-    "db:migrate:prod": "wrangler d1 migrations apply personally-production --remote --config ../../apps/api/wrangler.jsonc",
+    "db:migrate:prod": "wrangler d1 migrations apply personally-production --remote --env production --config ../../apps/api/wrangler.jsonc",
     "db:reset:local": "rm -rf ../../.personally && pnpm db:migrate:local"
   },
   "dependencies": {

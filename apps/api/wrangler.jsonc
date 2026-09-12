@@ -1,13 +1,25 @@
 {
-  "name": "personally-api",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-02-01",
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "personally-local",
-      "database_id": "local",
-      "migrations_dir": "../../packages/db/migrations",
-    },
-  ],
+	"name": "personally-api",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-02-01",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "personally-local",
+			"database_id": "local",
+			"migrations_dir": "../../packages/db/migrations",
+		},
+	],
+	"env": {
+		"production": {
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "personally-production",
+					"database_id": "6274e160-cf43-4581-b277-5e3a06a425b2",
+					"migrations_dir": "../../packages/db/migrations",
+				},
+			],
+		},
+	},
 }
