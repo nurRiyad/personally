@@ -1,0 +1,18 @@
+{
+  "name": "@personally/api",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.7.2",
+    "drizzle-orm": "^0.39.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250214.0",
+    "wrangler": "^4.11.1",
+    "typescript": "^5.8.2"
+  }
+}

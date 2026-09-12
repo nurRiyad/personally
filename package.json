@@ -1,0 +1,32 @@
+{
+  "name": "personally",
+  "private": true,
+  "packageManager": "pnpm@10.6.2",
+  "scripts": {
+    "dev": "concurrently -n web,api -c blue,green \"pnpm dev:web\" \"pnpm dev:api\"",
+    "dev:web": "pnpm --filter @personally/web dev",
+    "dev:api": "pnpm --filter @personally/api dev",
+    "setup:local": "pnpm db:migrate:local",
+    "build": "pnpm build:web && pnpm build:api",
+    "build:web": "pnpm --filter @personally/web build",
+    "build:api": "pnpm --filter @personally/api build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "pnpm --filter @personally/db db:generate",
+    "db:migrate:local": "pnpm --filter @personally/db db:migrate:local",
+    "db:migrate:prod": "pnpm --filter @personally/db db:migrate:prod",
+    "db:reset:local": "pnpm --filter @personally/db db:reset:local"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "concurrently": "^9.1.2",
+    "eslint": "^9.0.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.0"
+  }
+}

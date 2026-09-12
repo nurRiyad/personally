@@ -1,0 +1,33 @@
+name: Deploy Production
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: '${{ github.event.workflow_run.head_sha }}' }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.6.2 }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:migrate:prod
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - run: pnpm --filter @personally/api exec wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - run: pnpm dlx vercel pull --yes --environment=production --token="$VERCEL_TOKEN" && pnpm dlx vercel build --prod --token="$VERCEL_TOKEN" && pnpm dlx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+        working-directory: apps/web
+        env:
+          {
+            VERCEL_TOKEN: '${{ secrets.VERCEL_TOKEN }}',
+            VERCEL_ORG_ID: '${{ secrets.VERCEL_ORG_ID }}',
+            VERCEL_PROJECT_ID: '${{ secrets.VERCEL_PROJECT_ID }}',
+          }
