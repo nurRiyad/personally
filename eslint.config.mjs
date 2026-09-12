@@ -2,9 +2,9 @@ export default [
   {
     ignores: [
       'node_modules/**',
-      '.next/**',
+      '**/.next/**',
       'dist/**',
-      '.wrangler/**',
+      '**/.wrangler/**',
       'coverage/**',
       '.turbo/**',
       '.agents/**',
