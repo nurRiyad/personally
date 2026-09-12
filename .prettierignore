@@ -2,5 +2,9 @@ node_modules
 .next
 .wrangler
 dist
+coverage
+.turbo
+.agents
+**/*.tsbuildinfo
 pnpm-lock.yaml
 docs/PROJECT_FOUNDATION.md

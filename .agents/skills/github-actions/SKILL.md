@@ -1,6 +1,6 @@
 ---
 name: github-actions
-description: "GitHub Actions CI/CD workflows for automating build, test, and deployment"
+description: 'GitHub Actions CI/CD workflows for automating build, test, and deployment'
 user-invocable: false
 disable-model-invocation: true
 version: 1.0.0
@@ -17,9 +17,11 @@ progressive_disclosure:
 # GitHub Actions CI/CD
 
 ## Summary
+
 GitHub Actions is GitHub's native CI/CD platform for automating software workflows. Define workflows in YAML files to build, test, and deploy code directly from your repository with event-driven automation.
 
 ## When to Use
+
 - Automate testing on every pull request
 - Build and deploy applications on merge to main
 - Schedule regular tasks (nightly builds, backups)
@@ -30,6 +32,7 @@ GitHub Actions is GitHub's native CI/CD platform for automating software workflo
 ## Quick Start
 
 ### Basic Test Workflow
+
 Create `.github/workflows/test.yml`:
 
 ```yaml
@@ -60,9 +63,11 @@ jobs:
 ## Core Concepts
 
 ### Workflows
+
 YAML files in `.github/workflows/` that define automation pipelines.
 
 **Structure**:
+
 - **Name**: Workflow identifier
 - **Triggers**: Events that start the workflow
 - **Jobs**: One or more jobs to execute
@@ -80,6 +85,7 @@ jobs:
 ```
 
 ### Jobs
+
 Independent execution units that run in parallel by default.
 
 ```yaml
@@ -91,18 +97,19 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    needs: lint  # Wait for lint to complete
+    needs: lint # Wait for lint to complete
     steps:
       - run: npm test
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [lint, test]  # Wait for both
+    needs: [lint, test] # Wait for both
     steps:
       - run: ./deploy.sh
 ```
 
 ### Steps
+
 Sequential commands or actions within a job.
 
 ```yaml
@@ -121,6 +128,7 @@ steps:
 ```
 
 ### Actions
+
 Reusable units of code (from marketplace or custom).
 
 ```yaml
@@ -143,20 +151,22 @@ Reusable units of code (from marketplace or custom).
 ### Triggers (on)
 
 #### Push Events
+
 ```yaml
 on:
   push:
     branches:
       - main
-      - 'releases/**'  # Wildcard pattern
+      - 'releases/**' # Wildcard pattern
     tags:
-      - 'v*'  # All version tags
+      - 'v*' # All version tags
     paths:
       - 'src/**'
-      - '!src/docs/**'  # Exclude docs
+      - '!src/docs/**' # Exclude docs
 ```
 
 #### Pull Request Events
+
 ```yaml
 on:
   pull_request:
@@ -168,6 +178,7 @@ on:
 ```
 
 #### Schedule (Cron)
+
 ```yaml
 on:
   schedule:
@@ -178,6 +189,7 @@ on:
 ```
 
 #### Manual Trigger
+
 ```yaml
 on:
   workflow_dispatch:
@@ -196,6 +208,7 @@ on:
 ```
 
 #### Multiple Triggers
+
 ```yaml
 on:
   push:
@@ -203,13 +216,14 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 0 * * 0'  # Weekly
-  workflow_dispatch:  # Manual
+    - cron: '0 0 * * 0' # Weekly
+  workflow_dispatch: # Manual
 ```
 
 ### Environment Variables
 
 #### Workflow-level
+
 ```yaml
 env:
   NODE_ENV: production
@@ -223,6 +237,7 @@ jobs:
 ```
 
 #### Job-level
+
 ```yaml
 jobs:
   test:
@@ -234,6 +249,7 @@ jobs:
 ```
 
 #### Step-level
+
 ```yaml
 steps:
   - name: Build
@@ -243,6 +259,7 @@ steps:
 ```
 
 ### Secrets
+
 Store sensitive data in repository settings.
 
 ```yaml
@@ -255,6 +272,7 @@ steps:
 ```
 
 **Best Practices**:
+
 - Never commit secrets to code
 - Use GitHub encrypted secrets
 - Limit secret access to specific environments
@@ -263,6 +281,7 @@ steps:
 ## Contexts
 
 ### github Context
+
 Repository and workflow information.
 
 ```yaml
@@ -278,6 +297,7 @@ steps:
 ```
 
 ### env Context
+
 Access environment variables.
 
 ```yaml
@@ -289,6 +309,7 @@ steps:
 ```
 
 ### secrets Context
+
 Access repository secrets.
 
 ```yaml
@@ -298,6 +319,7 @@ Access repository secrets.
 ```
 
 ### matrix Context
+
 Access matrix values.
 
 ```yaml
@@ -309,6 +331,7 @@ steps:
 ```
 
 ### needs Context
+
 Access outputs from dependent jobs.
 
 ```yaml
@@ -333,19 +356,20 @@ jobs:
 ```yaml
 jobs:
   ubuntu:
-    runs-on: ubuntu-latest  # ubuntu-22.04
+    runs-on: ubuntu-latest # ubuntu-22.04
 
   macos:
-    runs-on: macos-latest  # macOS 14
+    runs-on: macos-latest # macOS 14
 
   windows:
-    runs-on: windows-latest  # Windows 2022
+    runs-on: windows-latest # Windows 2022
 
   specific:
-    runs-on: ubuntu-20.04  # Specific version
+    runs-on: ubuntu-20.04 # Specific version
 ```
 
 **Available Runners**:
+
 - `ubuntu-latest`, `ubuntu-22.04`, `ubuntu-20.04`
 - `macos-latest`, `macos-14`, `macos-13`
 - `windows-latest`, `windows-2022`, `windows-2019`
@@ -360,6 +384,7 @@ runs-on: [self-hosted, linux, x64, gpu]
 ```
 
 **Setup**:
+
 1. Go to Settings → Actions → Runners
 2. Click "New self-hosted runner"
 3. Follow platform-specific instructions
@@ -368,6 +393,7 @@ runs-on: [self-hosted, linux, x64, gpu]
 ## Matrix Strategies
 
 ### Basic Matrix
+
 Test across multiple versions.
 
 ```yaml
@@ -405,7 +431,7 @@ strategy:
 
 ```yaml
 strategy:
-  fail-fast: false  # Continue other jobs if one fails
+  fail-fast: false # Continue other jobs if one fails
   matrix:
     node: [18, 20, 22]
 ```
@@ -414,7 +440,7 @@ strategy:
 
 ```yaml
 strategy:
-  max-parallel: 2  # Run only 2 jobs concurrently
+  max-parallel: 2 # Run only 2 jobs concurrently
   matrix:
     node: [18, 20, 22]
 ```
@@ -422,23 +448,26 @@ strategy:
 ## Common Actions
 
 ### Checkout Code
+
 ```yaml
 - uses: actions/checkout@v4
   with:
-    fetch-depth: 0  # Full history for changelog
-    submodules: true  # Include submodules
+    fetch-depth: 0 # Full history for changelog
+    submodules: true # Include submodules
 ```
 
 ### Setup Node.js
+
 ```yaml
 - uses: actions/setup-node@v4
   with:
     node-version: '20'
-    cache: 'npm'  # or 'yarn', 'pnpm'
+    cache: 'npm' # or 'yarn', 'pnpm'
     registry-url: 'https://registry.npmjs.org'
 ```
 
 ### Setup Python
+
 ```yaml
 - uses: actions/setup-python@v5
   with:
@@ -447,6 +476,7 @@ strategy:
 ```
 
 ### Setup Java
+
 ```yaml
 - uses: actions/setup-java@v4
   with:
@@ -456,6 +486,7 @@ strategy:
 ```
 
 ### Setup Go
+
 ```yaml
 - uses: actions/setup-go@v5
   with:
@@ -464,6 +495,7 @@ strategy:
 ```
 
 ### Cache Dependencies
+
 ```yaml
 - uses: actions/cache@v4
   with:
@@ -476,6 +508,7 @@ strategy:
 ```
 
 ### Upload Artifacts
+
 ```yaml
 - uses: actions/upload-artifact@v4
   with:
@@ -485,6 +518,7 @@ strategy:
 ```
 
 ### Download Artifacts
+
 ```yaml
 - uses: actions/download-artifact@v4
   with:
@@ -495,6 +529,7 @@ strategy:
 ## Conditional Execution
 
 ### if Conditions
+
 ```yaml
 steps:
   - name: Deploy to production
@@ -523,6 +558,7 @@ steps:
 ```
 
 ### Job Conditions
+
 ```yaml
 jobs:
   deploy:
@@ -959,7 +995,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for changelog
+          fetch-depth: 0 # Full history for changelog
 
       - uses: actions/setup-node@v4
         with:
@@ -1055,7 +1091,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 0 * * 1'  # Weekly
+    - cron: '0 0 * * 1' # Weekly
 
 jobs:
   analyze:
@@ -1146,6 +1182,7 @@ Create reusable actions in `.github/actions/`.
 ### Simple Composite Action
 
 `.github/actions/setup-project/action.yml`:
+
 ```yaml
 name: 'Setup Project'
 description: 'Install dependencies and cache'
@@ -1169,6 +1206,7 @@ runs:
 ```
 
 **Usage**:
+
 ```yaml
 steps:
   - uses: actions/checkout@v4
@@ -1180,6 +1218,7 @@ steps:
 ### Reusable Workflows
 
 `.github/workflows/reusable-deploy.yml`:
+
 ```yaml
 name: Reusable Deploy
 
@@ -1207,6 +1246,7 @@ jobs:
 ```
 
 **Usage**:
+
 ```yaml
 name: Deploy Production
 
@@ -1285,6 +1325,7 @@ jobs:
 ### Enable Debug Logging
 
 Set repository secrets:
+
 - `ACTIONS_RUNNER_DEBUG`: `true`
 - `ACTIONS_STEP_DEBUG`: `true`
 
@@ -1312,6 +1353,7 @@ Set repository secrets:
 ## Best Practices
 
 ### Security
+
 - Use secrets for sensitive data
 - Pin action versions to SHA: `uses: actions/checkout@8e5e7e5a...`
 - Minimize token permissions
@@ -1319,6 +1361,7 @@ Set repository secrets:
 - Enable branch protection with required checks
 
 ### Performance
+
 - Cache dependencies aggressively
 - Use matrix strategies for parallel testing
 - Minimize checkout depth when possible
@@ -1326,6 +1369,7 @@ Set repository secrets:
 - Optimize Docker builds with multi-stage builds
 
 ### Maintainability
+
 - Use reusable workflows for common patterns
 - Create composite actions for repeated steps
 - Document workflow purpose and triggers
@@ -1333,6 +1377,7 @@ Set repository secrets:
 - Keep workflows focused (single responsibility)
 
 ### Reliability
+
 - Set appropriate timeouts
 - Use `continue-on-error` strategically
 - Implement retry logic for flaky tests
@@ -1399,21 +1444,25 @@ jobs:
 ### Common Issues
 
 **Workflow not triggering**:
+
 - Check branch filters match actual branch names
 - Verify workflow file is in `.github/workflows/`
 - Ensure YAML syntax is valid
 
 **Job skipped**:
+
 - Check `if` conditions
 - Verify `needs` dependencies succeeded
 - Check branch protection rules
 
 **Timeout**:
+
 - Default timeout is 360 minutes
 - Set explicit timeout: `timeout-minutes: 30`
 - Optimize long-running steps
 
 **Permission denied**:
+
 - Update workflow permissions:
   ```yaml
   permissions:
@@ -1422,6 +1471,7 @@ jobs:
   ```
 
 **Secrets not available**:
+
 - Verify secret names match exactly (case-sensitive)
 - Check secret scope (repo, organization, environment)
 - Ensure workflow has access to environment secrets

@@ -1,16 +1,17 @@
 ---
 name: drizzle-migrations
-description: "Migration-first database development workflow using Drizzle ORM for TypeScript/J..."
+description: 'Migration-first database development workflow using Drizzle ORM for TypeScript/J...'
 user-invocable: false
 disable-model-invocation: true
 version: 1.0.0
 tags: []
 progressive_disclosure:
   entry_point:
-    summary: "Migration-first database development workflow using Drizzle ORM for TypeScript/J..."
-    when_to_use: "When working with drizzle-migrations or related functionality."
-    quick_start: "1. Review the core concepts below. 2. Apply patterns to your use case. 3. Follow best practices for implementation."
+    summary: 'Migration-first database development workflow using Drizzle ORM for TypeScript/J...'
+    when_to_use: 'When working with drizzle-migrations or related functionality.'
+    quick_start: '1. Review the core concepts below. 2. Apply patterns to your use case. 3. Follow best practices for implementation.'
 ---
+
 # Drizzle ORM Database Migrations (TypeScript)
 
 Migration-first database development workflow using Drizzle ORM for TypeScript/JavaScript projects.
@@ -18,6 +19,7 @@ Migration-first database development workflow using Drizzle ORM for TypeScript/J
 ## When to Use This Skill
 
 Use this skill when:
+
 - Working with Drizzle ORM in TypeScript/JavaScript projects
 - Need to create or modify database schema
 - Want migration-first development workflow
@@ -29,6 +31,7 @@ Use this skill when:
 **Critical Rule**: Schema changes ALWAYS start with migrations, never code-first.
 
 ### Why Migration-First?
+
 - ✅ SQL migrations are the single source of truth
 - ✅ Prevents schema drift between environments
 - ✅ Enables rollback and versioning
@@ -37,7 +40,9 @@ Use this skill when:
 - ✅ CI/CD can validate schema changes
 
 ### Anti-Pattern (Code-First)
+
 ❌ **WRONG**: Writing TypeScript schema first
+
 ```typescript
 // DON'T DO THIS FIRST
 export const users = pgTable('users', {
@@ -47,7 +52,9 @@ export const users = pgTable('users', {
 ```
 
 ### Correct Pattern (Migration-First)
+
 ✅ **CORRECT**: Write SQL migration first
+
 ```sql
 -- drizzle/0001_add_users_table.sql
 CREATE TABLE users (
@@ -86,6 +93,7 @@ ALTER TABLE school_calendars
 ```
 
 **Naming Convention**:
+
 - Use sequential numbers: `0001_`, `0002_`, etc.
 - Descriptive names: `create_school_calendars`, `add_user_roles`
 - Format: `XXXX_descriptive_name.sql`
@@ -103,6 +111,7 @@ npm run db:generate
 ```
 
 **What This Creates**:
+
 1. TypeScript schema files (if using `drizzle-kit push`)
 2. Snapshot files in `drizzle/meta/XXXX_snapshot.json`
 3. Migration metadata
@@ -139,6 +148,7 @@ Snapshots enable schema drift detection:
 ```
 
 **Snapshots in Version Control**:
+
 - ✅ Commit snapshots to git
 - ✅ Enables drift detection in CI
 - ✅ Documents schema history
@@ -170,6 +180,7 @@ export type NewSchoolCalendar = typeof schoolCalendars.$inferInsert;
 ```
 
 **Key Points**:
+
 - Column names match SQL exactly: `school_id` → `'school_id'`
 - TypeScript property names use camelCase: `schoolId`
 - Constraints and indexes defined in SQL, not TypeScript
@@ -194,6 +205,7 @@ src/lib/db/schema/
 ```
 
 **index.ts** (export all):
+
 ```typescript
 // src/lib/db/schema/index.ts
 export * from './school';
@@ -203,6 +215,7 @@ export * from './users';
 ```
 
 **school/index.ts**:
+
 ```typescript
 // src/lib/db/schema/school/index.ts
 export * from './district';
@@ -257,6 +270,7 @@ jobs:
 ```
 
 **CI Checks Explained**:
+
 - `drizzle-kit check`: Validates snapshots match schema
 - `drizzle-kit push --dry-run`: Tests migration without applying
 - Type checking: Ensures TypeScript compiles
@@ -284,6 +298,7 @@ curl https://staging.example.com/api/schools/calendars
 ```
 
 **Staging Checklist**:
+
 - [ ] Migration runs without errors
 - [ ] Schema drift check passes
 - [ ] API routes using new schema work correctly
@@ -305,6 +320,7 @@ CREATE INDEX idx_users_phone ON users(phone);
 ```
 
 TypeScript:
+
 ```typescript
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
@@ -328,17 +344,22 @@ CREATE INDEX idx_provider_specialties_specialty ON provider_specialties(specialt
 ```
 
 TypeScript:
+
 ```typescript
-export const providerSpecialties = pgTable('provider_specialties', {
-  providerId: uuid('provider_id')
-    .notNull()
-    .references(() => providers.id, { onDelete: 'cascade' }),
-  specialtyId: uuid('specialty_id')
-    .notNull()
-    .references(() => specialties.id, { onDelete: 'cascade' }),
-}, (table) => ({
-  pk: primaryKey(table.providerId, table.specialtyId),
-}));
+export const providerSpecialties = pgTable(
+  'provider_specialties',
+  {
+    providerId: uuid('provider_id')
+      .notNull()
+      .references(() => providers.id, { onDelete: 'cascade' }),
+    specialtyId: uuid('specialty_id')
+      .notNull()
+      .references(() => specialties.id, { onDelete: 'cascade' }),
+  },
+  (table) => ({
+    pk: primaryKey(table.providerId, table.specialtyId),
+  }),
+);
 ```
 
 ### Modifying Column Type
@@ -350,6 +371,7 @@ ALTER COLUMN price TYPE DECIMAL(10, 2);
 ```
 
 TypeScript:
+
 ```typescript
 import { decimal } from 'drizzle-orm/pg-core';
 
@@ -438,6 +460,7 @@ DROP TABLE new_feature;
 ```
 
 Apply rollback:
+
 ```bash
 # Manually run down migration
 psql $DATABASE_URL -f drizzle/0010_add_feature_down.sql
@@ -446,6 +469,7 @@ psql $DATABASE_URL -f drizzle/0010_add_feature_down.sql
 ## Best Practices
 
 ### Do's
+
 - ✅ Write SQL migrations first
 - ✅ Use descriptive migration names
 - ✅ Add indexes for foreign keys
@@ -456,6 +480,7 @@ psql $DATABASE_URL -f drizzle/0010_add_feature_down.sql
 - ✅ Use `drizzle-kit check` in CI
 
 ### Don'ts
+
 - ❌ Never write TypeScript schema before SQL migration
 - ❌ Don't skip staging testing
 - ❌ Don't modify old migrations (create new ones)
@@ -466,9 +491,11 @@ psql $DATABASE_URL -f drizzle/0010_add_feature_down.sql
 ## Troubleshooting
 
 ### Schema Drift Detected
+
 **Error**: `Schema drift detected`
 
 **Solution**:
+
 ```bash
 # Check what changed
 pnpm drizzle-kit check
@@ -482,9 +509,11 @@ git commit -m "Update schema snapshots"
 ```
 
 ### Migration Fails on Staging
+
 **Error**: Migration fails with data constraint violation
 
 **Solution**:
+
 1. Rollback migration
 2. Create data migration script
 3. Run data migration first
@@ -500,9 +529,11 @@ ALTER COLUMN status SET NOT NULL;
 ```
 
 ### TypeScript Types Out of Sync
+
 **Error**: TypeScript types don't match database
 
 **Solution**:
+
 ```bash
 # Regenerate everything
 pnpm db:generate

@@ -6,4 +6,7 @@ dist
 !.env.example
 .dev.vars
 .wrangler
+coverage
+.turbo
+*.tsbuildinfo
 .personally

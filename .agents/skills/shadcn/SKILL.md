@@ -1,22 +1,24 @@
 ---
 name: shadcn
-description: "shadcn/ui component library for React with Tailwind CSS - copy-paste accessible components with full code ownership"
+description: 'shadcn/ui component library for React with Tailwind CSS - copy-paste accessible components with full code ownership'
 user-invocable: false
 disable-model-invocation: true
 progressive_disclosure:
   entry_point:
-    summary: "shadcn/ui component library for React with Tailwind CSS - copy-paste accessible components with full code ownership"
-    when_to_use: "When working with shadcn-ui or related functionality."
-    quick_start: "1. Review the core concepts below. 2. Apply patterns to your use case. 3. Follow best practices for implementation."
+    summary: 'shadcn/ui component library for React with Tailwind CSS - copy-paste accessible components with full code ownership'
+    when_to_use: 'When working with shadcn-ui or related functionality.'
+    quick_start: '1. Review the core concepts below. 2. Apply patterns to your use case. 3. Follow best practices for implementation.'
 ---
+
 # shadcn/ui - Component Library
 
 ---
+
 progressive_disclosure:
-  entry_point: summary, when_to_use, quick_start
-  estimated_tokens:
-    entry: 85
-    full: 4800
+entry_point: summary, when_to_use, quick_start
+estimated_tokens:
+entry: 85
+full: 4800
 ---
 
 ## Summary
@@ -28,6 +30,7 @@ shadcn/ui is a collection of re-usable React components built with Radix UI prim
 ## When to Use
 
 **Use shadcn/ui when**:
+
 - Building React applications with Tailwind CSS
 - Need accessible, production-ready UI components
 - Want full control over component code and styling
@@ -37,6 +40,7 @@ shadcn/ui is a collection of re-usable React components built with Radix UI prim
 - Want TypeScript-first components
 
 **Don't use when**:
+
 - Not using Tailwind CSS (core styling dependency)
 - Need legacy browser support (uses modern CSS features)
 - Prefer packaged npm libraries over code ownership
@@ -77,8 +81,8 @@ npx shadcn-ui@latest add button card dialog form input
 ### Basic Usage
 
 ```tsx
-import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export default function Example() {
   return (
@@ -90,7 +94,7 @@ export default function Example() {
         <Button>Click me</Button>
       </CardContent>
     </Card>
-  )
+  );
 }
 ```
 
@@ -101,10 +105,12 @@ export default function Example() {
 ### Copy-Paste Philosophy
 
 **Key Difference from Traditional Libraries**:
+
 - **Traditional**: `npm install component-library` → locked to package versions
 - **shadcn/ui**: Components copied to `components/ui/` → you own the code
 
 **Benefits**:
+
 - Full customization control
 - No breaking changes from package updates
 - Easy to modify for specific needs
@@ -130,6 +136,7 @@ src/
 ### Technology Stack
 
 **Core Dependencies**:
+
 - **Radix UI**: Accessible component primitives (headless UI)
 - **Tailwind CSS**: Utility-first styling
 - **TypeScript**: Type safety
@@ -138,6 +145,7 @@ src/
 - **tailwind-merge**: Conflict-free class merging
 
 **Radix UI Integration**:
+
 ```tsx
 // shadcn/ui components wrap Radix primitives
 import * as DialogPrimitive from "@radix-ui/react-dialog"
@@ -184,6 +192,7 @@ const DialogContent = React.forwardRef<...>(
 ```
 
 **Key Options**:
+
 - `style`: "default" or "new-york" (design variants)
 - `rsc`: React Server Components support
 - `cssVariables`: Use CSS variables for theming
@@ -193,86 +202,86 @@ const DialogContent = React.forwardRef<...>(
 
 ```ts
 // tailwind.config.ts
-import type { Config } from "tailwindcss"
+import type { Config } from 'tailwindcss';
 
 const config = {
-  darkMode: ["class"],
+  darkMode: ['class'],
   content: [
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
-  prefix: "",
+  prefix: '',
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: '2rem',
       screens: {
-        "2xl": "1400px",
+        '2xl': '1400px',
       },
     },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
       },
       keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+        'accordion-down': {
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
         },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
         },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config
+  plugins: [require('tailwindcss-animate')],
+} satisfies Config;
 
-export default config
+export default config;
 ```
 
 ### CSS Variables (globals.css)
@@ -368,34 +377,38 @@ import { Button } from "@/components/ui/button"
 ```
 
 **Implementation Pattern** (CVA):
+
 ```tsx
-import { cva, type VariantProps } from "class-variance-authority"
+import { cva, type VariantProps } from 'class-variance-authority';
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50",
+  'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        destructive:
+          'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+        outline:
+          'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+        secondary:
+          'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+        ghost: 'hover:bg-accent hover:text-accent-foreground',
+        link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: 'h-10 px-4 py-2',
+        sm: 'h-9 rounded-md px-3',
+        lg: 'h-11 rounded-md px-8',
+        icon: 'h-10 w-10',
       },
     },
     defaultVariants: {
-      variant: "default",
-      size: "default",
+      variant: 'default',
+      size: 'default',
     },
-  }
-)
+  },
+);
 ```
 
 ### Card
@@ -408,7 +421,7 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-} from "@/components/ui/card"
+} from '@/components/ui/card';
 
 <Card>
   <CardHeader>
@@ -421,7 +434,7 @@ import {
   <CardFooter>
     <Button>Action</Button>
   </CardFooter>
-</Card>
+</Card>;
 ```
 
 ### Dialog (Modal)
@@ -435,7 +448,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog';
 
 <Dialog>
   <DialogTrigger asChild>
@@ -444,24 +457,22 @@ import {
   <DialogContent>
     <DialogHeader>
       <DialogTitle>Are you sure?</DialogTitle>
-      <DialogDescription>
-        This action cannot be undone.
-      </DialogDescription>
+      <DialogDescription>This action cannot be undone.</DialogDescription>
     </DialogHeader>
     <DialogFooter>
       <Button variant="outline">Cancel</Button>
       <Button>Confirm</Button>
     </DialogFooter>
   </DialogContent>
-</Dialog>
+</Dialog>;
 ```
 
 ### Form (with react-hook-form + zod)
 
 ```tsx
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 import {
   Form,
   FormControl,
@@ -470,30 +481,30 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const formSchema = z.object({
   username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
+    message: 'Username must be at least 2 characters.',
   }),
   email: z.string().email({
-    message: "Please enter a valid email address.",
+    message: 'Please enter a valid email address.',
   }),
-})
+});
 
 function ProfileForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
-      email: "",
+      username: '',
+      email: '',
     },
-  })
+  });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
+    console.log(values);
   }
 
   return (
@@ -531,7 +542,7 @@ function ProfileForm() {
         <Button type="submit">Submit</Button>
       </form>
     </Form>
-  )
+  );
 }
 ```
 
@@ -546,7 +557,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from '@/components/ui/table';
 
 <Table>
   <TableCaption>A list of your recent invoices.</TableCaption>
@@ -566,12 +577,13 @@ import {
       <TableCell className="text-right">$250.00</TableCell>
     </TableRow>
   </TableBody>
-</Table>
+</Table>;
 ```
 
 ### Additional Components
 
 **Available via CLI**:
+
 - `accordion` - Collapsible content sections
 - `alert` - Contextual feedback messages
 - `alert-dialog` - Interrupting modal dialogs
@@ -608,6 +620,7 @@ import {
 ### Color Customization
 
 **Change base color scheme**:
+
 ```bash
 # Regenerate components with new base color
 npx shadcn-ui@latest init
@@ -616,14 +629,15 @@ npx shadcn-ui@latest init
 ```
 
 **Manual color override** (globals.css):
+
 ```css
 :root {
-  --primary: 210 100% 50%;  /* HSL: Blue */
+  --primary: 210 100% 50%; /* HSL: Blue */
   --primary-foreground: 0 0% 100%;
 }
 
 .dark {
-  --primary: 210 100% 60%;  /* Lighter blue for dark mode */
+  --primary: 210 100% 60%; /* Lighter blue for dark mode */
 }
 ```
 
@@ -651,7 +665,7 @@ const buttonVariants = cva(
 
 ```tsx
 // Using next-themes
-import { ThemeProvider } from "next-themes"
+import { ThemeProvider } from 'next-themes';
 
 // app/layout.tsx
 export default function RootLayout({ children }) {
@@ -668,28 +682,28 @@ export default function RootLayout({ children }) {
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
 
 // Theme toggle component
-import { Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
-import { Button } from "@/components/ui/button"
+import { Moon, Sun } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { Button } from '@/components/ui/button';
 
 export function ThemeToggle() {
-  const { setTheme, theme } = useTheme()
+  const { setTheme, theme } = useTheme();
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
     >
       <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
       <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
       <span className="sr-only">Toggle theme</span>
     </Button>
-  )
+  );
 }
 ```
 
@@ -703,20 +717,20 @@ npm install next-themes
 
 ```tsx
 // app/providers.tsx
-"use client"
+'use client';
 
-import { ThemeProvider } from "next-themes"
+import { ThemeProvider } from 'next-themes';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       {children}
     </ThemeProvider>
-  )
+  );
 }
 
 // app/layout.tsx
-import { Providers } from "./providers"
+import { Providers } from './providers';
 
 export default function RootLayout({ children }) {
   return (
@@ -725,7 +739,7 @@ export default function RootLayout({ children }) {
         <Providers>{children}</Providers>
       </body>
     </html>
-  )
+  );
 }
 ```
 
@@ -765,7 +779,7 @@ npx shadcn-ui@latest add button card form
 
 ```tsx
 // app/page.tsx (Server Component by default)
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button';
 
 export default function HomePage() {
   return (
@@ -776,7 +790,7 @@ export default function HomePage() {
         <a href="/about">Learn More</a>
       </Button>
     </main>
-  )
+  );
 }
 ```
 
@@ -784,14 +798,14 @@ export default function HomePage() {
 
 ```tsx
 // app/interactive.tsx
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
 export function InteractiveSection() {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -802,7 +816,7 @@ export function InteractiveSection() {
         <p>Client-side interactivity</p>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 ```
 
@@ -810,26 +824,26 @@ export function InteractiveSection() {
 
 ```tsx
 // app/api/submit/route.ts
-import { NextResponse } from "next/server"
-import { z } from "zod"
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
 const formSchema = z.object({
   email: z.string().email(),
   message: z.string().min(10),
-})
+});
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const validatedData = formSchema.parse(body)
+    const body = await request.json();
+    const validatedData = formSchema.parse(body);
 
     // Process form data
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ errors: error.errors }, { status: 400 })
+      return NextResponse.json({ errors: error.errors }, { status: 400 });
     }
-    return NextResponse.json({ error: "Internal error" }, { status: 500 })
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }
 ```
@@ -863,6 +877,7 @@ All shadcn/ui components include proper ARIA attributes via Radix UI:
 ### Keyboard Navigation
 
 **Built-in keyboard support**:
+
 - `Tab` / `Shift+Tab` - Navigate between interactive elements
 - `Enter` / `Space` - Activate buttons
 - `Escape` - Close dialogs, dropdowns, popovers
@@ -870,6 +885,7 @@ All shadcn/ui components include proper ARIA attributes via Radix UI:
 - `Home` / `End` - Jump to first/last in lists
 
 **Example: Command Palette**:
+
 ```tsx
 import {
   Command,
@@ -879,7 +895,7 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandItem,
-} from "@/components/ui/command"
+} from '@/components/ui/command';
 
 // ⌘K to open
 <CommandDialog open={open} onOpenChange={setOpen}>
@@ -892,7 +908,7 @@ import {
       <CommandItem>Calculator</CommandItem>
     </CommandGroup>
   </CommandList>
-</CommandDialog>
+</CommandDialog>;
 ```
 
 ### Screen Reader Support
@@ -924,22 +940,20 @@ import {
 ```tsx
 // Focus trap in Dialog (automatic)
 <Dialog>
-  <DialogContent>
-    {/* Focus stays within dialog until closed */}
-  </DialogContent>
-</Dialog>
+  <DialogContent>{/* Focus stays within dialog until closed */}</DialogContent>
+</Dialog>;
 
 // Custom focus management
-import { useRef, useEffect } from "react"
+import { useRef, useEffect } from 'react';
 
 function CustomComponent() {
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
+    inputRef.current?.focus();
+  }, []);
 
-  return <Input ref={inputRef} />
+  return <Input ref={inputRef} />;
 }
 ```
 
@@ -1000,17 +1014,18 @@ import Link from "next/link"
 ```
 
 **How it works** (Radix Slot):
+
 ```tsx
-import { Slot } from "@radix-ui/react-slot"
+import { Slot } from '@radix-ui/react-slot';
 
 interface ButtonProps {
-  asChild?: boolean
+  asChild?: boolean;
 }
 
 const Button = ({ asChild, ...props }: ButtonProps) => {
-  const Comp = asChild ? Slot : "button"
-  return <Comp {...props} />
-}
+  const Comp = asChild ? Slot : 'button';
+  return <Comp {...props} />;
+};
 ```
 
 ### Custom Compositions
@@ -1021,10 +1036,10 @@ export function PricingCard({
   title,
   price,
   features,
-  highlighted
+  highlighted,
 }: PricingCardProps) {
   return (
-    <Card className={cn(highlighted && "border-primary")}>
+    <Card className={cn(highlighted && 'border-primary')}>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription className="text-3xl font-bold">
@@ -1042,12 +1057,15 @@ export function PricingCard({
         </ul>
       </CardContent>
       <CardFooter>
-        <Button className="w-full" variant={highlighted ? "default" : "outline"}>
+        <Button
+          className="w-full"
+          variant={highlighted ? 'default' : 'outline'}
+        >
           Get Started
         </Button>
       </CardFooter>
     </Card>
-  )
+  );
 }
 ```
 
@@ -1120,45 +1138,45 @@ npx shadcn-ui@latest update --dry-run
 
 ```tsx
 // useToast hook (built-in with toast component)
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from '@/components/ui/use-toast';
 
 function MyComponent() {
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   return (
     <Button
       onClick={() => {
         toast({
-          title: "Scheduled: Catch up",
-          description: "Friday, February 10, 2023 at 5:57 PM",
-        })
+          title: 'Scheduled: Catch up',
+          description: 'Friday, February 10, 2023 at 5:57 PM',
+        });
       }}
     >
       Show Toast
     </Button>
-  )
+  );
 }
 
 // Custom form hook
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 function useFormWithToast<T extends z.ZodType>(schema: T) {
-  const { toast } = useToast()
+  const { toast } = useToast();
   const form = useForm({
     resolver: zodResolver(schema),
-  })
+  });
 
   const handleSubmit = form.handleSubmit(async (data) => {
     try {
       // Submit logic
-      toast({ title: "Success!" })
+      toast({ title: 'Success!' });
     } catch (error) {
-      toast({ title: "Error", variant: "destructive" })
+      toast({ title: 'Error', variant: 'destructive' });
     }
-  })
+  });
 
-  return { form, handleSubmit }
+  return { form, handleSubmit };
 }
 ```
 
@@ -1168,29 +1186,29 @@ function useFormWithToast<T extends z.ZodType>(schema: T) {
 // Mobile-first responsive components
 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
   <Card>Mobile: 1 col, Tablet: 2 col, Desktop: 3 col</Card>
-</div>
+</div>;
 
 // Responsive dialog (sheet on mobile, dialog on desktop)
-import { useMediaQuery } from "@/hooks/use-media-query"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 
 function ResponsiveModal({ children, ...props }) {
-  const isDesktop = useMediaQuery("(min-width: 768px)")
+  const isDesktop = useMediaQuery('(min-width: 768px)');
 
   if (isDesktop) {
     return (
       <Dialog {...props}>
         <DialogContent>{children}</DialogContent>
       </Dialog>
-    )
+    );
   }
 
   return (
     <Sheet {...props}>
       <SheetContent>{children}</SheetContent>
     </Sheet>
-  )
+  );
 }
 ```
 
@@ -1239,29 +1257,34 @@ const item = {
 ## Best Practices
 
 **Code Organization**:
+
 - Keep shadcn/ui components in `components/ui/` (don't mix with app components)
 - Create custom compositions in `components/` (outside ui/)
 - Use `lib/utils.ts` for shared utilities
 
 **Customization**:
+
 - Modify components directly in your project (you own the code)
 - Use CSS variables for theme-wide changes
 - Extend variants with CVA for new styles
 - Don't edit `components.json` manually (use CLI)
 
 **Performance**:
+
 - Tree-shaking automatic (only imports what you use)
 - Use `asChild` to avoid unnecessary wrapper elements
 - Lazy load heavy components (Calendar, Command)
 - Prefer Server Components when possible (Next.js)
 
 **Accessibility**:
+
 - Don't remove ARIA attributes from components
 - Test keyboard navigation for custom compositions
 - Maintain focus management in dialogs/modals
 - Use semantic HTML with `asChild` when applicable
 
 **TypeScript**:
+
 - Leverage exported types (ButtonProps, CardProps, etc.)
 - Use VariantProps for variant type safety
 - Add strict null checks for form validation
@@ -1269,6 +1292,7 @@ const item = {
 ## Troubleshooting
 
 **Import errors**:
+
 ```bash
 # Check path aliases in tsconfig.json
 {
@@ -1282,28 +1306,31 @@ const item = {
 ```
 
 **Tailwind classes not applying**:
+
 ```ts
 // Ensure content paths include your components
 // tailwind.config.ts
 content: [
-  './src/components/**/*.{ts,tsx}',  // Add this
+  './src/components/**/*.{ts,tsx}', // Add this
   './src/app/**/*.{ts,tsx}',
-]
+];
 ```
 
 **Dark mode not working**:
+
 ```tsx
 // Add suppressHydrationWarning to <html>
 <html lang="en" suppressHydrationWarning>
 ```
 
 **Form validation not triggering**:
+
 ```tsx
 // Ensure FormMessage is included in FormField
 <FormField>
   <FormItem>
     <FormControl>...</FormControl>
-    <FormMessage />  {/* Required for errors */}
+    <FormMessage /> {/* Required for errors */}
   </FormItem>
 </FormField>
 ```

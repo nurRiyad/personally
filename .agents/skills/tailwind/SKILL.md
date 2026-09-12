@@ -1,42 +1,29 @@
 ---
 name: tailwind
-description: "Tailwind CSS utility-first framework for rapid UI development with responsive design and dark mode"
+description: 'Tailwind CSS utility-first framework for rapid UI development with responsive design and dark mode'
 user-invocable: false
 disable-model-invocation: true
 progressive_disclosure:
   entry_point:
-    summary: "Tailwind CSS utility-first framework for rapid UI development with responsive design and dark mode"
-    when_to_use: "When working with tailwind-css or related functionality."
-    quick_start: "1. Review the core concepts below. 2. Apply patterns to your use case. 3. Follow best practices for implementation."
+    summary: 'Tailwind CSS utility-first framework for rapid UI development with responsive design and dark mode'
+    when_to_use: 'When working with tailwind-css or related functionality.'
+    quick_start: '1. Review the core concepts below. 2. Apply patterns to your use case. 3. Follow best practices for implementation.'
 ---
+
 # Tailwind CSS Skill
 
 ---
+
 progressive_disclosure:
-  entry_point:
-    - summary
-    - when_to_use
-    - quick_start
-  sections:
-    core_concepts:
-      - utility_first_approach
-      - responsive_design
-      - configuration
-    advanced:
-      - dark_mode
-      - custom_utilities
-      - plugins
-      - performance_optimization
-    integration:
-      - framework_integration
-      - component_patterns
-    reference:
-      - common_utilities
-      - breakpoints
-      - color_system
+entry_point: - summary - when_to_use - quick_start
+sections:
+core_concepts: - utility_first_approach - responsive_design - configuration
+advanced: - dark_mode - custom_utilities - plugins - performance_optimization
+integration: - framework_integration - component_patterns
+reference: - common_utilities - breakpoints - color_system
 tokens:
-  entry: 75
-  full: 4500
+entry: 75
+full: 4500
 ---
 
 ## Summary
@@ -46,6 +33,7 @@ Tailwind CSS is a utility-first CSS framework that provides low-level utility cl
 ## When to Use
 
 **Best for:**
+
 - Rapid prototyping with consistent design systems
 - Component-based frameworks (React, Vue, Svelte)
 - Projects requiring responsive and dark mode support
@@ -53,6 +41,7 @@ Tailwind CSS is a utility-first CSS framework that provides low-level utility cl
 - Design systems with standardized spacing/colors
 
 **Consider alternatives when:**
+
 - Team unfamiliar with utility-first approach (learning curve)
 - Project requires extensive custom CSS animations
 - Legacy browser support needed (IE11)
@@ -79,23 +68,22 @@ npx tailwindcss init -p
 ### Configuration
 
 **tailwind.config.js:**
+
 ```javascript
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
-    "./public/index.html",
-  ],
+  content: ['./src/**/*.{js,jsx,ts,tsx}', './public/index.html'],
   theme: {
     extend: {},
   },
   plugins: [],
-}
+};
 ```
 
 ### Basic CSS Setup
 
 **styles/globals.css:**
+
 ```css
 @tailwind base;
 @tailwind components;
@@ -107,11 +95,11 @@ module.exports = {
 ```jsx
 // Simple button with Tailwind utilities
 function Button({ children, variant = 'primary' }) {
-  const baseClasses = "px-4 py-2 rounded-lg font-medium transition-colors";
+  const baseClasses = 'px-4 py-2 rounded-lg font-medium transition-colors';
   const variants = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700",
-    secondary: "bg-gray-200 text-gray-900 hover:bg-gray-300",
-    danger: "bg-red-600 text-white hover:bg-red-700"
+    primary: 'bg-blue-600 text-white hover:bg-blue-700',
+    secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300',
+    danger: 'bg-red-600 text-white hover:bg-red-700',
   };
 
   return (
@@ -133,6 +121,7 @@ Tailwind provides single-purpose utility classes that map directly to CSS proper
 #### Layout Utilities
 
 **Flexbox:**
+
 ```jsx
 // Centered flex container
 <div className="flex items-center justify-center">
@@ -153,6 +142,7 @@ Tailwind provides single-purpose utility classes that map directly to CSS proper
 ```
 
 **Grid:**
+
 ```jsx
 // Basic grid
 <div className="grid grid-cols-3 gap-4">
@@ -178,6 +168,7 @@ Tailwind provides single-purpose utility classes that map directly to CSS proper
 #### Spacing System
 
 **Padding and Margin:**
+
 ```jsx
 // Uniform spacing
 <div className="p-4">Padding all sides</div>
@@ -195,6 +186,7 @@ Tailwind provides single-purpose utility classes that map directly to CSS proper
 ```
 
 **Space Between:**
+
 ```jsx
 // Gap between children
 <div className="flex gap-4">
@@ -320,6 +312,7 @@ Tailwind uses mobile-first breakpoint system.
 #### Theme Extension
 
 **tailwind.config.js:**
+
 ```javascript
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -336,9 +329,9 @@ module.exports = {
         accent: '#ff6b6b',
       },
       spacing: {
-        '18': '4.5rem',
-        '88': '22rem',
-        '128': '32rem',
+        18: '4.5rem',
+        88: '22rem',
+        128: '32rem',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -372,7 +365,7 @@ module.exports = {
     },
   },
   plugins: [],
-}
+};
 ```
 
 #### Custom Breakpoints
@@ -381,22 +374,22 @@ module.exports = {
 module.exports = {
   theme: {
     screens: {
-      'xs': '475px',
-      'sm': '640px',
-      'md': '768px',
-      'lg': '1024px',
-      'xl': '1280px',
+      xs: '475px',
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
       '2xl': '1536px',
       '3xl': '1920px',
       // Custom breakpoints
-      'tablet': '640px',
-      'laptop': '1024px',
-      'desktop': '1280px',
+      tablet: '640px',
+      laptop: '1024px',
+      desktop: '1280px',
       // Max-width breakpoints
-      'max-md': {'max': '767px'},
+      'max-md': { max: '767px' },
     },
   },
-}
+};
 ```
 
 ---
@@ -408,14 +401,16 @@ module.exports = {
 #### Class Strategy (Recommended)
 
 **tailwind.config.js:**
+
 ```javascript
 module.exports = {
   darkMode: 'class', // or 'media' for OS preference
   // ...
-}
+};
 ```
 
 **Implementation:**
+
 ```jsx
 // Toggle component
 function DarkModeToggle() {
@@ -442,12 +437,14 @@ function DarkModeToggle() {
 // Dark mode styles
 function Card() {
   return (
-    <div className="
+    <div
+      className="
       bg-white dark:bg-gray-800
       text-gray-900 dark:text-gray-100
       border border-gray-200 dark:border-gray-700
       shadow-lg dark:shadow-none
-    ">
+    "
+    >
       <h2 className="text-xl font-bold mb-2">Card Title</h2>
       <p className="text-gray-600 dark:text-gray-400">
         Card content adapts to dark mode
@@ -463,14 +460,12 @@ function Card() {
 // tailwind.config.js
 module.exports = {
   darkMode: 'media', // Uses OS preference
-}
+};
 ```
 
 ```jsx
 // Automatically adapts to system preference
-<div className="bg-white dark:bg-gray-900">
-  Content adapts automatically
-</div>
+<div className="bg-white dark:bg-gray-900">Content adapts automatically</div>
 ```
 
 ### Custom Utilities
@@ -478,12 +473,13 @@ module.exports = {
 #### Adding Custom Utilities
 
 **tailwind.config.js:**
+
 ```javascript
 const plugin = require('tailwindcss/plugin');
 
 module.exports = {
   plugins: [
-    plugin(function({ addUtilities, addComponents, theme }) {
+    plugin(function ({ addUtilities, addComponents, theme }) {
       // Custom utilities
       addUtilities({
         '.scrollbar-hide': {
@@ -517,7 +513,7 @@ module.exports = {
       });
     }),
   ],
-}
+};
 ```
 
 #### Custom Variants
@@ -555,6 +551,7 @@ npm install -D @tailwindcss/forms @tailwindcss/typography @tailwindcss/aspect-ra
 ```
 
 **tailwind.config.js:**
+
 ```javascript
 module.exports = {
   plugins: [
@@ -562,7 +559,7 @@ module.exports = {
     require('@tailwindcss/typography'),
     require('@tailwindcss/aspect-ratio'),
   ],
-}
+};
 ```
 
 #### Forms Plugin
@@ -598,13 +595,15 @@ module.exports = {
 
 ```jsx
 // Beautiful prose styling
-<article className="
+<article
+  className="
   prose
   prose-lg
   prose-slate
   dark:prose-invert
   max-w-none
-">
+"
+>
   <h1>Article Title</h1>
   <p>Automatic typography styles for markdown content...</p>
   <ul>
@@ -649,7 +648,7 @@ module.exports = {
       variants: ['hover', 'focus'],
     },
   ],
-}
+};
 ```
 
 #### JIT Mode (Default in v3+)
@@ -675,11 +674,9 @@ module.exports = {
     tailwindcss: {},
     autoprefixer: {},
     // Production minification
-    ...(process.env.NODE_ENV === 'production'
-      ? { cssnano: {} }
-      : {}),
+    ...(process.env.NODE_ENV === 'production' ? { cssnano: {} } : {}),
   },
-}
+};
 ```
 
 ---
@@ -689,6 +686,7 @@ module.exports = {
 ### React / Next.js
 
 **Installation:**
+
 ```bash
 npx create-next-app@latest my-app --tailwind
 # or add to existing project
@@ -697,14 +695,16 @@ npx tailwindcss init -p
 ```
 
 **next.config.js:**
+
 ```javascript
 /** @type {import('next').NextConfig} */
 module.exports = {
   // Tailwind works out of box with Next.js
-}
+};
 ```
 
-**_app.tsx:**
+**\_app.tsx:**
+
 ```typescript
 import '@/styles/globals.css'
 import type { AppProps } from 'next/app'
@@ -715,35 +715,37 @@ export default function App({ Component, pageProps }: AppProps) {
 ```
 
 **Component Example:**
+
 ```tsx
 // components/Button.tsx
-import { ButtonHTMLAttributes, forwardRef } from 'react'
-import { cva, type VariantProps } from 'class-variance-authority'
+import { ButtonHTMLAttributes, forwardRef } from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-lg font-medium transition-colors",
+  'inline-flex items-center justify-center rounded-lg font-medium transition-colors',
   {
     variants: {
       variant: {
-        default: "bg-blue-600 text-white hover:bg-blue-700",
-        outline: "border border-gray-300 hover:bg-gray-100",
-        ghost: "hover:bg-gray-100",
+        default: 'bg-blue-600 text-white hover:bg-blue-700',
+        outline: 'border border-gray-300 hover:bg-gray-100',
+        ghost: 'hover:bg-gray-100',
       },
       size: {
-        sm: "px-3 py-1.5 text-sm",
-        md: "px-4 py-2",
-        lg: "px-6 py-3 text-lg",
+        sm: 'px-3 py-1.5 text-sm',
+        md: 'px-4 py-2',
+        lg: 'px-6 py-3 text-lg',
       },
     },
     defaultVariants: {
-      variant: "default",
-      size: "md",
+      variant: 'default',
+      size: 'md',
     },
-  }
-)
+  },
+);
 
 interface ButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {}
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -754,16 +756,17 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={buttonVariants({ variant, size, className })}
         {...props}
       />
-    )
-  }
-)
+    );
+  },
+);
 
-export default Button
+export default Button;
 ```
 
 ### SvelteKit
 
 **Installation:**
+
 ```bash
 npx sv create my-app
 # Select Tailwind CSS option
@@ -773,6 +776,7 @@ npx tailwindcss init -p
 ```
 
 **svelte.config.js:**
+
 ```javascript
 import adapter from '@sveltejs/adapter-auto';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
@@ -780,12 +784,13 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 export default {
   preprocess: vitePreprocess(),
   kit: {
-    adapter: adapter()
-  }
+    adapter: adapter(),
+  },
 };
 ```
 
 **Component Example:**
+
 ```svelte
 <!-- Button.svelte -->
 <script lang="ts">
@@ -815,6 +820,7 @@ export default {
 ### Vue 3
 
 **Installation:**
+
 ```bash
 npm create vue@latest my-app
 # Select Tailwind CSS
@@ -824,44 +830,46 @@ npx tailwindcss init -p
 ```
 
 **main.ts:**
-```typescript
-import { createApp } from 'vue'
-import App from './App.vue'
-import './assets/main.css'
 
-createApp(App).mount('#app')
+```typescript
+import { createApp } from 'vue';
+import App from './App.vue';
+import './assets/main.css';
+
+createApp(App).mount('#app');
 ```
 
 **Component Example:**
+
 ```vue
 <!-- Button.vue -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from 'vue';
 
 interface Props {
-  variant?: 'primary' | 'secondary'
-  size?: 'sm' | 'md' | 'lg'
+  variant?: 'primary' | 'secondary';
+  size?: 'sm' | 'md' | 'lg';
 }
 
 const props = withDefaults(defineProps<Props>(), {
   variant: 'primary',
-  size: 'md'
-})
+  size: 'md',
+});
 
 const classes = computed(() => {
-  const base = 'rounded-lg font-medium transition-colors'
+  const base = 'rounded-lg font-medium transition-colors';
   const variants = {
     primary: 'bg-blue-600 text-white hover:bg-blue-700',
-    secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-  }
+    secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300',
+  };
   const sizes = {
     sm: 'px-3 py-1.5 text-sm',
     md: 'px-4 py-2',
-    lg: 'px-6 py-3 text-lg'
-  }
+    lg: 'px-6 py-3 text-lg',
+  };
 
-  return `${base} ${variants[props.variant]} ${sizes[props.size]}`
-})
+  return `${base} ${variants[props.variant]} ${sizes[props.size]}`;
+});
 </script>
 
 <template>
@@ -884,7 +892,7 @@ function Container({ children, size = 'default' }) {
   const sizes = {
     sm: 'max-w-3xl',
     default: 'max-w-7xl',
-    full: 'max-w-full'
+    full: 'max-w-full',
   };
 
   return (
@@ -900,13 +908,15 @@ function Container({ children, size = 'default' }) {
 ```jsx
 function GridLayout({ children, cols = { default: 1, md: 2, lg: 3 } }) {
   return (
-    <div className={`
+    <div
+      className={`
       grid
       grid-cols-${cols.default}
       md:grid-cols-${cols.md}
       lg:grid-cols-${cols.lg}
       gap-6
-    `}>
+    `}
+    >
       {children}
     </div>
   );
@@ -917,11 +927,7 @@ function GridLayout({ children, cols = { default: 1, md: 2, lg: 3 } }) {
 
 ```jsx
 function Stack({ children, spacing = 4 }) {
-  return (
-    <div className={`flex flex-col gap-${spacing}`}>
-      {children}
-    </div>
-  );
+  return <div className={`flex flex-col gap-${spacing}`}>{children}</div>;
 }
 ```
 
@@ -932,26 +938,22 @@ function Stack({ children, spacing = 4 }) {
 ```jsx
 function Card({ title, description, image, footer }) {
   return (
-    <div className="
+    <div
+      className="
       bg-white dark:bg-gray-800
       rounded-lg shadow-lg
       overflow-hidden
       transition-transform hover:scale-105
-    ">
+    "
+    >
       {image && (
-        <img
-          src={image}
-          alt={title}
-          className="w-full h-48 object-cover"
-        />
+        <img src={image} alt={title} className="w-full h-48 object-cover" />
       )}
       <div className="p-6">
         <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
           {title}
         </h3>
-        <p className="text-gray-600 dark:text-gray-400">
-          {description}
-        </p>
+        <p className="text-gray-600 dark:text-gray-400">{description}</p>
       </div>
       {footer && (
         <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
@@ -979,16 +981,16 @@ function Modal({ isOpen, onClose, title, children }) {
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="
+        <div
+          className="
           relative bg-white dark:bg-gray-800
           rounded-lg shadow-xl
           max-w-md w-full
           p-6
           animate-fade-in
-        ">
-          <h2 className="text-2xl font-bold mb-4">
-            {title}
-          </h2>
+        "
+        >
+          <h2 className="text-2xl font-bold mb-4">{title}</h2>
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
@@ -1026,9 +1028,7 @@ function Input({ label, error, ...props }) {
         `}
         {...props}
       />
-      {error && (
-        <p className="mt-1 text-sm text-red-500">{error}</p>
-      )}
+      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
     </div>
   );
 }
@@ -1053,12 +1053,14 @@ function Badge({ children, variant = 'default', size = 'md' }) {
   };
 
   return (
-    <span className={`
+    <span
+      className={`
       inline-flex items-center
       rounded-full font-medium
       ${variants[variant]}
       ${sizes[size]}
-    `}>
+    `}
+    >
       {children}
     </span>
   );
@@ -1197,7 +1199,8 @@ dark:focus: .dark &:focus
 
 ```jsx
 // Group classes logically
-<div className={`
+<div
+  className={`
   // Layout
   flex items-center justify-between
   // Spacing
@@ -1214,7 +1217,8 @@ dark:focus: .dark &:focus
   md:px-6 md:py-3
   // Dark mode
   dark:bg-gray-800 dark:text-white
-`}>
+`}
+>
   Content
 </div>
 ```
@@ -1253,7 +1257,7 @@ module.exports = {
       },
     },
   },
-}
+};
 ```
 
 ```css
@@ -1271,9 +1275,7 @@ module.exports = {
 
 ```jsx
 // Usage with opacity
-<div className="bg-primary/50 text-primary">
-  50% opacity primary color
-</div>
+<div className="bg-primary/50 text-primary">50% opacity primary color</div>
 ```
 
 ### Avoiding Class Conflicts
@@ -1306,11 +1308,13 @@ function cn(...inputs) {
 ### Styles Not Applying
 
 1. **Check content paths in config:**
+
    ```javascript
-   content: ['./src/**/*.{js,jsx,ts,tsx}']
+   content: ['./src/**/*.{js,jsx,ts,tsx}'];
    ```
 
 2. **Verify CSS imports:**
+
    ```css
    @tailwind base;
    @tailwind components;
