@@ -2,7 +2,15 @@
 
 The detailed project and agent instructions are maintained in [`docs/PROJECT_FOUNDATION.md`](./docs/PROJECT_FOUNDATION.md).
 
-Before working, run `nvm use` and read that document for the current scope, architecture, commands, and quality requirements.
+Before working, load NVM and run `nvm use`, then read that document for the current scope, architecture, commands, and quality requirements. In non-interactive shells, NVM may not be loaded automatically; use:
+
+```bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+nvm use
+```
+
+If `nvm` is still unavailable after this, report the environment issue and continue only with commands that do not depend on selecting the Node version.
 
 ## Project-local skills
 
