@@ -19,11 +19,11 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body className="flex min-h-screen flex-col bg-slate-50 text-slate-950">
-        <SiteNavbar />
         <AuthProvider>
+          <SiteNavbar />
           <div className="flex flex-1 flex-col pt-16">{children}</div>
+          <SiteFooter />
         </AuthProvider>
-        <SiteFooter />
       </body>
     </html>
   );

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ButtonLink } from '../components/ui/button';
 import { Card } from '../components/ui/card';
+import { HomeAuthRedirect } from './components/home-auth-redirect';
 
 export const metadata: Metadata = {
   title: 'Your life, thoughtfully organized',
@@ -90,6 +91,7 @@ const steps = [
 export default function Home() {
   return (
     <main>
+      <HomeAuthRedirect />
       <section className="overflow-hidden bg-[#f8faf8]">
         <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 pb-20 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[1fr_0.88fr] lg:items-center lg:gap-16 lg:pb-28">
           <div className="max-w-2xl animate-rise-in">

@@ -74,12 +74,16 @@ export class AuthService {
 
   async login(input: LoginRequest) {
     const raw = input.identifier.trim();
-    const identifier = raw.includes('@')
-      ? normalizeEmail(raw)
-      : raw.startsWith('+') || /^\d/.test(raw)
-        ? normalizePhone(raw)
-        : normalizeUsername(raw);
-    const user = await this.users.findByIdentifier(identifier);
+    const identifiers = [
+      normalizeUsername(raw),
+      normalizeEmail(raw),
+      normalizePhone(raw),
+    ].filter((identifier, index, all) => all.indexOf(identifier) === index);
+    let user: User | undefined;
+    for (const identifier of identifiers) {
+      user = await this.users.findByIdentifier(identifier);
+      if (user) break;
+    }
     if (
       !user ||
       !user.isActive ||

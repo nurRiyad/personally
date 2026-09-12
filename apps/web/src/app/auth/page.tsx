@@ -94,12 +94,15 @@ export default function AuthPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { status, signIn, signUp } = useAuth();
   const router = useRouter();
-  const [returnTo, setReturnTo] = useState('/dashboard');
+  const [returnTo, setReturnTo] = useState('/');
 
   useEffect(() => {
-    setReturnTo(
-      safeReturnTo(new URLSearchParams(window.location.search).get('returnTo')),
-    );
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('mode') === 'signup') {
+      setMode('signup');
+    }
+    const requestedReturnTo = searchParams.get('returnTo');
+    setReturnTo(requestedReturnTo ? safeReturnTo(requestedReturnTo) : '/');
   }, []);
 
   useEffect(() => {

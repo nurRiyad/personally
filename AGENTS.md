@@ -29,6 +29,8 @@ If `nvm` is still unavailable after this, report the environment issue and conti
 - Phase 0 does not define product functionality; preserve the current route/UI implementation and do not add speculative product features unless explicitly requested.
 - Do not introduce Nx, Turborepo, Docker, Kubernetes, Redis, queues, microservices, or separate repositories at this stage.
 - Use shadcn/ui when a suitable component exists for frontend UI; otherwise prefer native HTML or small local components.
+- Treat shadcn/ui as the default for frontend UI: reuse an existing component before creating a bespoke equivalent, and add a local shadcn-style primitive when a needed component is not yet present.
+- For forms, use the existing React Hook Form dependency for form state and submission, and validate inputs with the shared Zod schemas from `@personally/validation` whenever a schema exists. Keep field-level errors accessible and close to their inputs.
 - Keep changes focused, preserve existing patterns, and update `README.md` when commands or setup behavior changes.
 - Never commit secrets, local database state, or generated build output. Commit intentional migration files.
 
@@ -44,7 +46,7 @@ Use the skills in `.agents/skills/` only when the task matches their purpose. Do
 - `shadcn` / `tailwind`: UI components or Tailwind styling.
 - `web-design-guidelines`: UI, accessibility, or UX review.
 
-For frontend UI work, always use a shadcn/ui component when a suitable component is available. Prefer native HTML and small local components when shadcn/ui does not provide a relevant component.
+For frontend UI work, always use a shadcn/ui component when a suitable component is available. Prefer native HTML and small local components when shadcn/ui does not provide a relevant component. For forms, use React Hook Form with shared Zod validation from `@personally/validation` rather than hand-rolled form state or ad hoc validation.
 
 If a task does not match one of these areas, work without loading a project-local skill. Always follow the skill's `SKILL.md` instructions when it is used.
 
