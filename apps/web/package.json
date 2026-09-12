@@ -12,6 +12,7 @@
     "@types/react-dom": "^19.0.0"
   },
   "dependencies": {
+    "@base-ui/react": "^1.8.0",
     "@personally/validation": "workspace:*",
     "@tanstack/react-query": "^5.102.8",
     "motion": "^13.2.0",

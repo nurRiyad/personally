@@ -1,14 +1,11 @@
-import { BackButton } from '../components/back-button';
 import { ProtectedRoute } from '../../components/auth';
+import { LearningOverview } from './learning-ui';
+import { learningEpics } from './learning-data';
 
 export default function Learning() {
   return (
     <ProtectedRoute>
-      <main>
-        <h1>Learning Management</h1>
-        <p>Hello World</p>
-        <BackButton />
-      </main>
+      <LearningOverview epics={learningEpics} />
     </ProtectedRoute>
   );
 }
