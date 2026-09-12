@@ -23,11 +23,3 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      - run: pnpm dlx vercel pull --yes --environment=production --token="$VERCEL_TOKEN" && pnpm dlx vercel build --prod --token="$VERCEL_TOKEN" && pnpm dlx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
-        working-directory: apps/web
-        env:
-          {
-            VERCEL_TOKEN: '${{ secrets.VERCEL_TOKEN }}',
-            VERCEL_ORG_ID: '${{ secrets.VERCEL_ORG_ID }}',
-            VERCEL_PROJECT_ID: '${{ secrets.VERCEL_PROJECT_ID }}',
-          }
