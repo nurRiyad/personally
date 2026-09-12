@@ -29,12 +29,24 @@ importers:
 
   apps/api:
     dependencies:
+      '@personally/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@personally/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@cloudflare/workers-types@5.20260911.1)(gel@2.2.0)
       hono:
         specifier: ^4.7.2
         version: 4.13.7
+      jose:
+        specifier: ^6.1.0
+        version: 6.2.12
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^5.20260911.1
@@ -48,6 +60,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@personally/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
       '@tanstack/react-query':
         specifier: ^5.102.8
         version: 5.102.8(react@19.3.0)
@@ -86,6 +101,9 @@ importers:
         specifier: ^0.45.2
         version: 0.45.2(@cloudflare/workers-types@5.20260911.1)(gel@2.2.0)
     devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^5.20260911.1
+        version: 5.20260911.1
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10
@@ -1773,6 +1791,9 @@ packages:
   jiti@2.7.0:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
+
+  jose@6.2.12:
+    resolution: {integrity: sha512-9NiFmJEex0sy2Dk58j2UGBSHgUs2ypF9eZSu4L6vjOX3Dp96Sw1F3uL+H+D1sx02jZZdzUT0HgvCy59CuvXcWw==}
 
   js-tokens@9.0.1:
     resolution: {integrity: sha512-mxa9E9ITFOt0ban3j6L5MpjwegGz6lBQmM1IJkWeBZGcMxto50+eWdjC/52xDbS2vy0k7vIMK0Fe2wfL9OQSpQ==}
@@ -3559,6 +3580,8 @@ snapshots:
     optional: true
 
   jiti@2.7.0: {}
+
+  jose@6.2.12: {}
 
   js-tokens@9.0.1: {}
 

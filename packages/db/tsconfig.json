@@ -1,5 +1,9 @@
 {
   "extends": "../../tsconfig.json",
-  "compilerOptions": { "module": "esnext", "moduleResolution": "bundler" },
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["@cloudflare/workers-types"]
+  },
   "include": ["src/**/*.ts"]
 }

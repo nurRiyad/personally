@@ -1,7 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth, safeReturnTo } from '../../components/auth';
+import { ApiError } from '../../lib/api/client';
+import {
+  loginRequestSchema,
+  registerRequestSchema,
+} from '@personally/validation';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 
@@ -83,17 +90,74 @@ function validate(mode: Mode, formData: FormData): FormErrors {
 export default function AuthPage() {
   const [mode, setMode] = useState<Mode>('login');
   const [errors, setErrors] = useState<FormErrors>({});
+  const [formError, setFormError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { status, signIn, signUp } = useAuth();
+  const router = useRouter();
+  const [returnTo, setReturnTo] = useState('/dashboard');
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    setReturnTo(
+      safeReturnTo(new URLSearchParams(window.location.search).get('returnTo')),
+    );
+  }, []);
+
+  useEffect(() => {
+    if (status === 'authenticated') router.replace(returnTo);
+  }, [returnTo, router, status]);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validate(mode, new FormData(event.currentTarget));
     setErrors(nextErrors);
-    // Backend authentication will be connected here later.
+    setFormError('');
+    if (Object.keys(nextErrors).length > 0) return;
+    setIsSubmitting(true);
+    const values = Object.fromEntries(
+      new FormData(event.currentTarget).entries(),
+    );
+    const request =
+      mode === 'login'
+        ? loginRequestSchema.safeParse(values)
+        : registerRequestSchema.safeParse(values);
+    if (!request.success) {
+      setIsSubmitting(false);
+      setFormError('Please check the highlighted fields.');
+      return;
+    }
+    try {
+      if (mode === 'login') {
+        await signIn(loginRequestSchema.parse(values));
+      } else {
+        await signUp(registerRequestSchema.parse(values));
+      }
+      router.replace(returnTo);
+    } catch (error: unknown) {
+      if (error instanceof ApiError && error.fields) {
+        setErrors(
+          Object.fromEntries(
+            Object.entries(error.fields).map(([key, messages]) => [
+              key,
+              messages[0] ?? 'Invalid value.',
+            ]),
+          ),
+        );
+      } else {
+        setFormError(
+          error instanceof ApiError
+            ? error.message
+            : 'Something went wrong. Please try again.',
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function switchMode(nextMode: Mode) {
     setMode(nextMode);
     setErrors({});
+    setFormError('');
   }
 
   return (
@@ -185,8 +249,26 @@ export default function AuthPage() {
               </button>
             </div>
           ) : null}
-          <Button type="submit" className="w-full">
-            {mode === 'login' ? 'Log in' : 'Create account'}
+          {formError ? (
+            <p
+              role="alert"
+              className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+              {formError}
+            </p>
+          ) : null}
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting
+              ? mode === 'login'
+                ? 'Signing in…'
+                : 'Creating account…'
+              : mode === 'login'
+                ? 'Log in'
+                : 'Create account'}
           </Button>
         </form>
 
