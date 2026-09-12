@@ -1,4 +1,5 @@
-const ITERATIONS = 310_000;
+// Cloudflare Workers currently rejects PBKDF2 derivations above 100,000 iterations.
+const ITERATIONS = 100_000;
 const KEY_LENGTH = 256;
 const SALT_LENGTH = 16;
 const ALGORITHM = `pbkdf2-sha256-v1:${ITERATIONS}`;
