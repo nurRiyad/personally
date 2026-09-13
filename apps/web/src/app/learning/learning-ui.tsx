@@ -8,7 +8,7 @@ import {
   learningTaskSchema,
   manualTimeSchema,
 } from '@personally/validation';
-import { Button, ButtonLink } from '../../components/ui/button';
+import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { Select } from '../../components/ui/select';
 import { Pagination } from '../../components/ui/pagination';
@@ -41,7 +41,7 @@ function Progress({ value }: { value: number }) {
   return (
     <div className="h-2 overflow-hidden rounded-full bg-slate-100">
       <div
-        className="h-full rounded-full bg-slate-950 transition-all"
+        className="h-full rounded-full bg-slate-950 transition-[width]"
         style={{ width: `${value}%` }}
       />
     </div>
@@ -238,14 +238,13 @@ export function LearningOverview({ epics }: { epics: LearningEpic[] }) {
         >
           {paginatedEpics.length ? (
             <>
-              <div className="hidden border-b border-slate-100 bg-slate-50/70 px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem_4rem] lg:items-center lg:gap-6">
+              <div className="hidden border-b border-slate-100 bg-slate-50/70 px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-6">
                 <span>Epic</span>
                 <span className="grid grid-cols-3 gap-5">
                   <span>Created</span>
                   <span>Due</span>
                   <span>Tracked</span>
                 </span>
-                <span />
               </div>
               {paginatedEpics.map((epic) => (
                 <EpicCard key={epic.id} epic={epic} />
@@ -330,18 +329,16 @@ function EpicCard({ epic }: { epic: LearningEpic }) {
   const actual = epic.tasks.reduce((sum, task) => sum + task.actualMinutes, 0);
   return (
     <div className="group border-b border-slate-100 last:border-b-0 hover:bg-slate-50/60">
-      <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem_4rem] lg:gap-6">
+      <Link
+        href={`/learning/epics/${epic.id}`}
+        className="flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-slate-50/80 focus-visible:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-950 sm:flex-row sm:items-center sm:gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-6"
+      >
         <div className="flex min-w-0 items-center gap-4">
           <CircularProgress value={progress} />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
               <h3 className="truncate text-base font-semibold text-slate-950">
-                <Link
-                  className="hover:underline"
-                  href={`/learning/epics/${epic.id}`}
-                >
-                  {epic.name}
-                </Link>
+                {epic.name}
               </h3>
               <Status value={epicStatus(epic)} />
             </div>
@@ -350,7 +347,7 @@ function EpicCard({ epic }: { epic: LearningEpic }) {
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-5 text-sm lg:w-[22rem] lg:shrink-0">
+        <div className="grid grid-cols-3 gap-5 text-sm tabular-nums lg:w-[22rem] lg:shrink-0">
           <div>
             <p className="text-xs text-slate-400 lg:sr-only">Created</p>
             <p className="mt-1 whitespace-nowrap text-slate-600">
@@ -370,14 +367,7 @@ function EpicCard({ epic }: { epic: LearningEpic }) {
             </p>
           </div>
         </div>
-        <ButtonLink
-          href={`/learning/epics/${epic.id}`}
-          variant="ghost"
-          className="w-full px-3 sm:w-auto lg:shrink-0"
-        >
-          View
-        </ButtonLink>
-      </div>
+      </Link>
     </div>
   );
 }
@@ -453,17 +443,14 @@ export function EpicDetail({ epic }: { epic: LearningEpic }) {
       <section className="mt-9">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
-            <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-semibold text-slate-950">Tasks</h2>
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
-                {visibleTasks.length} of {epic.tasks.length}
-              </span>
-            </div>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+              Your Tasks
+            </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Filter tasks by status and prioritize by weight.
+              Filter and sort the tasks in this epic.
             </p>
           </div>
-          <div className="flex flex-wrap justify-end gap-2">
+          <div className="flex flex-wrap gap-1.5 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
             <Select
               label="Task status"
               value={statusFilter}
@@ -487,14 +474,23 @@ export function EpicDetail({ epic }: { epic: LearningEpic }) {
         </div>
         <Card className="mt-4 divide-y divide-slate-100 rounded-2xl">
           {paginatedTasks.length ? (
-            paginatedTasks.map((task, index) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                index={index}
-                epicId={epic.id}
-              />
-            ))
+            <>
+              <div className="hidden border-b border-slate-100 bg-slate-50/70 px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400 lg:grid lg:grid-cols-[minmax(0,1fr)_5rem_8rem_6rem_6rem] lg:items-center lg:gap-5">
+                <span>Task</span>
+                <span>Weight</span>
+                <span>Status</span>
+                <span>Target</span>
+                <span>Actual</span>
+              </div>
+              {paginatedTasks.map((task, index) => (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  index={index}
+                  epicId={epic.id}
+                />
+              ))}
+            </>
           ) : (
             <div className="px-6 py-12 text-center">
               <p className="font-semibold text-slate-950">
@@ -575,37 +571,46 @@ function TaskRow({
   epicId: string;
 }) {
   return (
-    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+    <Link
+      href={`/learning/epics/${epicId}/tasks/${task.id}`}
+      className="flex flex-col gap-4 p-5 transition-colors hover:bg-slate-50/80 focus-visible:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-950 lg:grid lg:grid-cols-[minmax(0,1fr)_5rem_8rem_6rem_6rem] lg:items-center lg:gap-5"
+    >
       <div className="flex min-w-0 flex-1 items-start gap-4">
         <span className="mt-1 text-sm font-semibold text-slate-400">
           {String(index + 1).padStart(2, '0')}
         </span>
         <div className="min-w-0">
-          <Link
-            href={`/learning/epics/${epicId}/tasks/${task.id}`}
-            className="font-semibold text-slate-950 hover:underline"
-          >
-            {task.name}
-          </Link>
+          <span className="font-semibold text-slate-950">{task.name}</span>
           <p className="mt-1 line-clamp-1 text-sm text-slate-500">
             {task.description}
           </p>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-3 sm:pl-4">
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-          Weight {task.weight}
-        </span>
-        <Status value={task.status} />
-        <ButtonLink
-          href={`/learning/epics/${epicId}/tasks/${task.id}`}
-          variant="ghost"
-          className="px-3"
-        >
-          View
-        </ButtonLink>
+      <div className="grid grid-cols-2 gap-3 text-sm tabular-nums sm:grid-cols-4 lg:contents">
+        <div>
+          <p className="text-xs text-slate-400 lg:sr-only">Weight</p>
+          <p className="mt-1 font-semibold text-slate-600">{task.weight}</p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-400 lg:sr-only">Status</p>
+          <div className="mt-1">
+            <Status value={task.status} />
+          </div>
+        </div>
+        <div>
+          <p className="text-xs text-slate-400 lg:sr-only">Target</p>
+          <p className="mt-1 whitespace-nowrap text-slate-600">
+            {formatMinutes(task.targetMinutes)}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-400 lg:sr-only">Actual</p>
+          <p className="mt-1 whitespace-nowrap text-slate-600">
+            {formatMinutes(task.actualMinutes)}
+          </p>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
