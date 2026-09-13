@@ -54,3 +54,39 @@ export const apiErrorSchema = z.object({
 
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
+
+export const learningEpicSchema = z.object({
+  name: z.string().trim().min(1, 'Epic name is required.').max(120),
+  targetDate: z.string().min(1, 'Target date is required.'),
+});
+
+export const learningTaskSchema = z.object({
+  name: z.string().trim().min(1, 'Task name is required.').max(120),
+  description: z
+    .string()
+    .trim()
+    .min(1, 'Task description is required.')
+    .max(500),
+  targetMinutes: z.coerce
+    .number()
+    .int()
+    .min(1, 'Target time must be at least 1 minute.'),
+  weight: z.coerce.number().int().min(1, 'Weight must be at least 1.').max(10),
+});
+
+export type LearningEpicInput = z.infer<typeof learningEpicSchema>;
+export type LearningTaskInput = z.infer<typeof learningTaskSchema>;
+
+export const manualTimeSchema = z.object({
+  date: z.string().min(1, 'Date is required.'),
+  minutes: z.coerce
+    .number()
+    .int()
+    .min(1, 'Duration must be at least 1 minute.')
+    .max(1440, 'Duration cannot exceed 24 hours.'),
+  note: z
+    .string()
+    .trim()
+    .max(300, 'Note must be 300 characters or fewer.')
+    .optional(),
+});

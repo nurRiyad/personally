@@ -40,6 +40,7 @@ Requirements: Node 24 and pnpm.
 ```bash
 nvm use
 pnpm install
+cp apps/api/.dev.vars.example apps/api/.dev.vars # then replace JWT_SECRET locally
 pnpm setup:local
 pnpm dev
 ```

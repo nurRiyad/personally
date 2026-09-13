@@ -1,1 +1,4 @@
-# Local Worker secrets go here when needed.
+JWT_SECRET=replace-with-a-long-random-local-secret
+JWT_ISSUER=personally-api
+JWT_AUDIENCE=personally-web
+ALLOWED_ORIGINS=http://localhost:3000
