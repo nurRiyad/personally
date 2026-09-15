@@ -1,210 +1,223 @@
 'use client';
-
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import {
-  learningEpicSchema,
-  learningTaskSchema,
-  manualTimeSchema,
-} from '@personally/validation';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Pencil } from 'lucide-react';
+import * as s from '@personally/validation';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { Select } from '../../components/ui/select';
 import { Pagination } from '../../components/ui/pagination';
 import { Dialog } from '../../components/ui/dialog';
+import { apiRequest, ApiError } from '../../lib/api/client';
 import {
-  epicProgress,
-  epicStatus,
+  epicPath,
+  taskPath,
+  learningRecord,
+  learningRequest,
+  jsonRequest,
+  queryString,
+} from '../../lib/api/learning';
+import {
+  useLearningQuery,
+  useLearningMutation,
+  useLearningTimer,
+  errorMessage,
+} from './learning-provider';
+import {
+  EpicForm,
+  TaskForm,
+  ManualForm,
+  StopwatchForm,
+  NotesForm,
+} from './learning-forms';
+import {
+  Status,
+  Summary,
+  EpicCard,
+  TaskRow,
   formatMinutes,
-  type LearningEpic,
-  type LearningTask,
-} from './learning-data';
+} from './learning-display';
 
-const statusStyles: Record<string, string> = {
-  Todo: 'bg-slate-100 text-slate-600',
-  'In progress': 'bg-amber-100 text-amber-800',
-  Done: 'bg-emerald-100 text-emerald-800',
-  Blocked: 'bg-rose-100 text-rose-800',
-  Cancelled: 'bg-slate-100 text-slate-400',
-};
-function Status({ value }: { value: string }) {
-  return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[value] ?? statusStyles.Todo}`}
-    >
-      {value}
-    </span>
-  );
-}
-function Progress({ value }: { value: number }) {
-  return (
-    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-      <div
-        className="h-full rounded-full bg-slate-950 transition-[width]"
-        style={{ width: `${value}%` }}
-      />
-    </div>
-  );
-}
-const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-});
-
-function LearningForm({
-  type,
-  defaults,
-  onSubmit,
-  onCancel,
-}: {
-  type: 'epic' | 'task';
-  defaults?: Record<string, string | number>;
-  onSubmit: (values: Record<string, string | number>) => void;
-  onCancel: () => void;
-}) {
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors },
-  } = useForm<Record<string, string | number>>({ defaultValues: defaults });
-  const submit = (values: Record<string, string | number>) => {
-    const result =
-      type === 'epic'
-        ? learningEpicSchema.safeParse(values)
-        : learningTaskSchema.safeParse(values);
-    if (!result.success) {
-      result.error.issues.forEach((issue) =>
-        setError(String(issue.path[0]), { message: issue.message }),
-      );
-      return;
-    }
-    onSubmit(values);
-  };
-  const field = (name: string, label: string, inputType = 'text') => (
-    <label className="block text-sm font-medium text-slate-700">
-      {label}
-      <input
-        {...register(name)}
-        type={inputType}
-        className="mt-1.5 min-h-10 w-full rounded-lg border border-slate-200 px-3 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-      />
-      {errors[name] && (
-        <span className="mt-1 block text-xs font-normal text-rose-600">
-          {String(errors[name]?.message)}
-        </span>
-      )}
-    </label>
-  );
-  return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-4">
-      {field('name', type === 'epic' ? 'Epic name' : 'Task name')}
-      {type === 'epic' ? (
-        field('targetDate', 'Target completion date', 'date')
-      ) : (
-        <>
-          {field('description', 'Description')}
-          <div className="grid grid-cols-2 gap-3">
-            {field('targetMinutes', 'Target minutes', 'number')}
-            {field('weight', 'Weight', 'number')}
-          </div>
-        </>
-      )}
-      <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit">Save</Button>
-      </div>
-    </form>
-  );
-}
-
-export function LearningOverview({ epics }: { epics: LearningEpic[] }) {
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [createdFilter, setCreatedFilter] = useState('All time');
-  const [sortBy, setSortBy] = useState('Newest');
-  const [page, setPage] = useState(1);
-  useEffect(() => setPage(1), [statusFilter, createdFilter, sortBy]);
-  const completedEpics = epics.filter(
-    (epic) => epicStatus(epic) === 'Done',
-  ).length;
-  const inProgressEpics = epics.filter(
-    (epic) => epicStatus(epic) === 'In progress',
-  ).length;
-  const visibleEpics = epics
-    .filter((epic) => {
-      const matchesStatus =
-        statusFilter === 'All' || epicStatus(epic) === statusFilter;
-      const age = Date.now() - new Date(epic.createdAt).getTime();
-      const matchesCreated =
-        createdFilter === 'All time' ||
-        (createdFilter === 'Last 30 days' && age <= 30 * 24 * 60 * 60 * 1000) ||
-        (createdFilter === 'Older than 30 days' &&
-          age > 30 * 24 * 60 * 60 * 1000);
-      return matchesStatus && matchesCreated;
-    })
-    .sort((first, second) => {
-      if (sortBy === 'Oldest')
-        return (
-          new Date(first.createdAt).getTime() -
-          new Date(second.createdAt).getTime()
-        );
-      if (sortBy === 'Name') return first.name.localeCompare(second.name);
-      if (sortBy === 'Progress')
-        return epicProgress(second) - epicProgress(first);
-      return (
-        new Date(second.createdAt).getTime() -
-        new Date(first.createdAt).getTime()
-      );
-    });
-  const pageSize = 10;
-  const totalPages = Math.ceil(visibleEpics.length / pageSize);
-  const paginatedEpics = visibleEpics.slice(
-    (page - 1) * pageSize,
-    page * pageSize,
-  );
+function Frame({ children }: { children: ReactNode }) {
   return (
     <main
       id="main-content"
       className="page-transition mx-auto w-full max-w-6xl px-5 py-7 sm:px-8 sm:py-8"
     >
-      <div className="flex flex-col justify-between gap-7 sm:flex-row sm:items-end">
-        <h1 className="text-balance text-3xl font-semibold tracking-[-0.035em] text-slate-950 sm:text-4xl">
-          Your learning workspace
-        </h1>
+      {children}
+    </main>
+  );
+}
+function QueryState({
+  error,
+  retry,
+}: {
+  error: unknown;
+  retry: () => unknown;
+}) {
+  return (
+    <div className="py-10" role={error ? 'alert' : 'status'}>
+      {error ? (
+        <>
+          <p>
+            {error instanceof ApiError && error.status === 404
+              ? 'This learning record was not found.'
+              : errorMessage(error)}
+          </p>
+          {error instanceof ApiError && error.status === 401 ? (
+            <Link href="/auth" className="underline">
+              Sign in
+            </Link>
+          ) : (
+            <Button className="mt-3" onClick={() => retry()}>
+              Try again
+            </Button>
+          )}
+          <Link className="ml-4 underline" href="/learning">
+            All learning
+          </Link>
+        </>
+      ) : (
+        <p>Loading learning…</p>
+      )}
+    </div>
+  );
+}
+function Empty({ children }: { children: ReactNode }) {
+  return (
+    <p className="px-6 py-12 text-center text-sm text-slate-500">{children}</p>
+  );
+}
+function useClampedPage(
+  totalPages: number | undefined,
+  page: number,
+  setPage: (v: number) => void,
+) {
+  useEffect(() => {
+    if (totalPages !== undefined && page > Math.max(1, totalPages))
+      setPage(Math.max(1, totalPages));
+  }, [totalPages, page, setPage]);
+}
+function DeleteDialog({
+  open,
+  title,
+  onClose,
+  onDelete,
+}: {
+  open: boolean;
+  title: string;
+  onClose: () => void;
+  onDelete: () => Promise<unknown>;
+}) {
+  const mutation = useLearningMutation();
+  return (
+    <Dialog
+      open={open}
+      title={title}
+      description="This removes the record and its saved time permanently."
+      onClose={() => {
+        if (!mutation.isPending) onClose();
+      }}
+    >
+      {mutation.error && (
+        <p role="alert" className="mb-3 text-sm text-rose-700">
+          {errorMessage(mutation.error)}
+        </p>
+      )}
+      <div className="flex justify-end gap-2">
+        <Button disabled={mutation.isPending} variant="ghost" onClick={onClose}>
+          Cancel
+        </Button>
         <Button
-          className="shrink-0"
-          onClick={() => setShowCreateForm((value) => !value)}
-          aria-expanded={showCreateForm}
-          aria-controls="new-epic"
+          disabled={mutation.isPending}
+          className="bg-rose-600 hover:bg-rose-700"
+          onClick={() =>
+            void mutation
+              .mutateAsync(onDelete)
+              .then(onClose)
+              .catch(() => {})
+          }
         >
-          + Create Epic
+          {mutation.isPending ? 'Deleting…' : 'Delete'}
         </Button>
       </div>
-      <div className="mt-7 grid gap-3 sm:grid-cols-3">
-        <Summary label="Total Epics" value={String(epics.length)} />
-        <Summary label="Completed Epics" value={String(completedEpics)} />
-        <Summary label="In Progress Epics" value={String(inProgressEpics)} />
+    </Dialog>
+  );
+}
+const epicSort: Record<string, s.EpicQuery['sort']> = {
+  Newest: 'newest',
+  Oldest: 'oldest',
+  Name: 'name',
+  Progress: 'progress',
+};
+const createdValues: Record<string, s.EpicQuery['created']> = {
+  'All time': 'all',
+  'Last 30 days': 'recent30',
+  'Older than 30 days': 'older30',
+};
+const taskSort: Record<string, s.TaskQuery['sort']> = {
+  'Weight (high to low)': 'weight-desc',
+  'Weight (low to high)': 'weight-asc',
+  Name: 'name',
+  'Manual order': 'manual',
+};
+
+export function LearningOverview() {
+  const [showCreate, setShowCreate] = useState(false),
+    [status, setStatus] = useState('All'),
+    [created, setCreated] = useState('All time'),
+    [sort, setSort] = useState('Newest'),
+    [page, setPage] = useState(1);
+  const mutation = useLearningMutation();
+  const params = {
+    status,
+    created: createdValues[created],
+    sort: epicSort[sort],
+    page,
+    pageSize: 10,
+  };
+  const list = useLearningQuery(['epics', params], () =>
+    learningRequest(
+      '/learning/epics' + queryString(params),
+      s.epicListResponseSchema,
+    ),
+  );
+  const summary = useLearningQuery(['summary'], () =>
+    learningRecord('/learning/summary', s.summaryResponseSchema),
+  );
+  useClampedPage(list.data?.meta.totalPages, page, setPage);
+  const change = (setter: (v: string) => void) => (value: string) => {
+    setter(value);
+    setPage(1);
+  };
+  return (
+    <Frame>
+      <div className="flex flex-col justify-between gap-7 sm:flex-row sm:items-end">
+        <h1 className="text-balance text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+          Your learning workspace
+        </h1>
+        <Button onClick={() => setShowCreate(true)}>+ Create Epic</Button>
       </div>
-      <Dialog
-        open={showCreateForm}
-        title="Create a new epic"
-        description="Define the outcome first. You can add tasks next."
-        onClose={() => setShowCreateForm(false)}
-      >
-        <LearningForm
-          type="epic"
-          onCancel={() => setShowCreateForm(false)}
-          onSubmit={() => setShowCreateForm(false)}
-        />
-      </Dialog>
+      {summary.data ? (
+        <div className="mt-7 grid gap-3 sm:grid-cols-3">
+          <Summary label="Total Epics" value={String(summary.data.total)} />
+          <Summary
+            label="Completed Epics"
+            value={String(summary.data.completed)}
+          />
+          <Summary
+            label="In Progress Epics"
+            value={String(summary.data.inProgress)}
+          />
+        </div>
+      ) : (
+        <QueryState error={summary.error} retry={summary.refetch} />
+      )}
       <section className="mt-9">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+            <h2 className="text-2xl font-semibold tracking-tight">
               Your Epics
             </h2>
             <p className="mt-1 text-sm text-slate-500">
@@ -214,191 +227,121 @@ export function LearningOverview({ epics }: { epics: LearningEpic[] }) {
           <div className="flex flex-wrap gap-1.5 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
             <Select
               label="Status"
-              value={statusFilter}
-              onValueChange={setStatusFilter}
+              value={status}
+              onValueChange={change(setStatus)}
               options={['All', 'Todo', 'In progress', 'Done']}
             />
             <Select
               label="Created"
-              value={createdFilter}
-              onValueChange={setCreatedFilter}
-              options={['All time', 'Last 30 days', 'Older than 30 days']}
+              value={created}
+              onValueChange={change(setCreated)}
+              options={Object.keys(createdValues)}
             />
             <Select
               label="Sort"
-              value={sortBy}
-              onValueChange={setSortBy}
-              options={['Newest', 'Oldest', 'Name', 'Progress']}
+              value={sort}
+              onValueChange={change(setSort)}
+              options={Object.keys(epicSort)}
             />
           </div>
         </div>
-        <div
-          id="learning-list"
-          className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
-        >
-          {paginatedEpics.length ? (
+        <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          {list.error || !list.data ? (
+            <QueryState error={list.error} retry={list.refetch} />
+          ) : (
             <>
-              <div className="hidden border-b border-slate-100 bg-slate-50/70 px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-6">
-                <span>Epic</span>
-                <span className="grid grid-cols-3 gap-5">
-                  <span>Created</span>
-                  <span>Due</span>
-                  <span>Tracked</span>
-                </span>
-              </div>
-              {paginatedEpics.map((epic) => (
-                <EpicCard key={epic.id} epic={epic} />
-              ))}
+              {list.data.data.length ? (
+                <>
+                  <div className="hidden border-b border-slate-100 bg-slate-50 px-5 py-2.5 text-xs font-semibold uppercase text-slate-400 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem]">
+                    <span>Epic</span>
+                    <span className="grid grid-cols-3 gap-5">
+                      <span>Created</span>
+                      <span>Due</span>
+                      <span>Tracked</span>
+                    </span>
+                  </div>
+                  {list.data.data.map((epic) => (
+                    <EpicCard key={epic.id} epic={epic} />
+                  ))}
+                </>
+              ) : (
+                <Empty>
+                  {summary.data?.total === 0
+                    ? 'Create your first epic to start learning.'
+                    : 'No epics match these filters.'}
+                </Empty>
+              )}
               <Pagination
                 page={page}
-                totalPages={totalPages}
+                totalPages={list.data.meta.totalPages}
                 onPageChange={setPage}
               />
             </>
-          ) : (
-            <div className="px-6 py-14 text-center">
-              <p className="font-semibold text-slate-950">
-                No epics match these filters.
-              </p>
-              <p className="mt-1 text-sm text-slate-500">
-                Try a different status or creation date.
-              </p>
-            </div>
           )}
         </div>
       </section>
-    </main>
-  );
-}
-function Summary({ label, value }: { label: string; value: string }) {
-  return (
-    <Card className="relative overflow-hidden rounded-2xl p-4 shadow-sm sm:p-5">
-      <div className="absolute inset-y-0 left-0 w-1 bg-slate-950" />
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className="mt-2 tabular-nums text-2xl font-semibold tracking-tight text-slate-950">
-        {value}
-      </p>
-    </Card>
-  );
-}
-function CircularProgress({ value }: { value: number }) {
-  const radius = 18;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (value / 100) * circumference;
-  return (
-    <div
-      className="relative h-14 w-14 shrink-0"
-      aria-label={`${value}% complete`}
-      role="img"
-    >
-      <svg
-        className="h-full w-full -rotate-90"
-        viewBox="0 0 44 44"
-        aria-hidden="true"
+      <Dialog
+        open={showCreate}
+        title="Create a new epic"
+        description="Define the outcome first. You can add tasks next."
+        onClose={() => {
+          if (!mutation.isPending) setShowCreate(false);
+        }}
       >
-        <circle
-          cx="22"
-          cy="22"
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="4"
-          className="text-slate-100"
+        <EpicForm
+          onCancel={() => setShowCreate(false)}
+          onSubmit={async (values) => {
+            await mutation.mutateAsync(() =>
+              learningRecord(
+                '/learning/epics',
+                s.epicResponseSchema,
+                jsonRequest('POST', values),
+              ),
+            );
+            setPage(1);
+            setShowCreate(false);
+          }}
         />
-        <circle
-          cx="22"
-          cy="22"
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="4"
-          strokeLinecap="round"
-          className="text-slate-950 transition-[stroke-dashoffset] duration-500"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-        />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center tabular-nums text-xs font-bold text-slate-700">
-        {value}%
-      </span>
-    </div>
-  );
-}
-function EpicCard({ epic }: { epic: LearningEpic }) {
-  const progress = epicProgress(epic);
-  const actual = epic.tasks.reduce((sum, task) => sum + task.actualMinutes, 0);
-  return (
-    <div className="group border-b border-slate-100 last:border-b-0 hover:bg-slate-50/60">
-      <Link
-        href={`/learning/epics/${epic.id}`}
-        className="flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-slate-50/80 focus-visible:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-950 sm:flex-row sm:items-center sm:gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-6"
-      >
-        <div className="flex min-w-0 items-center gap-4">
-          <CircularProgress value={progress} />
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-3">
-              <h3 className="truncate text-base font-semibold text-slate-950">
-                {epic.name}
-              </h3>
-              <Status value={epicStatus(epic)} />
-            </div>
-            <p className="mt-1 line-clamp-1 text-sm text-slate-500">
-              {epic.description}
-            </p>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-5 text-sm tabular-nums lg:w-[22rem] lg:shrink-0">
-          <div>
-            <p className="text-xs text-slate-400 lg:sr-only">Created</p>
-            <p className="mt-1 whitespace-nowrap text-slate-600">
-              {shortDateFormatter.format(new Date(epic.createdAt))}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-400 lg:sr-only">Due</p>
-            <p className="mt-1 whitespace-nowrap text-slate-600">
-              {shortDateFormatter.format(new Date(epic.targetDate))}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-400 lg:sr-only">Tracked</p>
-            <p className="mt-1 whitespace-nowrap text-slate-600">
-              {formatMinutes(actual)}
-            </p>
-          </div>
-        </div>
-      </Link>
-    </div>
+      </Dialog>
+    </Frame>
   );
 }
 
-export function EpicDetail({ epic }: { epic: LearningEpic }) {
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [sortBy, setSortBy] = useState('Weight (high to low)');
-  const [page, setPage] = useState(1);
-  const [showEdit, setShowEdit] = useState(false);
-  const [showDelete, setShowDelete] = useState(false);
-  const [showAddTask, setShowAddTask] = useState(false);
-  useEffect(() => setPage(1), [statusFilter, sortBy]);
-  const actual = epic.tasks.reduce((sum, task) => sum + task.actualMinutes, 0);
-  const progress = epicProgress(epic);
-  const visibleTasks = epic.tasks
-    .filter((task) => statusFilter === 'All' || task.status === statusFilter)
-    .sort((first, second) =>
-      sortBy === 'Weight (low to high)'
-        ? first.weight - second.weight
-        : sortBy === 'Name'
-          ? first.name.localeCompare(second.name)
-          : second.weight - first.weight,
-    );
-  const pageSize = 10;
-  const totalPages = Math.ceil(visibleTasks.length / pageSize);
-  const paginatedTasks = visibleTasks.slice(
-    (page - 1) * pageSize,
-    page * pageSize,
+export function EpicDetail({ id }: { id: string }) {
+  const router = useRouter(),
+    timer = useLearningTimer(),
+    mutation = useLearningMutation();
+  const epic = useLearningQuery(['epic', id], () =>
+    learningRecord(epicPath(id), s.epicResponseSchema),
   );
+  const [status, setStatus] = useState('All'),
+    [sort, setSort] = useState('Weight (high to low)'),
+    [page, setPage] = useState(1),
+    [dialog, setDialog] = useState<'edit' | 'delete' | 'add' | 'order' | null>(
+      null,
+    );
+  const params = { status, sort: taskSort[sort], page, pageSize: 10 };
+  const list = useLearningQuery(['tasks', id, params], () =>
+    learningRequest(
+      `${epicPath(id)}/tasks${queryString(params)}`,
+      s.taskListResponseSchema,
+    ),
+  );
+  useClampedPage(list.data?.meta.totalPages, page, setPage);
+  if (!epic.data || epic.error)
+    return (
+      <Frame>
+        <QueryState error={epic.error} retry={epic.refetch} />
+      </Frame>
+    );
+  const value = epic.data,
+    close = () => {
+      if (!mutation.isPending) setDialog(null);
+    };
+  const timerHere =
+    timer.active?.task.epicId === id || timer.pending?.task.epicId === id;
   return (
-    <main className="page-transition mx-auto w-full max-w-6xl px-5 py-7 sm:px-8 sm:py-8">
+    <Frame>
       <Link
         href="/learning"
         className="text-sm font-semibold text-slate-500 hover:text-slate-950"
@@ -408,42 +351,56 @@ export function EpicDetail({ epic }: { epic: LearningEpic }) {
       <div className="mt-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-balance text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-              {epic.name}
+            <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+              {value.name}
             </h1>
-            <Status value={epicStatus(epic)} />
+            <Status value={value.status} />
           </div>
+          <p className="mt-3 text-slate-600">{value.description}</p>
+          <p className="mt-2 text-sm text-slate-500">
+            Target date: {value.targetDate}
+          </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={() => setShowAddTask(true)}>+ Add Task</Button>
-          <Button variant="secondary" onClick={() => setShowEdit(true)}>
+        <div className="flex gap-2">
+          <Button onClick={() => setDialog('add')}>+ Add Task</Button>
+          <Button variant="secondary" onClick={() => setDialog('edit')}>
             Edit
           </Button>
           <Button
+            disabled={timerHere}
+            title={
+              timerHere ? 'Save or discard the active timer first' : undefined
+            }
             variant="ghost"
-            className="text-slate-500"
-            onClick={() => setShowDelete(true)}
+            onClick={() => setDialog('delete')}
           >
             Delete
           </Button>
         </div>
       </div>
       <div className="mt-6 grid gap-3 sm:grid-cols-4">
-        <Summary label="Progress" value={`${progress}%`} />
+        <Summary label="Progress" value={`${value.progress}%`} />
         <Summary
           label="Target time"
-          value={formatMinutes(epic.targetMinutes)}
+          value={formatMinutes(value.targetMinutes)}
         />
-        <Summary label="Actual time" value={formatMinutes(actual)} />
         <Summary
-          label="Difference"
-          value={formatMinutes(Math.abs(actual - epic.targetMinutes))}
+          label="Actual time"
+          value={formatMinutes(value.actualMinutes)}
+        />
+        <Summary
+          label={value.differenceMinutes > 0 ? 'Over target' : 'Remaining'}
+          value={formatMinutes(value.differenceMinutes)}
         />
       </div>
+      <p className="mt-3 text-sm text-slate-500">
+        {Math.round(value.percentageUsed)}% of target time used ·{' '}
+        {value.completedPoints}/{value.eligiblePoints} eligible points completed
+      </p>
       <section className="mt-9">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+            <h2 className="text-2xl font-semibold tracking-tight">
               Your Tasks
             </h2>
             <p className="mt-1 text-sm text-slate-500">
@@ -453,442 +410,785 @@ export function EpicDetail({ epic }: { epic: LearningEpic }) {
           <div className="flex flex-wrap gap-1.5 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
             <Select
               label="Task status"
-              value={statusFilter}
-              onValueChange={setStatusFilter}
-              options={[
-                'All',
-                'Todo',
-                'In progress',
-                'Done',
-                'Blocked',
-                'Cancelled',
-              ]}
+              value={status}
+              onValueChange={(v) => {
+                setStatus(v);
+                setPage(1);
+              }}
+              options={['All', ...s.taskStatusSchema.options]}
             />
             <Select
               label="Sort tasks"
-              value={sortBy}
-              onValueChange={setSortBy}
-              options={['Weight (high to low)', 'Weight (low to high)', 'Name']}
+              value={sort}
+              onValueChange={(v) => {
+                setSort(v);
+                setPage(1);
+              }}
+              options={Object.keys(taskSort)}
             />
+            <Button
+              variant="secondary"
+              className="min-h-10 rounded-lg px-3"
+              disabled={!value.taskCount || timerHere}
+              onClick={() => setDialog('order')}
+            >
+              Reorder
+            </Button>
           </div>
         </div>
         <Card className="mt-4 divide-y divide-slate-100 rounded-2xl">
-          {paginatedTasks.length ? (
-            <>
-              <div className="hidden border-b border-slate-100 bg-slate-50/70 px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400 lg:grid lg:grid-cols-[minmax(0,1fr)_5rem_8rem_6rem_6rem] lg:items-center lg:gap-5">
-                <span>Task</span>
-                <span>Weight</span>
-                <span>Status</span>
-                <span>Target</span>
-                <span>Actual</span>
-              </div>
-              {paginatedTasks.map((task, index) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  index={index}
-                  epicId={epic.id}
-                />
-              ))}
-            </>
+          {list.error || !list.data ? (
+            <QueryState error={list.error} retry={list.refetch} />
           ) : (
-            <div className="px-6 py-12 text-center">
-              <p className="font-semibold text-slate-950">
-                No tasks match this filter.
-              </p>
-              <p className="mt-1 text-sm text-slate-500">
-                Try another status to see more tasks.
-              </p>
-            </div>
+            <>
+              {list.data.data.length ? (
+                <>
+                  <div className="hidden bg-slate-50/70 px-5 py-2.5 text-xs font-semibold uppercase text-slate-400 lg:grid lg:grid-cols-[minmax(0,1fr)_5rem_8rem_6rem_6rem] lg:gap-5">
+                    <span>Task</span>
+                    <span>Weight</span>
+                    <span>Status</span>
+                    <span>Target</span>
+                    <span>Actual</span>
+                  </div>
+                  {list.data.data.map((task, index) => (
+                    <TaskRow
+                      key={task.id}
+                      task={task}
+                      index={(page - 1) * 10 + index}
+                      epicId={id}
+                    />
+                  ))}
+                </>
+              ) : (
+                <Empty>
+                  {value.taskCount
+                    ? 'No tasks match this filter.'
+                    : 'Add your first task to this epic.'}
+                </Empty>
+              )}
+              <Pagination
+                page={page}
+                totalPages={list.data.meta.totalPages}
+                onPageChange={setPage}
+              />
+            </>
           )}
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-          />
         </Card>
       </section>
-      {epic.comment && (
-        <Card className="mt-5 rounded-2xl p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-            Epic comment
-          </p>
-          <p className="mt-3 text-slate-700">{epic.comment}</p>
-        </Card>
-      )}
-      <Dialog
-        open={showAddTask}
-        title="Add task"
-        description="Break this epic into a focused next step."
-        onClose={() => setShowAddTask(false)}
-      >
-        <LearningForm
-          type="task"
-          onCancel={() => setShowAddTask(false)}
-          onSubmit={() => setShowAddTask(false)}
-        />
-      </Dialog>
-      <Dialog
-        open={showEdit}
-        title="Edit epic"
-        onClose={() => setShowEdit(false)}
-      >
-        <LearningForm
-          type="epic"
-          defaults={{ name: epic.name, targetDate: epic.targetDate }}
-          onCancel={() => setShowEdit(false)}
-          onSubmit={() => setShowEdit(false)}
-        />
-      </Dialog>
-      <Dialog
-        open={showDelete}
-        title="Delete this epic?"
-        description="This action will remove the epic and its tasks. This cannot be undone."
-        onClose={() => setShowDelete(false)}
-      >
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => setShowDelete(false)}>
-            Cancel
-          </Button>
+      <Card className="mt-5 rounded-2xl p-5">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="font-semibold">Epic comment</h2>
           <Button
-            onClick={() => setShowDelete(false)}
-            className="bg-rose-600 hover:bg-rose-700"
+            variant="ghost"
+            className="min-h-8 rounded-lg px-2.5 text-xs"
+            onClick={() => setDialog('edit')}
           >
-            Delete epic
+            <Pencil className="size-3.5" aria-hidden="true" />
+            Edit
           </Button>
         </div>
+        <p className="mt-3 whitespace-pre-wrap text-slate-700">
+          {value.comment || 'No comment yet.'}
+        </p>
+      </Card>
+      <Dialog open={dialog === 'add'} title="Add task" onClose={close}>
+        <TaskForm
+          onCancel={close}
+          onSubmit={async (values) => {
+            await mutation.mutateAsync(() =>
+              learningRecord(
+                `${epicPath(id)}/tasks`,
+                s.taskResponseSchema,
+                jsonRequest('POST', values),
+              ),
+            );
+            setDialog(null);
+          }}
+        />
       </Dialog>
-    </main>
+      <Dialog open={dialog === 'edit'} title="Edit epic" onClose={close}>
+        <EpicForm
+          defaults={{
+            name: value.name,
+            description: value.description,
+            targetDate: value.targetDate,
+            targetMinutes: value.targetMinutes,
+            comment: value.comment ?? '',
+          }}
+          onCancel={close}
+          onSubmit={async (values) => {
+            await mutation.mutateAsync(() =>
+              learningRecord(
+                epicPath(id),
+                s.epicResponseSchema,
+                jsonRequest('PATCH', { ...values, version: value.version }),
+              ),
+            );
+            setDialog(null);
+          }}
+        />
+      </Dialog>
+      <DeleteDialog
+        open={dialog === 'delete'}
+        title="Delete this epic?"
+        onClose={close}
+        onDelete={async () => {
+          await apiRequest(
+            epicPath(id),
+            jsonRequest('DELETE', { version: value.version }),
+          );
+          router.push('/learning');
+        }}
+      />
+      <Dialog
+        open={dialog === 'order'}
+        title="Reorder all tasks"
+        description="Move tasks in their saved order. Filters do not affect this list."
+        onClose={close}
+      >
+        {dialog === 'order' && (
+          <OrderForm
+            epic={value}
+            onClose={() => {
+              setDialog(null);
+              setStatus('All');
+              setSort('Manual order');
+              setPage(1);
+            }}
+          />
+        )}
+      </Dialog>
+    </Frame>
   );
 }
-function TaskRow({
-  task,
-  index,
-  epicId,
+function OrderForm({
+  epic,
+  onClose,
 }: {
-  task: LearningTask;
-  index: number;
-  epicId: string;
+  epic: s.LearningEpic;
+  onClose: () => void;
 }) {
-  return (
-    <Link
-      href={`/learning/epics/${epicId}/tasks/${task.id}`}
-      className="flex flex-col gap-4 p-5 transition-colors hover:bg-slate-50/80 focus-visible:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-950 lg:grid lg:grid-cols-[minmax(0,1fr)_5rem_8rem_6rem_6rem] lg:items-center lg:gap-5"
-    >
-      <div className="flex min-w-0 flex-1 items-start gap-4">
-        <span className="mt-1 text-sm font-semibold text-slate-400">
-          {String(index + 1).padStart(2, '0')}
-        </span>
-        <div className="min-w-0">
-          <span className="font-semibold text-slate-950">{task.name}</span>
-          <p className="mt-1 line-clamp-1 text-sm text-slate-500">
-            {task.description}
-          </p>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3 text-sm tabular-nums sm:grid-cols-4 lg:contents">
-        <div>
-          <p className="text-xs text-slate-400 lg:sr-only">Weight</p>
-          <p className="mt-1 font-semibold text-slate-600">{task.weight}</p>
-        </div>
-        <div>
-          <p className="text-xs text-slate-400 lg:sr-only">Status</p>
-          <div className="mt-1">
-            <Status value={task.status} />
-          </div>
-        </div>
-        <div>
-          <p className="text-xs text-slate-400 lg:sr-only">Target</p>
-          <p className="mt-1 whitespace-nowrap text-slate-600">
-            {formatMinutes(task.targetMinutes)}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs text-slate-400 lg:sr-only">Actual</p>
-          <p className="mt-1 whitespace-nowrap text-slate-600">
-            {formatMinutes(task.actualMinutes)}
-          </p>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-function ManualTimeForm({
-  onCancel,
-  onSubmit,
-}: {
-  onCancel: () => void;
-  onSubmit: () => void;
-}) {
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors },
-  } = useForm<Record<string, string | number>>({
-    defaultValues: { date: new Date().toISOString().slice(0, 10) },
-  });
-  const submit = (values: Record<string, string | number>) => {
-    const result = manualTimeSchema.safeParse(values);
-    if (!result.success) {
-      result.error.issues.forEach((issue) =>
-        setError(String(issue.path[0]), { message: issue.message }),
+  const mutation = useLearningMutation();
+  const [ordered, setOrdered] = useState<s.LearningTask[] | null>(null);
+  const result = useLearningQuery(['order', epic.id], async () => {
+    let page = 1;
+    const rows: s.LearningTask[] = [];
+    for (;;) {
+      const r = await learningRequest(
+        `${epicPath(epic.id)}/tasks${queryString({ page, pageSize: 100, status: 'All', sort: 'manual' })}`,
+        s.taskListResponseSchema,
       );
-      return;
+      rows.push(...r.data);
+      if (rows.length >= r.meta.total) return rows;
+      page++;
     }
-    onSubmit();
+  });
+  // Keep the version paired with the order being edited, including while parent queries refetch.
+  const version = useRef(epic.version);
+  if (!result.data || result.error)
+    return <QueryState error={result.error} retry={result.refetch} />;
+  const rows = ordered ?? result.data;
+  const move = (index: number, direction: number) => {
+    const next = [...rows];
+    [next[index], next[index + direction]] = [
+      next[index + direction],
+      next[index],
+    ];
+    setOrdered(next);
   };
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-4">
-      <label className="block text-sm font-medium text-slate-700">
-        Date
-        <input
-          {...register('date')}
-          type="date"
-          className="mt-1.5 min-h-10 w-full rounded-lg border border-slate-200 px-3"
-        />
-        {errors.date && (
-          <span className="mt-1 block text-xs font-normal text-rose-600">
-            {String(errors.date.message)}
-          </span>
-        )}
-      </label>
-      <label className="block text-sm font-medium text-slate-700">
-        Duration in minutes
-        <input
-          {...register('minutes')}
-          type="number"
-          min="1"
-          max="1440"
-          placeholder="e.g. 45"
-          className="mt-1.5 min-h-10 w-full rounded-lg border border-slate-200 px-3"
-        />
-        {errors.minutes && (
-          <span className="mt-1 block text-xs font-normal text-rose-600">
-            {String(errors.minutes.message)}
-          </span>
-        )}
-      </label>
-      <label className="block text-sm font-medium text-slate-700">
-        Note <span className="font-normal text-slate-400">(optional)</span>
-        <textarea
-          {...register('note')}
-          maxLength={300}
-          className="mt-1.5 min-h-20 w-full rounded-lg border border-slate-200 p-3"
-          placeholder="What did you work on?…"
-        />
-        {errors.note && (
-          <span className="mt-1 block text-xs font-normal text-rose-600">
-            {String(errors.note.message)}
-          </span>
-        )}
-      </label>
-      <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          Cancel
+    <div className="space-y-5">
+      <ol className="max-h-80 space-y-1 overflow-y-auto pr-1">
+        {rows.map((task, index) => (
+          <li
+            key={task.id}
+            className="flex min-h-12 items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2"
+          >
+            <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">
+              {index + 1}. {task.name}
+            </span>
+            <span className="flex shrink-0 items-center gap-1">
+              <Button
+                aria-label={`Move ${task.name} up`}
+                disabled={!index || mutation.isPending}
+                variant="ghost"
+                className="size-9 rounded-lg p-0 text-base"
+                onClick={() => move(index, -1)}
+              >
+                ↑
+              </Button>
+              <Button
+                aria-label={`Move ${task.name} down`}
+                disabled={index === rows.length - 1 || mutation.isPending}
+                variant="ghost"
+                className="size-9 rounded-lg p-0 text-base"
+                onClick={() => move(index, 1)}
+              >
+                ↓
+              </Button>
+            </span>
+          </li>
+        ))}
+      </ol>
+      {mutation.error && (
+        <p role="alert" className="-mt-2 text-sm text-rose-700">
+          {errorMessage(mutation.error)} Close and reopen to load the current
+          order.
+        </p>
+      )}
+      <div className="flex justify-end border-t border-slate-100 pt-4">
+        <Button
+          disabled={mutation.isPending}
+          onClick={() =>
+            void mutation
+              .mutateAsync(() =>
+                learningRecord(
+                  `${epicPath(epic.id)}/task-order`,
+                  s.epicResponseSchema,
+                  jsonRequest('PUT', {
+                    version: version.current,
+                    taskIds: rows.map((t) => t.id),
+                  }),
+                ),
+              )
+              .then(onClose)
+              .catch(() => {})
+          }
+        >
+          {mutation.isPending ? 'Saving…' : 'Save order'}
         </Button>
-        <Button type="submit">Save time</Button>
       </div>
-    </form>
+    </div>
   );
 }
 
 export function TaskDetail({
-  epic,
-  task,
+  epicId,
+  taskId,
 }: {
-  epic: LearningEpic;
-  task: LearningTask;
+  epicId: string;
+  taskId: string;
 }) {
-  const [seconds, setSeconds] = useState(0);
-  const [running, setRunning] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-  const [showDelete, setShowDelete] = useState(false);
-  const [showManualTime, setShowManualTime] = useState(false);
-  const [note, setNote] = useState(task.completionNote ?? '');
-  const [savedNote, setSavedNote] = useState(task.completionNote ?? '');
-  useEffect(() => {
-    if (!running) return;
-    const id = window.setInterval(() => setSeconds((value) => value + 1), 1000);
-    return () => window.clearInterval(id);
-  }, [running]);
-  const minutes = Math.floor(seconds / 60);
-  const difference = task.actualMinutes - task.targetMinutes;
+  const result = useLearningQuery(['task', epicId, taskId], () =>
+    learningRecord(taskPath(epicId, taskId), s.taskResponseSchema),
+  );
+  if (!result.data || result.error)
+    return (
+      <Frame>
+        <QueryState error={result.error} retry={result.refetch} />
+      </Frame>
+    );
+  return <TaskContent key={taskId} task={result.data} />;
+}
+function TaskContent({ task }: { task: s.LearningTask }) {
+  const router = useRouter(),
+    timer = useLearningTimer(),
+    mutation = useLearningMutation();
+  const [dialog, setDialog] = useState<
+    'edit' | 'notes' | 'delete' | 'manual' | 'complete' | 'start-status' | null
+  >(null);
+  const path = taskPath(task.epicId, task.id),
+    running = timer.active?.task.id === task.id,
+    pending = timer.pending?.task.id === task.id;
+  const hasTimer = running || pending,
+    paused = running && timer.active?.pausedAt !== null,
+    otherTimer = !!(timer.active || timer.pending) && !hasTimer,
+    eligible = ['Todo', 'In progress'].includes(task.status),
+    canRequestStart = ['Todo', 'In progress', 'Done'].includes(task.status);
+  const close = () => {
+    if (!mutation.isPending && !timer.busy) setDialog(null);
+  };
+  const seconds = running ? timer.seconds : 0;
   return (
-    <main className="page-transition mx-auto w-full max-w-6xl px-5 py-7 sm:px-8 sm:py-8">
+    <Frame>
       <Link
-        href={`/learning/epics/${epic.id}`}
+        href={epicPath(task.epicId)}
         className="text-sm font-semibold text-slate-500 hover:text-slate-950"
       >
-        ← {epic.name}
+        ← {task.epicName}
       </Link>
       <div className="mt-5 flex flex-col justify-between gap-4 sm:flex-row">
-        <div className="min-w-0">
+        <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               {task.name}
             </h1>
             <Status value={task.status} />
           </div>
+          <p className="mt-3 text-slate-600">{task.description}</p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="secondary" onClick={() => setShowEdit(true)}>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="secondary"
+            disabled={hasTimer}
+            onClick={() => setDialog('edit')}
+          >
             Edit
           </Button>
           <Button
             variant="ghost"
-            className="text-slate-500"
-            onClick={() => setShowDelete(true)}
+            disabled={hasTimer}
+            onClick={() => setDialog('delete')}
           >
             Delete
           </Button>
+          <fieldset disabled={hasTimer || mutation.isPending || timer.busy}>
+            <Select
+              label="Change task status"
+              value={task.status}
+              options={['Todo', 'In progress', 'Done', 'Blocked', 'Cancelled']}
+              onValueChange={(status) =>
+                void mutation
+                  .mutateAsync(() =>
+                    learningRecord(
+                      `${path}/status`,
+                      s.taskResponseSchema,
+                      jsonRequest('PATCH', { version: task.version, status }),
+                    ),
+                  )
+                  .catch(() => {})
+              }
+            />
+          </fieldset>
         </div>
       </div>
+      {mutation.error && (
+        <p role="alert" className="mt-3 text-sm text-rose-700">
+          {errorMessage(mutation.error)}
+        </p>
+      )}
       <div className="mt-6 grid gap-3 sm:grid-cols-4">
         <Summary
           label="Target time"
           value={formatMinutes(task.targetMinutes)}
         />
         <Summary
-          label="Actual time"
-          value={formatMinutes(task.actualMinutes + minutes)}
+          label="Saved actual time"
+          value={formatMinutes(task.actualMinutes)}
         />
         <Summary
-          label="Difference"
-          value={`${difference < 0 ? '-' : '+'}${formatMinutes(Math.abs(difference))}`}
+          label={task.differenceMinutes > 0 ? 'Over target' : 'Remaining'}
+          value={formatMinutes(task.differenceMinutes)}
         />
-        <Summary
-          label="Sessions"
-          value={`${task.sessions} · avg ${formatMinutes(task.sessions ? Math.round(task.actualMinutes / task.sessions) : 0)}`}
-        />
+        <Summary label="Weight" value={String(task.weight)} />
       </div>
+      <p className="mt-3 text-sm text-slate-500">
+        {Math.round(task.percentageUsed)}% of target time used
+      </p>
       <Card className="mt-6 rounded-2xl p-5 text-center sm:p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
           Current session
         </p>
-        <p className="mt-2 font-mono text-5xl font-semibold tracking-tight text-slate-950 sm:text-6xl">
+        <p className="mt-2 font-mono text-5xl font-semibold tracking-tight sm:text-6xl">
           {String(Math.floor(seconds / 3600)).padStart(2, '0')}:
           {String(Math.floor(seconds / 60) % 60).padStart(2, '0')}:
           {String(seconds % 60).padStart(2, '0')}
         </p>
         <p className="mt-3 text-sm text-slate-500">
-          Start a session to track time against this task.
+          {pending
+            ? 'A save is pending. Retry it before starting another session.'
+            : !eligible
+              ? 'Change a blocked or cancelled task to Todo or In progress before working.'
+              : running
+                ? `${Math.floor(seconds / 60)} unsaved whole minutes`
+                : 'Start a session to track time against this task.'}
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-2">
           {!running ? (
-            <Button onClick={() => setRunning(true)}>Start</Button>
+            <Button
+              disabled={!canRequestStart || otherTimer || pending || timer.busy}
+              onClick={() =>
+                task.status === 'In progress'
+                  ? void timer.start(task)
+                  : setDialog('start-status')
+              }
+            >
+              Start
+            </Button>
+          ) : paused ? (
+            <Button
+              disabled={timer.busy}
+              variant="secondary"
+              onClick={timer.resume}
+            >
+              Resume
+            </Button>
           ) : (
-            <Button onClick={() => setRunning(false)} variant="secondary">
+            <Button
+              disabled={timer.busy}
+              variant="secondary"
+              onClick={timer.pause}
+            >
               Pause
             </Button>
           )}
           <Button
-            onClick={() => {
-              setRunning(false);
-              setSeconds(0);
-            }}
+            disabled={!running || timer.busy}
             variant="ghost"
+            onClick={() => void timer.finish(task).catch(() => {})}
           >
-            Stop
+            Stop &amp; save
           </Button>
           <Button
-            onClick={() => {
-              setRunning(false);
-              setSeconds(0);
-            }}
-            variant="default"
+            disabled={!eligible || otherTimer || pending || timer.busy}
+            onClick={() => setDialog('complete')}
           >
-            Complete
+            Complete &amp; save
           </Button>
+          {pending && (
+            <Button
+              disabled={timer.busy}
+              onClick={() => void timer.retry().catch(() => {})}
+            >
+              Retry save
+            </Button>
+          )}
         </div>
+        <p className="mt-4 text-xs text-slate-400">
+          Pause freezes the session. Stop &amp; save, and Complete &amp; save
+          save whole minutes. Refreshing or leaving Learning loses unsaved time.
+        </p>
       </Card>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <Card className="rounded-2xl p-5">
-          <h2 className="font-semibold text-slate-950">Saved time</h2>
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="font-semibold">Saved time</h2>
+            <Button
+              disabled={hasTimer}
+              variant="ghost"
+              className="min-h-8 rounded-lg px-2.5 text-xs"
+              onClick={() => setDialog('manual')}
+            >
+              + Add manual
+            </Button>
+          </div>
           <p className="mt-2 text-sm text-slate-500">
-            {task.sessions} saved sessions · {formatMinutes(task.actualMinutes)}{' '}
-            tracked
+            {task.sessions} timer sessions · {formatMinutes(task.timerMinutes)}{' '}
+            timed · {formatMinutes(task.manualMinutes)} manual
           </p>
-          <Button
-            variant="secondary"
-            className="mt-5"
-            onClick={() => setShowManualTime(true)}
-          >
-            + Add manual time
-          </Button>
+          <TimeHistory task={task} locked={hasTimer} />
         </Card>
         <Card className="rounded-2xl p-5">
-          <h2 className="font-semibold text-slate-950">Notes</h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Completion note and task comment will be saved with this task.
-          </p>
-          <textarea
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            className="mt-4 min-h-24 w-full rounded-2xl border border-slate-200 p-3 text-sm outline-none focus:border-slate-400"
-            placeholder="Add a private note…"
-            maxLength={500}
-          />
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <span className="text-xs text-slate-400" aria-live="polite">
-              {savedNote === note ? 'Saved' : 'Unsaved changes'}
-            </span>
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="font-semibold">Notes</h2>
             <Button
-              disabled={savedNote === note}
-              onClick={() => setSavedNote(note)}
+              variant="ghost"
+              className="min-h-8 rounded-lg px-2.5 text-xs"
+              onClick={() => setDialog('notes')}
             >
-              Save note
+              <Pencil className="size-3.5" aria-hidden="true" />
+              Edit
             </Button>
+          </div>
+          <div className="mt-4 space-y-4 text-sm">
+            <p className="whitespace-pre-wrap text-slate-600">
+              {task.comment || 'No notes yet.'}
+            </p>
           </div>
         </Card>
       </div>
-      <Dialog
-        open={showManualTime}
-        title="Add manual time"
-        description="Record time spent outside the timer."
-        onClose={() => setShowManualTime(false)}
-      >
-        <ManualTimeForm
-          onCancel={() => setShowManualTime(false)}
-          onSubmit={() => setShowManualTime(false)}
-        />
-      </Dialog>
-      <Dialog
-        open={showEdit}
-        title="Edit task"
-        onClose={() => setShowEdit(false)}
-      >
-        <LearningForm
-          type="task"
+      <Dialog open={dialog === 'edit'} title="Edit task" onClose={close}>
+        <TaskForm
           defaults={{
             name: task.name,
             description: task.description,
             targetMinutes: task.targetMinutes,
             weight: task.weight,
+            comment: task.comment ?? '',
           }}
-          onCancel={() => setShowEdit(false)}
-          onSubmit={() => setShowEdit(false)}
+          onCancel={close}
+          onSubmit={async (values) => {
+            await mutation.mutateAsync(() =>
+              learningRecord(
+                path,
+                s.taskResponseSchema,
+                jsonRequest('PATCH', { ...values, version: task.version }),
+              ),
+            );
+            setDialog(null);
+          }}
+        />
+      </Dialog>
+      <Dialog open={dialog === 'notes'} title="Edit notes" onClose={close}>
+        <NotesForm
+          comment={task.comment}
+          onSubmit={(values) =>
+            mutation
+              .mutateAsync(() =>
+                learningRecord(
+                  path,
+                  s.taskResponseSchema,
+                  jsonRequest('PATCH', { ...values, version: task.version }),
+                ),
+              )
+              .then(() => setDialog(null))
+          }
         />
       </Dialog>
       <Dialog
-        open={showDelete}
-        title="Delete this task?"
-        description="This action cannot be undone."
-        onClose={() => setShowDelete(false)}
+        open={dialog === 'manual'}
+        title="Add manual time"
+        onClose={close}
       >
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => setShowDelete(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={() => setShowDelete(false)}
-            className="bg-rose-600 hover:bg-rose-700"
-          >
-            Delete task
-          </Button>
-        </div>
+        {dialog === 'manual' && (
+          <CreateManual task={task} onClose={() => setDialog(null)} />
+        )}
       </Dialog>
-    </main>
+      <Dialog
+        open={dialog === 'complete'}
+        title="Complete task"
+        description="Any active timer time is saved together with completion."
+        onClose={close}
+      >
+        <NotesForm
+          submitLabel="Complete & save"
+          comment={task.comment}
+          onSubmit={async (notes) => {
+            await timer.finish(task, true, notes);
+            setDialog(null);
+          }}
+        />
+      </Dialog>
+      <Dialog
+        open={dialog === 'start-status'}
+        title={
+          task.status === 'Done'
+            ? 'Task is already done'
+            : 'Move task to In progress?'
+        }
+        description={
+          task.status === 'Done'
+            ? 'Completed tasks cannot be restarted.'
+            : 'A timer can only be started for a task that is In progress.'
+        }
+        onClose={close}
+      >
+        {task.status === 'Done' ? (
+          <div className="flex justify-end">
+            <Button variant="secondary" onClick={close}>
+              Close
+            </Button>
+          </div>
+        ) : (
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              disabled={mutation.isPending || timer.busy}
+              onClick={close}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={mutation.isPending || timer.busy}
+              onClick={() =>
+                void mutation
+                  .mutateAsync(() =>
+                    learningRecord(
+                      `${path}/status`,
+                      s.taskResponseSchema,
+                      jsonRequest('PATCH', {
+                        version: task.version,
+                        status: 'In progress',
+                      }),
+                    ),
+                  )
+                  .then(() => timer.start(task))
+                  .then(() => setDialog(null))
+                  .catch(() => {})
+              }
+            >
+              Move to In progress &amp; start
+            </Button>
+          </div>
+        )}
+      </Dialog>
+      <DeleteDialog
+        open={dialog === 'delete'}
+        title="Delete this task?"
+        onClose={close}
+        onDelete={async () => {
+          await apiRequest(
+            path,
+            jsonRequest('DELETE', { version: task.version }),
+          );
+          router.push(epicPath(task.epicId));
+        }}
+      />
+    </Frame>
+  );
+}
+function CreateManual({
+  task,
+  onClose,
+}: {
+  task: s.LearningTask;
+  onClose: () => void;
+}) {
+  const mutation = useLearningMutation(),
+    id = useRef(crypto.randomUUID());
+  return (
+    <ManualForm
+      onCancel={onClose}
+      onSubmit={async (values) => {
+        await mutation.mutateAsync(() =>
+          learningRecord(
+            `${taskPath(task.epicId, task.id)}/times`,
+            s.timeResponseSchema,
+            jsonRequest('POST', {
+              type: 'manual',
+              ...values,
+              id: id.current,
+              version: task.version,
+            }),
+          ),
+        );
+        onClose();
+      }}
+    />
+  );
+}
+function TimeHistory({
+  task,
+  locked,
+}: {
+  task: s.LearningTask;
+  locked: boolean;
+}) {
+  const [editing, setEditing] = useState<s.LearningTime | null>(null),
+    [deleting, setDeleting] = useState<s.LearningTime | null>(null);
+  const mutation = useLearningMutation(),
+    path = taskPath(task.epicId, task.id);
+  const times = useLearningQuery(['times', task.id], () =>
+    learningRequest(
+      `${path}/times${queryString({ page: 1, pageSize: 100 })}`,
+      s.timeListResponseSchema,
+    ),
+  );
+  const activities = [
+    ...(times.data?.data ?? []).map((row) => ({
+      id: row.id,
+      date:
+        row.type === 'stopwatch' ? row.startedAt : `${row.date}T00:00:00.000Z`,
+      duration: row.type === 'stopwatch' ? row.durationMinutes : row.minutes,
+      kind:
+        row.type === 'stopwatch' ? ('Stopwatch' as const) : ('Manual' as const),
+      time: row,
+    })),
+  ].sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+  return (
+    <div className="mt-5 text-sm">
+      {times.error ? (
+        <QueryState error={times.error} retry={() => void times.refetch()} />
+      ) : !times.data ? (
+        <p className="py-4 text-slate-500">Loading saved time…</p>
+      ) : activities.length ? (
+        <ul className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-100">
+          {activities.map((activity) => (
+            <li key={`${activity.kind}-${activity.id}`} className="px-3 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-slate-700">
+                    {activity.kind} time · {formatMinutes(activity.duration)}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {new Date(activity.date).toLocaleString()}
+                  </p>
+                </div>
+                {activity.time && (
+                  <div className="flex shrink-0 gap-1">
+                    <Button
+                      disabled={locked}
+                      variant="ghost"
+                      className="min-h-8 rounded-lg px-2 text-xs"
+                      onClick={() => setEditing(activity.time)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      disabled={locked}
+                      variant="ghost"
+                      className="min-h-8 rounded-lg px-2 text-xs text-rose-700"
+                      onClick={() => setDeleting(activity.time)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="py-4 text-slate-500">No saved time yet.</p>
+      )}
+      <Dialog
+        open={!!editing}
+        title="Edit saved time"
+        onClose={() => {
+          if (!mutation.isPending) setEditing(null);
+        }}
+      >
+        {editing?.type === 'manual' && (
+          <ManualForm
+            defaults={{
+              date: editing.date,
+              minutes: editing.minutes,
+            }}
+            onCancel={() => setEditing(null)}
+            onSubmit={async (values) => {
+              await mutation.mutateAsync(() =>
+                learningRecord(
+                  `${path}/times/${editing.id}`,
+                  s.timeResponseSchema,
+                  jsonRequest('PATCH', {
+                    type: 'manual',
+                    ...values,
+                    version: task.version,
+                    entryVersion: editing.version,
+                  }),
+                ),
+              );
+              setEditing(null);
+            }}
+          />
+        )}
+        {editing?.type === 'stopwatch' && (
+          <StopwatchForm
+            defaults={{ minutes: editing.durationMinutes }}
+            onCancel={() => setEditing(null)}
+            onSubmit={async (values) => {
+              await mutation.mutateAsync(() =>
+                learningRecord(
+                  `${path}/times/${editing.id}`,
+                  s.timeResponseSchema,
+                  jsonRequest('PATCH', {
+                    type: 'stopwatch',
+                    ...values,
+                    version: task.version,
+                    entryVersion: editing.version,
+                  }),
+                ),
+              );
+              setEditing(null);
+            }}
+          />
+        )}
+      </Dialog>
+      <DeleteDialog
+        open={!!deleting}
+        title="Delete saved time?"
+        onClose={() => setDeleting(null)}
+        onDelete={async () => {
+          if (deleting)
+            await apiRequest(
+              `${path}/times/${deleting.id}`,
+              jsonRequest('DELETE', {
+                version: task.version,
+                entryVersion: deleting.version,
+              }),
+            );
+        }}
+      />
+    </div>
   );
 }

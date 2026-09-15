@@ -2,7 +2,7 @@ export class AppError extends Error {
   constructor(
     public readonly code: string,
     message: string,
-    public readonly status: 400 | 401 | 409 | 500,
+    public readonly status: 400 | 401 | 404 | 409 | 500,
     public readonly fields?: Record<string, string[]>,
   ) {
     super(message);
@@ -28,5 +28,16 @@ export class InvalidCredentialsError extends AppError {
 export class UnauthorizedError extends AppError {
   constructor(message = 'Authentication required.') {
     super('UNAUTHORIZED', message, 401);
+  }
+}
+
+export class LearningConflictError extends AppError {
+  constructor(message = 'This record changed. Refresh and try again.') {
+    super('LEARNING_CONFLICT', message, 409);
+  }
+}
+export class NotFoundError extends AppError {
+  constructor() {
+    super('NOT_FOUND', 'Learning record not found.', 404);
   }
 }

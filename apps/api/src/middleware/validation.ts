@@ -22,7 +22,6 @@ export function validateBody(schema: Schema) {
           result.error.flatten().fieldErrors,
         );
       c.set('validatedBody', result.data);
-      await next();
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError(
@@ -31,5 +30,6 @@ export function validateBody(schema: Schema) {
         400,
       );
     }
+    await next();
   };
 }

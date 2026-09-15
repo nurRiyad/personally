@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   getCurrentUser,
   login,
@@ -37,6 +38,27 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      clearAccessToken();
+      setUser(null);
+      setStatus('unauthenticated');
+      if (pathname !== '/auth') {
+        router.replace(
+          `/auth?returnTo=${encodeURIComponent(pathname || '/dashboard')}`,
+        );
+      }
+    };
+    window.addEventListener('personally:session-expired', handleSessionExpired);
+    return () =>
+      window.removeEventListener(
+        'personally:session-expired',
+        handleSessionExpired,
+      );
+  }, [pathname, router]);
 
   const refresh = useCallback(async () => {
     if (!getAccessToken()) {

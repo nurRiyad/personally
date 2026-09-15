@@ -7,6 +7,6 @@ export function createAuthConfig(env: {
     secret: env.JWT_SECRET,
     issuer: env.JWT_ISSUER ?? 'personally-api',
     audience: env.JWT_AUDIENCE ?? 'personally-web',
-    expiresInSeconds: 900,
+    expiresInSeconds: 7 * 24 * 60 * 60,
   };
 }

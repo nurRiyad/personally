@@ -10,6 +10,7 @@ export type Env = {
     ALLOWED_ORIGINS?: string;
   };
   Variables: {
+    learningController: import('../controllers/learning.controller').LearningController;
     authConfig: ReturnType<typeof createAuthConfig>;
     authUserId: string;
     authService: AuthService;

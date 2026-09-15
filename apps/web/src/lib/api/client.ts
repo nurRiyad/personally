@@ -30,6 +30,12 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}) {
   if (response.status === 204) return undefined as T;
   const body: unknown = await response.json().catch(() => undefined);
   if (!response.ok) {
+    if (
+      response.status === 401 &&
+      getAccessToken() &&
+      !path.startsWith('/auth/')
+    )
+      window.dispatchEvent(new CustomEvent('personally:session-expired'));
     const parsed = apiErrorSchema.safeParse(body);
     if (parsed.success) {
       throw new ApiError(

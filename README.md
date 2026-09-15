@@ -2,7 +2,7 @@
 
 Personally is a personal management application bringing budgeting, asset management, and learning into one place.
 
-This repository is currently in Phase 0: building a reliable production foundation before implementing product features.
+The repository includes the application foundation, account authentication, and a persistent Learning Management module.
 
 ## Stack
 
@@ -73,7 +73,19 @@ pnpm db:reset:local      # Reset local D1 and reapply migrations
 - `/dashboard` — application shell placeholder
 - `/budget` — Monthly Budget placeholder
 - `/assets` — Asset Management placeholder
-- `/learning` — Learning Management placeholder
+- `/learning` — private epic overview, filters, sorting, and creation
+- `/learning/epics/[id]` — epic details, ordered tasks, progress, and comments
+- `/learning/epics/[id]/tasks/[taskId]` — task status, timer, manual time, and notes
+
+## Learning development
+
+Run `pnpm db:migrate:local` before starting the API after pulling database changes. Learning uses your signed-in account and starts empty; prototype fixtures are not imported into accounts. Create an epic, then add tasks to it.
+
+Timer state is shared between learning pages in the current tab. Pause, Stop, and Complete save whole minutes. Unsaved time does not survive refreshing or leaving Learning; failed saves can be retried without adding duplicate time.
+
+`pnpm test` includes API integration tests using Miniflare's isolated local D1 runtime, plus shared validation tests. These tests need permission to open local sockets and do not use production or the development database.
+
+See [`docs/LEARNING.md`](./docs/LEARNING.md) for the current Learning API, web architecture, data model, and behavior.
 
 ## Contributing
 

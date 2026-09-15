@@ -30,6 +30,7 @@ If `nvm` is still unavailable after this, report the environment issue and conti
 - Do not introduce Nx, Turborepo, Docker, Kubernetes, Redis, queues, microservices, or separate repositories at this stage.
 - Use shadcn/ui when a suitable component exists for frontend UI; otherwise prefer native HTML or small local components.
 - Treat shadcn/ui as the default for frontend UI: reuse an existing component before creating a bespoke equivalent, and add a local shadcn-style primitive when a needed component is not yet present.
+- For every date field, use the shared shadcn date-picker composition (`Popover` + `Calendar`/`DayPicker` + Lucide calendar icon). Do not use a native `input type="date"` directly in application forms; keep date values as timezone-safe `YYYY-MM-DD` strings.
 - For forms, use the existing React Hook Form dependency for form state and submission, and validate inputs with the shared Zod schemas from `@personally/validation` whenever a schema exists. Keep field-level errors accessible and close to their inputs.
 - Keep changes focused, preserve existing patterns, and update `README.md` when commands or setup behavior changes.
 - Never commit secrets, local database state, or generated build output. Commit intentional migration files.

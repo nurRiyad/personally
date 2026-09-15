@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useForm, type UseFormRegisterReturn } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useAuth, safeReturnTo } from '../../components/auth';
 import { ApiError } from '../../lib/api/client';
@@ -11,19 +12,16 @@ import {
 } from '@personally/validation';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
+import { Input } from '../../components/ui/input';
 
 type Mode = 'login' | 'signup';
-type FormErrors = Record<string, string>;
-
-const inputClassName =
-  'min-h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-950 outline-none transition-[border-color,box-shadow] placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10';
-
 function Field({
   id,
   label,
   type = 'text',
   autoComplete,
   placeholder,
+  registration,
   error,
 }: {
   id: string;
@@ -31,7 +29,8 @@ function Field({
   type?: string;
   autoComplete?: string;
   placeholder?: string;
-  error?: string;
+  registration: UseFormRegisterReturn;
+  error?: { message?: string };
 }) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const isPasswordField = type === 'password';
@@ -42,15 +41,15 @@ function Field({
         {label}
       </label>
       <div className="relative mt-2">
-        <input
+        <Input
+          {...registration}
           id={id}
-          name={id}
           type={isPasswordField && isPasswordVisible ? 'text' : type}
           autoComplete={autoComplete}
           placeholder={placeholder}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${id}-error` : undefined}
-          className={`${inputClassName} ${isPasswordField ? 'pr-12' : ''} ${error ? 'border-red-400 focus:border-red-500 focus:ring-red-500/10' : ''}`}
+          className={`rounded-2xl px-4 ${isPasswordField ? 'pr-12' : ''} ${error ? 'border-red-400 focus:border-red-500 focus:ring-red-500/10' : ''}`}
         />
         {isPasswordField ? (
           <button
@@ -69,7 +68,7 @@ function Field({
           role="alert"
           className="mt-2 text-xs text-red-600"
         >
-          {error}
+          {error.message}
         </p>
       ) : null}
     </div>
@@ -113,37 +112,12 @@ function EyeOffIcon() {
   );
 }
 
-function validate(mode: Mode, formData: FormData): FormErrors {
-  const errors: FormErrors = {};
-  const value = (name: string) => String(formData.get(name) ?? '').trim();
-  const password = String(formData.get('password') ?? '');
-
-  if (mode === 'login' && !value('identifier')) {
-    errors.identifier = 'Enter your email, phone, or username.';
-  }
-  if (mode === 'signup') {
-    if (!value('username')) errors.username = 'Enter a username.';
-    if (!value('email') || !/^\S+@\S+\.\S+$/.test(value('email'))) {
-      errors.email = 'Enter a valid email address.';
-    }
-    if (!value('phone')) errors.phone = 'Enter a phone number.';
-  }
-  if (!password) errors.password = 'Enter your password.';
-  else if (password.length < 8) errors.password = 'Use at least 8 characters.';
-  if (
-    mode === 'signup' &&
-    password !== String(formData.get('confirmPassword') ?? '')
-  ) {
-    errors.confirmPassword = 'Passwords do not match.';
-  }
-  return errors;
-}
-
 export default function AuthPage() {
   const [mode, setMode] = useState<Mode>('login');
-  const [errors, setErrors] = useState<FormErrors>({});
   const [formError, setFormError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const form = useForm<Record<string, string>>({ mode: 'onBlur' });
+  const { register, handleSubmit, setError, clearErrors, formState } = form;
+  const errors = formState.errors;
   const { status, signIn, signUp } = useAuth();
   const router = useRouter();
   const [returnTo, setReturnTo] = useState('/');
@@ -161,23 +135,17 @@ export default function AuthPage() {
     if (status === 'authenticated') router.replace(returnTo);
   }, [returnTo, router, status]);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const nextErrors = validate(mode, new FormData(event.currentTarget));
-    setErrors(nextErrors);
+  async function submit(values: Record<string, string>) {
+    clearErrors();
     setFormError('');
-    if (Object.keys(nextErrors).length > 0) return;
-    setIsSubmitting(true);
-    const values = Object.fromEntries(
-      new FormData(event.currentTarget).entries(),
-    );
     const request =
       mode === 'login'
         ? loginRequestSchema.safeParse(values)
         : registerRequestSchema.safeParse(values);
     if (!request.success) {
-      setIsSubmitting(false);
       setFormError('Please check the highlighted fields.');
+      for (const issue of request.error.issues)
+        setError(String(issue.path[0]), { message: issue.message });
       return;
     }
     try {
@@ -189,14 +157,8 @@ export default function AuthPage() {
       router.replace(returnTo);
     } catch (error: unknown) {
       if (error instanceof ApiError && error.fields) {
-        setErrors(
-          Object.fromEntries(
-            Object.entries(error.fields).map(([key, messages]) => [
-              key,
-              messages[0] ?? 'Invalid value.',
-            ]),
-          ),
-        );
+        for (const [key, messages] of Object.entries(error.fields))
+          setError(key, { message: messages[0] ?? 'Invalid value.' });
       } else {
         setFormError(
           error instanceof ApiError
@@ -205,13 +167,12 @@ export default function AuthPage() {
         );
       }
     } finally {
-      setIsSubmitting(false);
     }
   }
 
   function switchMode(nextMode: Mode) {
     setMode(nextMode);
-    setErrors({});
+    clearErrors();
     setFormError('');
   }
 
@@ -240,11 +201,16 @@ export default function AuthPage() {
           </p>
         </div>
 
-        <form className="mt-8 space-y-5" noValidate onSubmit={handleSubmit}>
+        <form
+          className="mt-8 space-y-5"
+          noValidate
+          onSubmit={handleSubmit(submit)}
+        >
           {mode === 'login' ? (
             <Field
               id="identifier"
               label="Email, phone, or username"
+              registration={register('identifier')}
               autoComplete="username"
               placeholder="you@example.com"
               error={errors.identifier}
@@ -254,6 +220,7 @@ export default function AuthPage() {
               <Field
                 id="username"
                 label="Username"
+                registration={register('username')}
                 autoComplete="username"
                 placeholder="yourname"
                 error={errors.username}
@@ -261,6 +228,7 @@ export default function AuthPage() {
               <Field
                 id="email"
                 label="Email"
+                registration={register('email')}
                 type="email"
                 autoComplete="email"
                 placeholder="you@example.com"
@@ -269,6 +237,7 @@ export default function AuthPage() {
               <Field
                 id="phone"
                 label="Phone"
+                registration={register('phone')}
                 type="tel"
                 autoComplete="tel"
                 placeholder="+1 555 000 0000"
@@ -279,6 +248,7 @@ export default function AuthPage() {
           <Field
             id="password"
             label="Password"
+            registration={register('password')}
             type="password"
             autoComplete={
               mode === 'login' ? 'current-password' : 'new-password'
@@ -289,6 +259,7 @@ export default function AuthPage() {
             <Field
               id="confirmPassword"
               label="Confirm password"
+              registration={register('confirmPassword')}
               type="password"
               autoComplete="new-password"
               error={errors.confirmPassword}
@@ -314,10 +285,10 @@ export default function AuthPage() {
           ) : null}
           <Button
             type="submit"
-            disabled={isSubmitting}
+            disabled={formState.isSubmitting}
             className="w-full disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSubmitting
+            {formState.isSubmitting
               ? mode === 'login'
                 ? 'Signing in…'
                 : 'Creating account…'

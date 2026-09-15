@@ -1,3 +1,7 @@
+import { LearningController } from '../controllers/learning.controller';
+import { LearningService } from '../services/learning.service';
+import { D1LearningRepository } from '../repositories/learning.repository';
+import { learningRoutes } from './learning.routes';
 import { Hono } from 'hono';
 import { createDb } from '@personally/db';
 import { createAuthConfig } from '../config';
@@ -22,3 +26,15 @@ routes.use('/auth/*', async (c, next) => {
 
 routes.route('/health', healthRoutes);
 routes.route('/auth', createAuthRoutes());
+
+routes.use('/learning/*', async (c, next) => {
+  c.set('authConfig', createAuthConfig(c.env));
+  c.set(
+    'learningController',
+    new LearningController(
+      new LearningService(new D1LearningRepository(createDb(c.env.DB))),
+    ),
+  );
+  await next();
+});
+routes.route('/learning', learningRoutes);

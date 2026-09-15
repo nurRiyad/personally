@@ -11,7 +11,7 @@ export const corsMiddleware: MiddlewareHandler<Env> = async (c, next) => {
   return cors({
     origin: (origin) =>
       origin && origins.includes(origin) ? origin : undefined,
-    allowMethods: ['GET', 'POST', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
     maxAge: 86400,
   })(c, next);
