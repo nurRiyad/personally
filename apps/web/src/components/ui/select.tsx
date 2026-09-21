@@ -52,7 +52,7 @@ export function Select({ label, value, options, onValueChange }: SelectProps) {
       }}
     >
       <BaseSelect.Label className="sr-only">{label}</BaseSelect.Label>
-      <BaseSelect.Trigger className="inline-flex min-h-10 min-w-28 items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm outline-none transition-[border-color,box-shadow] hover:border-slate-300 focus-visible:border-slate-500 focus-visible:ring-2 focus-visible:ring-slate-200 data-[popup-open]:border-slate-400 data-[popup-open]:ring-2 data-[popup-open]:ring-slate-100">
+      <BaseSelect.Trigger className="inline-flex min-h-11 min-w-28 items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm outline-none transition-[border-color,box-shadow] hover:border-slate-300 focus-visible:border-slate-500 focus-visible:ring-2 focus-visible:ring-slate-200 data-[popup-open]:border-slate-400 data-[popup-open]:ring-2 data-[popup-open]:ring-slate-100">
         <BaseSelect.Value />
         <BaseSelect.Icon className="text-slate-400">
           <CaretIcon />
