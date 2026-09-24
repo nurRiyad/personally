@@ -24,23 +24,23 @@ The switcher starts at the current local month. Its previous/next arithmetic cur
 
 All routes are mounted below `/budget`, require authentication, return `{ data: ... }`, and scope reads/writes to the authenticated user. `apps/api/src/routes/index.ts` constructs `BudgetController`, `BudgetService`, and `D1BudgetRepository` for the route tree.
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| GET | `/budget/months?year=YYYY` | List the user's stored months with summary and version. |
-| GET | `/budget/months/:month` | Fetch one full month document; returns 404 if absent. |
-| POST | `/budget/months` | Create an empty month. |
-| PATCH | `/budget/months/:month` | Replace the monthly note. |
-| POST | `/budget/months/:month/income-sources` | Add an income source. |
-| PATCH / DELETE | `/budget/income-sources/:sourceId` | Update or delete an income source. |
-| POST | `/budget/income-sources/:sourceId/income` | Record income received. |
-| DELETE | `/budget/income-entries/:incomeEntryId` | Delete a received-income entry. |
-| POST | `/budget/months/:month/groups` | Add a group. |
-| DELETE | `/budget/groups/:groupId` | Delete an empty group. |
-| POST | `/budget/months/:month/items` | Add an item to a group in that month. |
-| PATCH / DELETE | `/budget/items/:itemId` | Update or delete an item. |
-| POST | `/budget/items/:itemId/expenses` | Record an expense. |
-| DELETE | `/budget/expenses/:expenseId` | Delete an expense. |
-| POST | `/budget/months/:month/copy` | Copy recurring or all planned structure to a new target month. |
+| Method         | Path                                      | Purpose                                                        |
+| -------------- | ----------------------------------------- | -------------------------------------------------------------- |
+| GET            | `/budget/months?year=YYYY`                | List the user's stored months with summary and version.        |
+| GET            | `/budget/months/:month`                   | Fetch one full month document; returns 404 if absent.          |
+| POST           | `/budget/months`                          | Create an empty month.                                         |
+| PATCH          | `/budget/months/:month`                   | Replace the monthly note.                                      |
+| POST           | `/budget/months/:month/income-sources`    | Add an income source.                                          |
+| PATCH / DELETE | `/budget/income-sources/:sourceId`        | Update or delete an income source.                             |
+| POST           | `/budget/income-sources/:sourceId/income` | Record income received.                                        |
+| DELETE         | `/budget/income-entries/:incomeEntryId`   | Delete a received-income entry.                                |
+| POST           | `/budget/months/:month/groups`            | Add a group.                                                   |
+| DELETE         | `/budget/groups/:groupId`                 | Delete an empty group.                                         |
+| POST           | `/budget/months/:month/items`             | Add an item to a group in that month.                          |
+| PATCH / DELETE | `/budget/items/:itemId`                   | Update or delete an item.                                      |
+| POST           | `/budget/items/:itemId/expenses`          | Record an expense.                                             |
+| DELETE         | `/budget/expenses/:expenseId`             | Delete an expense.                                             |
+| POST           | `/budget/months/:month/copy`              | Copy recurring or all planned structure to a new target month. |
 
 Request schemas live in `packages/validation/src/budget.ts`. Names are trimmed and limited to 120 characters, notes are nullable and limited to 2,000 characters, amounts are bounded integers, month keys are valid `YYYY-MM`, and activity dates are valid `YYYY-MM-DD`. Income and expenses must be positive; planned amounts may be zero. Activity dates must be inside their owning budget month.
 
