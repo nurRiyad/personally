@@ -8,6 +8,7 @@ export type Env = {
     JWT_ISSUER?: string;
     JWT_AUDIENCE?: string;
     ALLOWED_ORIGINS?: string;
+    ENABLE_DEV_SEED?: string;
   };
   Variables: {
     learningController: import('../controllers/learning.controller').LearningController;
@@ -15,5 +16,6 @@ export type Env = {
     authUserId: string;
     authService: AuthService;
     validatedBody: unknown;
+    budgetController: import('../controllers/budget.controller').BudgetController;
   };
 };

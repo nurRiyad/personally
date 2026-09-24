@@ -171,6 +171,38 @@ export default function Dashboard() {
               </Card>
             </Link>
           ))}
+          <Card className="relative flex min-h-80 flex-col overflow-hidden border-dashed border-slate-300 bg-slate-50/70 p-7 animate-rise-in">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                className="h-6 w-6"
+              >
+                <path d="M4 19V5m0 14h16" strokeLinecap="round" />
+                <path
+                  d="m7 15 3-4 3 2 5-7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <span className="mt-8 w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+              Coming soon
+            </span>
+            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">
+              Yearly spending summary
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              See your full-year spending patterns, trends, and progress in one
+              clear view.
+            </p>
+            <span className="mt-auto pt-8 text-sm font-semibold text-slate-500">
+              We’re preparing this view
+            </span>
+          </Card>
         </section>
       </main>
     </ProtectedRoute>

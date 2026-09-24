@@ -109,9 +109,14 @@ export function LearningForm<T>({
           const props = {
             ...form.register(field.name),
             id: inputId,
+            required: !field.optional,
             'aria-invalid': !!error,
             'aria-describedby': error ? `${inputId}-error` : undefined,
             maxLength: field.max,
+            min: field.type === 'number' ? 1 : undefined,
+            inputMode:
+              field.type === 'number' ? ('numeric' as const) : undefined,
+            className: error ? 'border-rose-300 bg-rose-50/30' : undefined,
           };
           return (
             <div key={field.name}>
@@ -156,13 +161,21 @@ export function LearningForm<T>({
         })}
       </fieldset>
       {errors.root && (
-        <p role="alert" className="text-sm text-rose-700">
+        <p
+          role="alert"
+          aria-live="assertive"
+          className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700"
+        >
           {errors.root.message}
         </p>
       )}
       <div className="flex items-center justify-end gap-2">
         {!onCancel && (
-          <span role="status" className="mr-auto text-xs text-slate-500">
+          <span
+            role="status"
+            aria-live="polite"
+            className="mr-auto text-xs text-slate-500"
+          >
             {isDirty ? 'Unsaved changes' : saved ? 'Saved' : ''}
           </span>
         )}

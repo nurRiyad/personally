@@ -10,6 +10,10 @@ import { AuthService } from '../services';
 import type { Env } from '../types/env';
 import { healthRoutes } from './health.routes';
 import { createAuthRoutes } from './auth.routes';
+import { budgetRoutes } from './budget.routes';
+import { BudgetController } from '../controllers/budget.controller';
+import { BudgetService } from '../services/budget.service';
+import { D1BudgetRepository } from '../repositories/budget.repository';
 
 export const routes = new Hono<Env>();
 routes.use('/auth/*', async (c, next) => {
@@ -38,3 +42,12 @@ routes.use('/learning/*', async (c, next) => {
   await next();
 });
 routes.route('/learning', learningRoutes);
+routes.use('/budget/*', async (c, next) => {
+  c.set('authConfig', createAuthConfig(c.env));
+  c.set(
+    'budgetController',
+    new BudgetController(new BudgetService(new D1BudgetRepository(c.env.DB))),
+  );
+  await next();
+});
+routes.route('/budget', budgetRoutes);

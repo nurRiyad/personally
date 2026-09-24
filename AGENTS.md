@@ -9,6 +9,7 @@ topic document(s) relevant to the task:
 - API, D1, Drizzle, or local startup: `docs/DEVELOPMENT.md` and `docs/ARCHITECTURE.md`
 - Tests, lint, formatting, types, or builds: `docs/QUALITY.md`
 - CI, GitHub Actions, production migrations, or deployment: `docs/DEPLOYMENT.md`
+- Budget feature work: `docs/BUDGET.md` (then load the relevant Web/UI or API/D1 documents above)
 
 Do not load all foundation documents by default. In non-interactive shells, NVM may not be loaded automatically; use:
 

@@ -2,7 +2,7 @@
 
 Personally is a personal management application bringing budgeting, asset management, and learning into one place.
 
-The repository includes the application foundation, account authentication, and a persistent Learning Management module.
+The repository includes the application foundation, account authentication, and persistent Budget and Learning Management modules.
 
 ## Stack
 
@@ -27,6 +27,7 @@ packages/
   ...           Copilot and pull request guidance
 docs/
   ARCHITECTURE.md
+  BUDGET.md
   DEPLOYMENT.md
   DEVELOPMENT.md
   QUALITY.md
@@ -71,7 +72,7 @@ pnpm db:reset:local      # Reset local D1 and reapply migrations
 
 - `/` — public placeholder page
 - `/dashboard` — application shell placeholder
-- `/budget` — Monthly Budget placeholder
+- `/budget` — monthly income and spending plans, activity, notes, and month copying
 - `/assets` — Asset Management placeholder
 - `/learning` — private epic overview, filters, sorting, and creation
 - `/learning/epics/[id]` — epic details, ordered tasks, progress, and comments
@@ -86,6 +87,12 @@ Timer state is shared between learning pages in the current tab. Pause, Stop, an
 `pnpm test` includes API integration tests using Miniflare's isolated local D1 runtime, plus shared validation tests. These tests need permission to open local sockets and do not use production or the development database.
 
 See [`docs/LEARNING.md`](./docs/LEARNING.md) for the current Learning API, web architecture, data model, and behavior.
+
+## Budget development
+
+Run `pnpm db:migrate:local` before starting the API after pulling budget database changes. Budget data is scoped to the signed-in account; create a month before adding income sources, groups, items, or activity.
+
+See [`docs/BUDGET.md`](./docs/BUDGET.md) for the current Budget API, web architecture, data model, calculations, and behavior.
 
 ## Contributing
 

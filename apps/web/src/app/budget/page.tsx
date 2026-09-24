@@ -1,14 +1,10 @@
-import { BackButton } from '../components/back-button';
 import { ProtectedRoute } from '../../components/auth';
+import { BudgetWorkspace } from './budget-ui';
 
 export default function Budget() {
   return (
     <ProtectedRoute>
-      <main>
-        <h1>Monthly Budget</h1>
-        <p>Hello World</p>
-        <BackButton />
-      </main>
+      <BudgetWorkspace />
     </ProtectedRoute>
   );
 }

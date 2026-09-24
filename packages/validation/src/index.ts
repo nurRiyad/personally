@@ -56,3 +56,4 @@ export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
 export * from './learning';
+export * from './budget';

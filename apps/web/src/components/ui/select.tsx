@@ -7,6 +7,7 @@ type SelectProps = {
   value: string;
   options: string[];
   onValueChange: (value: string) => void;
+  className?: string;
 };
 
 function CaretIcon() {
@@ -41,7 +42,13 @@ function CheckIcon() {
   );
 }
 
-export function Select({ label, value, options, onValueChange }: SelectProps) {
+export function Select({
+  label,
+  value,
+  options,
+  onValueChange,
+  className = '',
+}: SelectProps) {
   const items = options.map((option) => ({ label: option, value: option }));
   return (
     <BaseSelect.Root
@@ -52,15 +59,17 @@ export function Select({ label, value, options, onValueChange }: SelectProps) {
       }}
     >
       <BaseSelect.Label className="sr-only">{label}</BaseSelect.Label>
-      <BaseSelect.Trigger className="inline-flex min-h-11 min-w-28 items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm outline-none transition-[border-color,box-shadow] hover:border-slate-300 focus-visible:border-slate-500 focus-visible:ring-2 focus-visible:ring-slate-200 data-[popup-open]:border-slate-400 data-[popup-open]:ring-2 data-[popup-open]:ring-slate-100">
+      <BaseSelect.Trigger
+        className={`inline-flex min-h-11 min-w-28 items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm outline-none transition-[border-color,box-shadow] hover:border-slate-300 focus-visible:border-slate-500 focus-visible:ring-2 focus-visible:ring-slate-200 data-[popup-open]:border-slate-400 data-[popup-open]:ring-2 data-[popup-open]:ring-slate-100 ${className}`}
+      >
         <BaseSelect.Value />
         <BaseSelect.Icon className="text-slate-400">
           <CaretIcon />
         </BaseSelect.Icon>
       </BaseSelect.Trigger>
       <BaseSelect.Portal>
-        <BaseSelect.Positioner sideOffset={6} className="z-50 outline-none">
-          <BaseSelect.Popup className="min-w-[var(--anchor-width)] overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-xl shadow-slate-950/10 outline-none data-[side=bottom]:animate-in data-[side=top]:animate-in">
+        <BaseSelect.Positioner sideOffset={6} className="z-[120] outline-none">
+          <BaseSelect.Popup className="min-w-[var(--anchor-width)] overflow-hidden rounded-xl border border-slate-200 bg-white p-1 text-slate-700 shadow-xl shadow-slate-950/10 outline-none data-[side=bottom]:animate-in data-[side=top]:animate-in">
             <BaseSelect.List>
               {options.map((option) => (
                 <BaseSelect.Item
