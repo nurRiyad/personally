@@ -23,20 +23,22 @@ export function Status({ value }: { value: string }) {
     </span>
   );
 }
-function Progress({ value }: { value: number }) {
-  return (
-    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-      <div
-        className="h-full rounded-full bg-slate-950 transition-[width]"
-        style={{ width: `${value}%` }}
-      />
-    </div>
-  );
-}
 const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
   month: 'short',
   day: 'numeric',
 });
+const dateTimeFormatter = new Intl.DateTimeFormat('en-US', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
+
+export function formatDate(value: string) {
+  return shortDateFormatter.format(new Date(`${value}T12:00:00`));
+}
+
+export function formatDateTime(value: string) {
+  return dateTimeFormatter.format(new Date(value));
+}
 
 export function Summary({ label, value }: { label: string; value: string }) {
   return (
@@ -125,9 +127,7 @@ export function EpicCard({ epic }: { epic: LearningEpic }) {
           <div>
             <p className="text-xs text-slate-400 lg:sr-only">Due</p>
             <p className="mt-1 whitespace-nowrap text-slate-600">
-              {shortDateFormatter.format(
-                new Date(`${epic.targetDate}T12:00:00`),
-              )}
+              {formatDate(epic.targetDate)}
             </p>
           </div>
           <div>

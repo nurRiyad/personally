@@ -341,6 +341,7 @@ function TimerProvider({ children }: { children: ReactNode }) {
         onClose={() => setShowDiscard(false)}
       >
         <Button
+          variant="destructive"
           onClick={() => {
             changeActive(null);
             changePending(null);

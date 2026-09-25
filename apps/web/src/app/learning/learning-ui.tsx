@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pencil } from 'lucide-react';
 import * as s from '@personally/validation';
 import { Button } from '../../components/ui/button';
@@ -9,7 +9,7 @@ import { Card } from '../../components/ui/card';
 import { Select } from '../../components/ui/select';
 import { Pagination } from '../../components/ui/pagination';
 import { Dialog } from '../../components/ui/dialog';
-import { apiRequest, ApiError } from '../../lib/api/client';
+import { apiRequest } from '../../lib/api/client';
 import {
   epicPath,
   taskPath,
@@ -36,59 +36,10 @@ import {
   Summary,
   EpicCard,
   TaskRow,
+  formatDate,
+  formatDateTime,
   formatMinutes,
 } from './learning-display';
-
-function Frame({ children }: { children: ReactNode }) {
-  return (
-    <main
-      id="main-content"
-      className="page-transition mx-auto w-full max-w-7xl px-5 py-7 sm:px-8 sm:py-8"
-    >
-      {children}
-    </main>
-  );
-}
-function QueryState({
-  error,
-  retry,
-}: {
-  error: unknown;
-  retry: () => unknown;
-}) {
-  return (
-    <div className="py-10" role={error ? 'alert' : 'status'}>
-      {error ? (
-        <>
-          <p>
-            {error instanceof ApiError && error.status === 404
-              ? 'This learning record was not found.'
-              : errorMessage(error)}
-          </p>
-          {error instanceof ApiError && error.status === 401 ? (
-            <Link href="/auth" className="underline">
-              Sign in
-            </Link>
-          ) : (
-            <Button className="mt-3" onClick={() => retry()}>
-              Try again
-            </Button>
-          )}
-          <Link className="ml-4 underline" href="/learning">
-            All learning
-          </Link>
-        </>
-      ) : (
-        <p>Loading learning…</p>
-      )}
-    </div>
-  );
-}
-function Empty({ children }: { children: ReactNode }) {
-  return (
-    <p className="px-6 py-12 text-center text-sm text-slate-500">{children}</p>
-  );
-}
 function useClampedPage(
   totalPages: number | undefined,
   page: number,
@@ -99,52 +50,12 @@ function useClampedPage(
       setPage(Math.max(1, totalPages));
   }, [totalPages, page, setPage]);
 }
-function DeleteDialog({
-  open,
-  title,
-  onClose,
-  onDelete,
-}: {
-  open: boolean;
-  title: string;
-  onClose: () => void;
-  onDelete: () => Promise<unknown>;
-}) {
-  const mutation = useLearningMutation();
-  return (
-    <Dialog
-      open={open}
-      title={title}
-      description="This removes the record and its saved time permanently."
-      onClose={() => {
-        if (!mutation.isPending) onClose();
-      }}
-    >
-      {mutation.error && (
-        <p role="alert" className="mb-3 text-sm text-rose-700">
-          {errorMessage(mutation.error)}
-        </p>
-      )}
-      <div className="flex justify-end gap-2">
-        <Button disabled={mutation.isPending} variant="ghost" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button
-          disabled={mutation.isPending}
-          className="bg-rose-600 hover:bg-rose-700"
-          onClick={() =>
-            void mutation
-              .mutateAsync(onDelete)
-              .then(onClose)
-              .catch(() => {})
-          }
-        >
-          {mutation.isPending ? 'Deleting…' : 'Delete'}
-        </Button>
-      </div>
-    </Dialog>
-  );
-}
+import {
+  LearningDeleteDialog,
+  LearningEmpty,
+  LearningFrame,
+  LearningQueryState,
+} from './learning-page-components';
 const epicSort: Record<string, s.EpicQuery['sort']> = {
   Newest: 'newest',
   Oldest: 'oldest',
@@ -192,7 +103,7 @@ export function LearningOverview() {
     setPage(1);
   };
   return (
-    <Frame>
+    <LearningFrame>
       <div className="flex flex-col justify-between gap-7 sm:flex-row sm:items-end">
         <h1 className="text-balance text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
           Your learning workspace
@@ -212,7 +123,7 @@ export function LearningOverview() {
           />
         </div>
       ) : (
-        <QueryState error={summary.error} retry={summary.refetch} />
+        <LearningQueryState error={summary.error} retry={summary.refetch} />
       )}
       <section className="mt-9">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
@@ -247,7 +158,7 @@ export function LearningOverview() {
         </div>
         <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           {list.error || !list.data ? (
-            <QueryState error={list.error} retry={list.refetch} />
+            <LearningQueryState error={list.error} retry={list.refetch} />
           ) : (
             <>
               {list.data.data.length ? (
@@ -265,11 +176,11 @@ export function LearningOverview() {
                   ))}
                 </>
               ) : (
-                <Empty>
+                <LearningEmpty>
                   {summary.data?.total === 0
                     ? 'Create your first epic to start learning.'
                     : 'No epics match these filters.'}
-                </Empty>
+                </LearningEmpty>
               )}
               <Pagination
                 page={page}
@@ -303,7 +214,7 @@ export function LearningOverview() {
           }}
         />
       </Dialog>
-    </Frame>
+    </LearningFrame>
   );
 }
 
@@ -330,9 +241,9 @@ export function EpicDetail({ id }: { id: string }) {
   useClampedPage(list.data?.meta.totalPages, page, setPage);
   if (!epic.data || epic.error)
     return (
-      <Frame>
-        <QueryState error={epic.error} retry={epic.refetch} />
-      </Frame>
+      <LearningFrame>
+        <LearningQueryState error={epic.error} retry={epic.refetch} />
+      </LearningFrame>
     );
   const value = epic.data,
     close = () => {
@@ -341,7 +252,7 @@ export function EpicDetail({ id }: { id: string }) {
   const timerHere =
     timer.active?.task.epicId === id || timer.pending?.task.epicId === id;
   return (
-    <Frame>
+    <LearningFrame>
       <Link
         href="/learning"
         className="text-sm font-semibold text-slate-500 hover:text-slate-950"
@@ -358,7 +269,7 @@ export function EpicDetail({ id }: { id: string }) {
           </div>
           <p className="mt-3 text-slate-600">{value.description}</p>
           <p className="mt-2 text-sm text-slate-500">
-            Target date: {value.targetDate}
+            Target date: {formatDate(value.targetDate)}
           </p>
         </div>
         <div className="flex gap-2">
@@ -372,6 +283,7 @@ export function EpicDetail({ id }: { id: string }) {
               timerHere ? 'Save or discard the active timer first' : undefined
             }
             variant="ghost"
+            className="text-rose-700 hover:bg-rose-50 hover:text-rose-800"
             onClick={() => setDialog('delete')}
           >
             Delete
@@ -438,7 +350,7 @@ export function EpicDetail({ id }: { id: string }) {
         </div>
         <Card className="mt-4 divide-y divide-slate-100 rounded-2xl">
           {list.error || !list.data ? (
-            <QueryState error={list.error} retry={list.refetch} />
+            <LearningQueryState error={list.error} retry={list.refetch} />
           ) : (
             <>
               {list.data.data.length ? (
@@ -460,11 +372,11 @@ export function EpicDetail({ id }: { id: string }) {
                   ))}
                 </>
               ) : (
-                <Empty>
+                <LearningEmpty>
                   {value.taskCount
                     ? 'No tasks match this filter.'
                     : 'Add your first task to this epic.'}
-                </Empty>
+                </LearningEmpty>
               )}
               <Pagination
                 page={page}
@@ -528,7 +440,7 @@ export function EpicDetail({ id }: { id: string }) {
           }}
         />
       </Dialog>
-      <DeleteDialog
+      <LearningDeleteDialog
         open={dialog === 'delete'}
         title="Delete this epic?"
         onClose={close}
@@ -558,7 +470,7 @@ export function EpicDetail({ id }: { id: string }) {
           />
         )}
       </Dialog>
-    </Frame>
+    </LearningFrame>
   );
 }
 function OrderForm({
@@ -586,7 +498,7 @@ function OrderForm({
   // Keep the version paired with the order being edited, including while parent queries refetch.
   const version = useRef(epic.version);
   if (!result.data || result.error)
-    return <QueryState error={result.error} retry={result.refetch} />;
+    return <LearningQueryState error={result.error} retry={result.refetch} />;
   const rows = ordered ?? result.data;
   const move = (index: number, direction: number) => {
     const next = [...rows];
@@ -674,9 +586,9 @@ export function TaskDetail({
   );
   if (!result.data || result.error)
     return (
-      <Frame>
-        <QueryState error={result.error} retry={result.refetch} />
-      </Frame>
+      <LearningFrame>
+        <LearningQueryState error={result.error} retry={result.refetch} />
+      </LearningFrame>
     );
   return <TaskContent key={taskId} task={result.data} />;
 }
@@ -700,7 +612,7 @@ function TaskContent({ task }: { task: s.LearningTask }) {
   };
   const seconds = running ? timer.seconds : 0;
   return (
-    <Frame>
+    <LearningFrame>
       <Link
         href={epicPath(task.epicId)}
         className="text-sm font-semibold text-slate-500 hover:text-slate-950"
@@ -727,6 +639,7 @@ function TaskContent({ task }: { task: s.LearningTask }) {
           </Button>
           <Button
             variant="ghost"
+            className="text-rose-700 hover:bg-rose-50 hover:text-rose-800"
             disabled={hasTimer}
             onClick={() => setDialog('delete')}
           >
@@ -1002,7 +915,7 @@ function TaskContent({ task }: { task: s.LearningTask }) {
           </div>
         )}
       </Dialog>
-      <DeleteDialog
+      <LearningDeleteDialog
         open={dialog === 'delete'}
         title="Delete this task?"
         onClose={close}
@@ -1014,7 +927,7 @@ function TaskContent({ task }: { task: s.LearningTask }) {
           router.push(epicPath(task.epicId));
         }}
       />
-    </Frame>
+    </LearningFrame>
   );
 }
 function CreateManual({
@@ -1078,7 +991,10 @@ function TimeHistory({
   return (
     <div className="mt-5 text-sm">
       {times.error ? (
-        <QueryState error={times.error} retry={() => void times.refetch()} />
+        <LearningQueryState
+          error={times.error}
+          retry={() => void times.refetch()}
+        />
       ) : !times.data ? (
         <p className="py-4 text-slate-500">Loading saved time…</p>
       ) : activities.length ? (
@@ -1091,7 +1007,9 @@ function TimeHistory({
                     {activity.kind} time · {formatMinutes(activity.duration)}
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
-                    {new Date(activity.date).toLocaleString()}
+                    {activity.time.type === 'manual'
+                      ? formatDate(activity.time.date)
+                      : formatDateTime(activity.time.startedAt)}
                   </p>
                 </div>
                 {activity.time && (
@@ -1107,7 +1025,7 @@ function TimeHistory({
                     <Button
                       disabled={locked}
                       variant="ghost"
-                      className="min-h-8 rounded-lg px-2 text-xs text-rose-700"
+                      className="min-h-8 rounded-lg px-2 text-xs text-rose-700 hover:bg-rose-50 hover:text-rose-800"
                       onClick={() => setDeleting(activity.time)}
                     >
                       Delete
@@ -1174,7 +1092,7 @@ function TimeHistory({
           />
         )}
       </Dialog>
-      <DeleteDialog
+      <LearningDeleteDialog
         open={!!deleting}
         title="Delete saved time?"
         onClose={() => setDeleting(null)}

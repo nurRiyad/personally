@@ -151,6 +151,7 @@ export function LearningForm<T>({
               {error && (
                 <p
                   id={`${inputId}-error`}
+                  role="alert"
                   className="mt-1.5 text-xs leading-4 text-rose-700"
                 >
                   {String(error.message)}

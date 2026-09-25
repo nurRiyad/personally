@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   getBudget,
   createBudget,
@@ -92,6 +93,7 @@ const monthKey = (offset: number) => {
 };
 
 export function BudgetWorkspace() {
+  const router = useRouter();
   const [months, setMonths] = useState<Record<string, BudgetMonth>>({});
   const [selectedKey, setSelectedKey] = useState(() =>
     new Date().toISOString().slice(0, 7),
@@ -99,6 +101,8 @@ export function BudgetWorkspace() {
   const [version, setVersion] = useState<number>();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [showCreateConfirmation, setShowCreateConfirmation] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [dialog, setDialog] = useState<
     | 'expense'
     | 'income'
@@ -349,23 +353,59 @@ export function BudgetWorkspace() {
   if (!savedMonth)
     return (
       <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-8">
+        <Button
+          variant="ghost"
+          className="mb-6 px-3"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="size-4" />
+          Back
+        </Button>
         <h1 className="text-3xl font-semibold">Budget</h1>
         <p className="mt-3 text-slate-600">
           No budget exists for {monthLabel(selectedKey)}.
         </p>
         <Button
           className="mt-5"
-          onClick={async () => {
-            try {
-              await createBudget(selectedKey);
-              await refresh();
-            } catch (error) {
-              reportMutationError(error, 'Unable to create this budget.');
-            }
-          }}
+          onClick={() => setShowCreateConfirmation(true)}
         >
           Create month
         </Button>
+        <Dialog
+          open={showCreateConfirmation}
+          title={`Create budget for ${monthLabel(selectedKey)}?`}
+          description="This creates a new monthly budget that you can customize afterwards."
+          onClose={() => {
+            if (!creating) setShowCreateConfirmation(false);
+          }}
+        >
+          <div className="flex flex-wrap justify-end gap-3">
+            <Button
+              variant="secondary"
+              disabled={creating}
+              onClick={() => setShowCreateConfirmation(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={creating}
+              onClick={async () => {
+                setCreating(true);
+                try {
+                  await createBudget(selectedKey);
+                  setShowCreateConfirmation(false);
+                  await refresh();
+                } catch (error) {
+                  reportMutationError(error, 'Unable to create this budget.');
+                } finally {
+                  setCreating(false);
+                }
+              }}
+            >
+              {creating ? 'Creating…' : 'Create budget'}
+            </Button>
+          </div>
+        </Dialog>
         {loadError && (
           <p className="mt-3 text-sm text-red-600" role="alert">
             {loadError}
