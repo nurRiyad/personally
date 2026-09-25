@@ -57,3 +57,4 @@ export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
 export * from './learning';
 export * from './budget';
+export * from './assets';

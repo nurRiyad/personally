@@ -19,10 +19,18 @@ import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { Dialog } from '../../components/ui/dialog';
 import { Select } from '../../components/ui/select';
+import { AddAssetForm } from './add-asset-form';
+import { AddAssetTypeForm } from './add-asset-type-form';
+import { RecordActivityForm } from './record-activity-form';
 
-type AssetKind =
-  'Bank account' | 'Fixed deposit' | 'DPS' | 'Land' | 'Money lent';
-type ActivityKind = 'Income' | 'Transfer' | 'Contribution' | 'Repayment';
+type AssetKind = string;
+type ActivityKind =
+  | 'Income'
+  | 'Transfer'
+  | 'Contribution'
+  | 'Lending'
+  | 'Repayment'
+  | 'External use';
 type Asset = {
   id: string;
   name: string;
@@ -92,7 +100,7 @@ const assets: Asset[] = [
   },
 ];
 
-const activities: Activity[] = [
+const initialActivities: Activity[] = [
   {
     id: 'a1',
     date: '18 Sep 2026',
@@ -153,6 +161,30 @@ const activities: Activity[] = [
 const tabs = ['Overview', 'Assets', 'Activity'] as const;
 const currency = (value: number) =>
   `৳${new Intl.NumberFormat('en-BD').format(value)}`;
+
+const activityTitle = (kind: ActivityKind) => {
+  switch (kind) {
+    case 'Income':
+      return 'Income received';
+    case 'Transfer':
+      return 'Transfer between holdings';
+    case 'Contribution':
+      return 'Contribution recorded';
+    case 'Lending':
+      return 'Money lent';
+    case 'Repayment':
+      return 'Repayment received';
+    case 'External use':
+      return 'Personal use recorded';
+  }
+};
+
+const activityDateLabel = (date: string) =>
+  new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(`${date}T00:00:00`));
 
 function AssetIcon({ kind }: { kind: AssetKind }) {
   const className = 'size-5';
@@ -233,19 +265,73 @@ export function AssetsWorkspace() {
   const [year, setYear] = useState('2026');
   const [activityFilter, setActivityFilter] = useState('All activity');
   const [showNewActivity, setShowNewActivity] = useState(false);
+  const [showAddAsset, setShowAddAsset] = useState(false);
+  const [showAddType, setShowAddType] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
-  const total = assets.reduce((sum, asset) => sum + asset.value, 0);
-  const yearlyChange = assets.reduce((sum, asset) => sum + asset.change, 0);
+  const [assetItems, setAssetItems] = useState(assets);
+  const [assetTypes, setAssetTypes] = useState(() => [
+    ...new Set(assets.map((asset) => asset.kind)),
+  ]);
+  const [activityItems, setActivityItems] = useState(initialActivities);
+  const total = assetItems.reduce((sum, asset) => sum + asset.value, 0);
+  const yearlyChange = assetItems.reduce((sum, asset) => sum + asset.change, 0);
   const filteredActivities = useMemo(
     () =>
-      activities.filter(
+      activityItems.filter(
         (activity) =>
           activityFilter === 'All activity' || activity.kind === activityFilter,
       ),
-    [activityFilter],
+    [activityFilter, activityItems],
   );
   const visibleActivities =
-    activeTab === 'Activity' ? filteredActivities : activities.slice(0, 4);
+    activeTab === 'Activity' ? filteredActivities : activityItems.slice(0, 4);
+  const recordActivity = (activity: {
+    kind: ActivityKind;
+    source: string;
+    destination: string;
+    amount: number;
+    date: string;
+    note?: string;
+  }) => {
+    setActivityItems((current) => [
+      {
+        id: `activity-${Date.now()}`,
+        date: activityDateLabel(activity.date),
+        title: activityTitle(activity.kind),
+        kind: activity.kind,
+        amount: activity.amount,
+        from: activity.source,
+        to: activity.destination,
+        note: activity.note || 'No note added',
+        status: 'Recorded',
+      },
+      ...current,
+    ]);
+    setShowNewActivity(false);
+    setActiveTab('Activity');
+  };
+  const addAsset = (asset: {
+    kind: AssetKind;
+    name: string;
+    openingValue: number;
+    openedOn: string;
+    detail: string;
+  }) => {
+    setAssetItems((current) => [
+      ...current,
+      {
+        id: `asset-${Date.now()}`,
+        name: asset.name,
+        kind: asset.kind,
+        value: asset.openingValue,
+        change: 0,
+        detail: asset.detail || `Opened ${asset.openedOn}`,
+        tone: 'bg-slate-100 text-slate-700',
+      },
+    ]);
+    setShowAddAsset(false);
+    setActiveTab('Assets');
+  };
   return (
     <main className="page-transition mx-auto w-full max-w-7xl flex-1 px-5 py-8 sm:px-8 sm:py-10">
       <header className="flex flex-col gap-5 border-b border-slate-200 pb-6 lg:flex-row lg:items-end lg:justify-between">
@@ -324,11 +410,21 @@ export function AssetsWorkspace() {
         </section>
       )}
       {activeTab === 'Overview' && (
-        <Overview total={total} onViewAssets={() => setActiveTab('Assets')} />
+        <Overview
+          total={total}
+          activities={activityItems}
+          assets={assetItems}
+          onViewAssets={() => setActiveTab('Assets')}
+        />
       )}
       {activeTab === 'Assets' && (
         <section className="mt-6">
-          <AssetsList onSelectAsset={setSelectedAsset} />
+          <AssetsList
+            assets={assetItems}
+            onSelectAsset={setSelectedAsset}
+            onAddAsset={() => setShowAddAsset(true)}
+            onAddType={() => setShowAddType(true)}
+          />
         </section>
       )}
       {activeTab === 'Activity' && (
@@ -342,50 +438,41 @@ export function AssetsWorkspace() {
         open={showNewActivity}
         onClose={() => setShowNewActivity(false)}
         title="Record asset activity"
-        description="Each entry becomes part of your permanent movement history."
+        description="Enter the movement details, then review the effect before saving."
       >
-        <div className="space-y-3">
-          {[
-            [
-              'Income received',
-              'Record FD interest, crop sales, or loan interest.',
-              ArrowDownLeft,
-            ],
-            [
-              'Transfer between assets',
-              'Move money without changing your total wealth.',
-              ArrowUpRight,
-            ],
-            [
-              'Add investment or contribution',
-              'Record a DPS instalment or money put into an asset.',
-              TrendingUp,
-            ],
-          ].map(([title, description, Icon]) => {
-            const IconComponent = Icon as typeof ArrowDownLeft;
-            return (
-              <button
-                key={title as string}
-                type="button"
-                onClick={() => setShowNewActivity(false)}
-                className="flex w-full items-center gap-3 rounded-xl border border-slate-200 p-4 text-left transition hover:border-emerald-300 hover:bg-emerald-50/50"
-              >
-                <span className="rounded-lg bg-slate-100 p-2 text-slate-700">
-                  <IconComponent className="size-4" />
-                </span>
-                <span>
-                  <span className="block text-sm font-semibold text-slate-900">
-                    {title as string}
-                  </span>
-                  <span className="mt-0.5 block text-xs leading-5 text-slate-500">
-                    {description as string}
-                  </span>
-                </span>
-                <ChevronRight className="ml-auto size-4 text-slate-400" />
-              </button>
+        <RecordActivityForm
+          assetNames={assetItems.map((asset) => asset.name)}
+          onCancel={() => setShowNewActivity(false)}
+          onRecord={recordActivity}
+        />
+      </Dialog>
+      <Dialog
+        open={showAddAsset}
+        onClose={() => setShowAddAsset(false)}
+        title="Add holding"
+        description="Choose a type, then enter the holding details."
+      >
+        <AddAssetForm
+          assetTypes={assetTypes}
+          onCancel={() => setShowAddAsset(false)}
+          onAdd={addAsset}
+        />
+      </Dialog>
+      <Dialog
+        open={showAddType}
+        onClose={() => setShowAddType(false)}
+        title="Create asset type"
+      >
+        <AddAssetTypeForm
+          onCancel={() => setShowAddType(false)}
+          onAdd={(name) => {
+            setAssetTypes((current) =>
+              current.includes(name) ? current : [...current, name],
             );
-          })}
-        </div>
+            setShowAddType(false);
+            setShowAddAsset(true);
+          }}
+        />
       </Dialog>
       <Dialog
         open={selectedAsset !== null}
@@ -395,7 +482,13 @@ export function AssetsWorkspace() {
           selectedAsset ? `${selectedAsset.kind} · ${selectedAsset.detail}` : ''
         }
       >
-        {selectedAsset && <AssetDetail asset={selectedAsset} year={year} />}
+        {selectedAsset && (
+          <AssetDetail
+            asset={selectedAsset}
+            year={year}
+            activities={activityItems}
+          />
+        )}
       </Dialog>
     </main>
   );
@@ -427,18 +520,32 @@ function SummaryCard({
 }
 function Overview({
   total,
+  activities,
+  assets,
   onViewAssets,
 }: {
   total: number;
+  activities: Activity[];
+  assets: Asset[];
   onViewAssets: () => void;
 }) {
-  const assetGroups = [
-    { name: 'Land & property', value: 1_240_000, color: 'bg-emerald-500' },
-    { name: 'Fixed deposits', value: 400_000, color: 'bg-violet-500' },
-    { name: 'Cash & bank', value: 186_500, color: 'bg-sky-500' },
-    { name: 'DPS & savings', value: 148_000, color: 'bg-amber-500' },
-    { name: 'Money lent', value: 65_000, color: 'bg-rose-500' },
+  const mixColors = [
+    'bg-emerald-500',
+    'bg-violet-500',
+    'bg-sky-500',
+    'bg-amber-500',
+    'bg-rose-500',
+    'bg-slate-500',
   ];
+  const assetGroups = [...new Set(assets.map((asset) => asset.kind))]
+    .map((kind, index) => ({
+      name: kind,
+      value: assets
+        .filter((asset) => asset.kind === kind)
+        .reduce((sum, asset) => sum + asset.value, 0),
+      color: mixColors[index % mixColors.length],
+    }))
+    .toSorted((left, right) => right.value - left.value);
   return (
     <div className="mt-6 grid gap-5 xl:grid-cols-[1.5fr_0.9fr]">
       <Card className="overflow-hidden p-5 sm:p-6">
@@ -492,10 +599,10 @@ function Overview({
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-base font-semibold text-slate-950">
-                Coming up
+                Top growing assets
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                The next actions that need your attention.
+                Your 5 strongest assets by yearly growth rate.
               </p>
             </div>
             <span className="rounded-lg bg-amber-50 p-2 text-amber-700">
@@ -503,21 +610,7 @@ function Overview({
             </span>
           </div>
           <div className="mt-5 space-y-3">
-            <Reminder
-              title="Rahim repayment due"
-              detail="10 Oct · ৳10,000 expected"
-              tone="bg-rose-50 text-rose-700"
-            />
-            <Reminder
-              title="FD interest expected"
-              detail="15 Dec · BRAC Bank"
-              tone="bg-violet-50 text-violet-700"
-            />
-            <Reminder
-              title="Next DPS instalment"
-              detail="05 Oct · ৳5,000"
-              tone="bg-amber-50 text-amber-700"
-            />
+            <TopGrowingAssets assets={assets} />
           </div>
         </Card>
         <Card className="overflow-hidden">
@@ -567,9 +660,15 @@ function Overview({
   );
 }
 function AssetsList({
+  assets,
   onSelectAsset,
+  onAddAsset,
+  onAddType,
 }: {
+  assets: Asset[];
   onSelectAsset: (asset: Asset) => void;
+  onAddAsset: () => void;
+  onAddType: () => void;
 }) {
   return (
     <Card className="overflow-hidden">
@@ -580,9 +679,24 @@ function AssetsList({
             Current value, returns, and important next steps.
           </p>
         </div>
-        <span className="text-xs font-semibold text-slate-500">
-          {assets.length} total
-        </span>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            className="px-3"
+            onClick={onAddType}
+          >
+            Create type
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className="px-3"
+            onClick={onAddAsset}
+          >
+            Add asset
+          </Button>
+        </div>
       </div>
       <div className="border-t border-slate-100">
         {assets.map((asset) => (
@@ -623,26 +737,44 @@ function AssetsList({
     </Card>
   );
 }
-function Reminder({
-  title,
-  detail,
-  tone,
-}: {
-  title: string;
-  detail: string;
-  tone: string;
-}) {
+function TopGrowingAssets({ assets }: { assets: Asset[] }) {
+  const growingAssets = assets
+    .map((asset) => {
+      const openingValue = asset.value - asset.change;
+      const growthRate =
+        openingValue > 0 ? (asset.change / openingValue) * 100 : 0;
+      return { ...asset, growthRate };
+    })
+    .filter((asset) => asset.growthRate > 0)
+    .toSorted((left, right) => right.growthRate - left.growthRate)
+    .slice(0, 5);
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-slate-100 p-3">
-      <span className={`size-2 rounded-full ${tone}`} />
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold text-slate-800">
-          {title}
-        </span>
-        <span className="block text-xs text-slate-500">{detail}</span>
-      </span>
-      <ChevronRight className="size-4 text-slate-400" />
-    </div>
+    <>
+      {growingAssets.map((asset) => (
+        <div
+          key={asset.id}
+          className="flex items-center gap-3 rounded-xl border border-slate-100 p-3"
+        >
+          <span className="size-2 rounded-full bg-emerald-500" />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-semibold text-slate-800">
+              {asset.name}
+            </span>
+            <span className="block text-xs text-slate-500">
+              {asset.kind} · {currency(asset.value)}
+            </span>
+          </span>
+          <span className="text-sm font-semibold text-emerald-700">
+            +{asset.growthRate.toFixed(1)}%
+          </span>
+        </div>
+      ))}
+      {growingAssets.length === 0 && (
+        <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+          Add a holding with positive yearly growth to see it here.
+        </p>
+      )}
+    </>
   );
 }
 function ActivityLog({
@@ -674,7 +806,9 @@ function ActivityLog({
               'Income',
               'Transfer',
               'Contribution',
+              'Lending',
               'Repayment',
+              'External use',
             ]}
             onValueChange={onFilterChange}
           />
@@ -735,7 +869,15 @@ function DetailMetric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function AssetDetail({ asset, year }: { asset: Asset; year: string }) {
+function AssetDetail({
+  asset,
+  year,
+  activities,
+}: {
+  asset: Asset;
+  year: string;
+  activities: Activity[];
+}) {
   const relatedActivity = activities.filter(
     (activity) => activity.from === asset.name || activity.to === asset.name,
   );

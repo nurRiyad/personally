@@ -6,9 +6,9 @@ future AI implementation work agree on the same numbers.
 
 ## Goal
 
-Assets tracks what the user owns, what each asset has earned, and where money
-moves. It is not a general expense log. Budget remains the place for monthly
-spending planning.
+Assets tracks what the user owns, owes, what each holding has earned, and where
+money moves. It is not a general expense log. Budget remains the place for
+monthly spending planning.
 
 The module supports:
 
@@ -17,6 +17,7 @@ The module supports:
 - DPS / recurring savings;
 - land, flats, plots, and other property;
 - money lent to people (receivables);
+- financing liabilities that must be included when reporting net worth;
 - future asset types without changing the transaction ledger.
 
 All money amounts are whole BDT (`integer`), as used by the existing Budget
@@ -41,6 +42,9 @@ module. All user-entered dates are timezone-safe `YYYY-MM-DD` strings.
    correcting entry that links to the original entry.
 6. **Every entry belongs to exactly one user.** A user may never read or
    mutate another user's assets or ledger entries.
+7. **A financed asset is not net wealth on its own.** Show the asset's value,
+   the related outstanding liability, and net worth separately. Never hide a
+   loan behind an asset total.
 
 ## Fixed-deposit interest example
 
@@ -91,6 +95,59 @@ Optional type-specific fields belong in an `asset_details` table or a validated
 JSON field only if querying them is unnecessary. Examples: bank name, FD
 maturity date, interest rate, property location, borrower name, or DPS monthly
 instalment.
+
+### Asset type and display grouping
+
+An asset record remains the atomic, ledger-backed unit. Do not create one
+combined “all FDs”, “all land”, or “money lent” asset: that would prevent a
+separate maturity date, valuation, crop return, borrower balance, or correction
+from being recorded accurately.
+
+Use the existing `kind` as the accounting type and add a non-ledger
+`displayGroup` / category in API responses for presentation. It is calculated
+from the asset type, not a parent asset with its own balance.
+
+| User holdings                | Separate records                                                | Dashboard and Assets-list group |
+| ---------------------------- | --------------------------------------------------------------- | ------------------------------- |
+| 3 fixed deposits             | One `fixed_deposit` per certificate/account                     | Deposits & savings              |
+| 1 DPS                        | One `dps`                                                       | Deposits & savings              |
+| 3 agricultural land holdings | One `property` per plot, with `propertyType: agricultural_land` | Land & property                 |
+| 1 flat                       | One `property`, with `propertyType: flat`                       | Land & property                 |
+| 3 people who borrowed money  | One `receivable` per borrower/loan                              | Money lent                      |
+
+Bank accounts and cash use the **Cash & bank** group. Each grouped row must
+show its count and aggregate current value, and expand to the individual
+records. The group total is display-only and must never receive a transaction
+or be included again in portfolio totals.
+
+Only land the user owns is a property asset. If “borrowed land” means rented,
+leased, or otherwise used for agriculture without ownership, do not add its
+market value to assets. Track the lease expense in Budget and, if crop activity
+needs to be tracked later, model it as an agricultural operation with its own
+income and costs rather than as owned land.
+
+Keep a person’s receivable separate from another person’s even when both loans
+were made on the same day. A single borrower may have one receivable with
+multiple lending and repayment transactions, unless their loans need separate
+terms or independent tracking.
+
+### Liability
+
+A liability is a stable obligation, not a negative asset. Phase 1 needs a
+liability record when a flat or other property is financed.
+
+| Field                                              | Notes                                                              |
+| -------------------------------------------------- | ------------------------------------------------------------------ |
+| `id`, `userId`, `name`                             | Stable identity and owner                                          |
+| `kind`                                             | Initially `property_loan`; extend later without changing reporting |
+| `openedOn`, `originalAmount`, `outstandingBalance` | Time-safe start date and amounts derived from its ledger           |
+| `linkedAssetId`                                    | Optional link to the financed flat/property                        |
+| `nextDueOn`, `monthlyPayment`                      | Optional reminder metadata; these do not calculate the balance     |
+| `isArchived`, timestamps                           | Same audit and lifecycle expectations as assets                    |
+
+Liabilities have their own immutable balance movements. They are not folded
+into `portfolioCurrentValue`; they are subtracted only when calculating net
+worth.
 
 ### Transaction
 
@@ -175,13 +232,24 @@ service-level rule for valid lines; do not rely on the client to enforce it.
 
 ### EMI and loans
 
-If an EMI is paid from an existing bank balance, record it as a contribution to
-the property. If a lender provides money and the user owes it back, a future
-`liability` module must record the loan as well. Do **not** count loan-funded
-property value as net wealth without also recording the matching debt.
+For a flat bought with a loan, create the property asset and a linked
+`property_loan` liability at the same time. The purchase may show the flat at
+its cost or an explicitly recorded valuation; the loan creates the matching
+outstanding liability. The dashboard may show gross assets before the liability
+is entered, but it must label that number **Gross assets**, not net worth.
 
-Phase 1 may show a note that financed purchases need liability tracking; it
-must not silently inflate net assets.
+An EMI is not a contribution to the property. Split every EMI into:
+
+- **principal:** bank/cash decreases and the linked liability decreases by the
+  same amount; net worth does not change;
+- **interest and charges:** bank/cash decreases and the amount is recorded as
+  a Budget expense; it reduces net worth;
+- **insurance or other optional components:** record explicitly rather than
+  silently adding them to principal or property value.
+
+Property value changes only through an explicit `valuation_update` (or capital
+improvement recorded as a separate contribution with a note). This keeps the
+flat's value, loan balance, and paid EMI understandable.
 
 ## Calculations
 
@@ -216,10 +284,19 @@ measure. It can include distributed income that is now held elsewhere.
 ```text
 portfolioCurrentValue
   = sum(currentValue(A) for all active assets)
+
+totalLiabilities
+  = sum(outstandingBalance(L) for all active liabilities)
+
+netWorth
+  = portfolioCurrentValue - totalLiabilities
 ```
 
 Never add `realizedReturn` separately to `portfolioCurrentValue`, because a
 distribution is already present in its destination bank/cash asset.
+
+`portfolioCurrentValue` is the **gross-assets** number. Only `netWorth` is the
+amount after the flat loan and other liabilities are deducted.
 
 ### Charts
 
@@ -233,6 +310,56 @@ Asset detail must expose two series:
 The UI must label both series clearly. A declining receivable is expected when
 the borrower repays; show `Outstanding balance declining` rather than treating
 it as poor investment performance.
+
+## Web information architecture
+
+### Assets page
+
+Keep the three current sections—**Overview**, **Assets**, and **Activity**—but
+make the Overview a portfolio summary and make the Assets section grouped and
+expandable.
+
+1. **Overview:** show `Gross assets`, `Liabilities`, and `Net worth` as the
+   primary values. Keep `Liquid money` and the next due item as supporting
+   values. An allocation chart uses gross assets only and says so in its label.
+2. **Grouped holdings:** show Cash & bank, Deposits & savings, Land & property,
+   and Money lent. Each group shows its aggregate, holding count, and a
+   disclosure control. Opening it reveals each FD, DPS, plot, flat, or
+   receivable. Do not replace the individual rows with the group total.
+3. **Liabilities:** show a separate group after holdings, visually marked as a
+   deduction. A flat loan row shows outstanding balance, next EMI date, and a
+   link to the flat it finances.
+4. **Detail view:** retain separate `Current value` and `Total return` for an
+   earning asset. A flat detail also shows its linked loan and `Equity = flat
+value − outstanding loan`; a receivable says `Outstanding balance`, not
+   negative growth.
+5. **Activity:** distinguish `valuation update`, `loan principal payment`, and
+   `EMI interest` from transfers. A transaction detail shows all affected
+   holdings and liabilities so a user can audit the result.
+
+The page needs a real **Add holding** entry point in addition to **Record
+activity**. The add flow first asks for type; type-specific fields then appear:
+FD maturity/rate, DPS instalment, land/flat property type and location,
+borrower and repayment terms, or flat-loan details. This corrects the current
+prototype's fixed five-type sample model without implementing it yet.
+
+### Home dashboard
+
+The home dashboard should be intentionally simpler than `/assets`: one compact
+**Net worth** card followed by grouped holdings, not every individual record.
+
+| Dashboard group    | Includes                        | Shows                                   |
+| ------------------ | ------------------------------- | --------------------------------------- |
+| Deposits & savings | 3 FDs and 1 DPS                 | Aggregate value and `4 holdings`        |
+| Land & property    | 3 agricultural plots and 1 flat | Aggregate value and `4 holdings`        |
+| Money lent         | 3 receivables                   | Outstanding aggregate and `3 borrowers` |
+| Liabilities        | Flat loan                       | Outstanding loan balance as a deduction |
+
+Selecting a group opens `/assets` with that group preselected; selecting a
+holding there opens its detail. The dashboard's attention list should combine
+the nearest FD maturity, DPS instalment, borrower repayment, and flat EMI due
+date. Grouping changes only the presentation—it never changes balances or
+ledger ownership.
 
 ## UI and forms
 
@@ -249,6 +376,8 @@ state for submitted values.
 - Record lending or repayment
 - Record external use
 - Record property valuation update
+- Add or update a linked property-loan liability
+- Record an EMI split into principal and interest
 - Create correction
 
 All forms require:
@@ -279,6 +408,11 @@ barrel. Use strict Zod objects. Shared rules include:
 - transaction type is an enum;
 - source and destination cannot be the same asset;
 - correction requires an original transaction ID and a correction reason.
+- a property-loan liability must have a non-negative outstanding balance and,
+  when linked, reference a property owned by the same user;
+- an EMI principal payment cannot exceed the liability's outstanding balance;
+- interest and charges in an EMI must be sent to Budget rather than increasing
+  the property's current value.
 
 The API service repeats balance-dependent validation inside the D1 transaction,
 because the client may be stale or malicious.
@@ -299,27 +433,34 @@ POST   /assets
 PATCH  /assets/:assetId
 POST   /assets/:assetId/archive
 
+GET    /liabilities?asOf=YYYY-MM-DD
+POST   /liabilities
+PATCH  /liabilities/:liabilityId
+POST   /liabilities/:liabilityId/archive
+
 GET    /assets/:assetId?from=YYYY-MM-DD&to=YYYY-MM-DD
 GET    /assets/:assetId/activity?from=YYYY-MM-DD&to=YYYY-MM-DD
 GET    /assets/:assetId/performance?from=YYYY-MM-DD&to=YYYY-MM-DD
 
 GET    /assets/activity?from=YYYY-MM-DD&to=YYYY-MM-DD&type=...
 POST   /assets/transactions
+POST   /liabilities/:liabilityId/emi-payments
 POST   /assets/transactions/:transactionId/corrections
 ```
 
-Use one committed migration for the initial Assets tables, then define each
-table in its own file under `packages/db/src/schema/` and export it through the
-schema barrel. Add indexes for `user_id + occurred_on`, `asset_id`, and
-`performance_asset_id` lookups.
+Use one committed migration for the initial Assets and liabilities tables, then
+define each table in its own file under `packages/db/src/schema/` and export it
+through the schema barrel. Add indexes for `user_id + occurred_on`, `asset_id`,
+`performance_asset_id`, and `linked_asset_id` lookups.
 
 `POST /assets/transactions` must use one D1 transaction to:
 
-1. confirm ownership and active status of all referenced assets;
+1. confirm ownership and active status of all referenced assets and
+   liabilities;
 2. validate current balance constraints;
 3. write the transaction;
 4. write every ledger line;
-5. increment affected asset versions;
+5. increment affected asset and liability versions;
 6. return recalculated summaries.
 
 ## Audit and correction rules
@@ -343,10 +484,13 @@ schema barrel. Add indexes for `user_id + occurred_on`, `asset_id`, and
    repositories.
 6. Add controller and route composition only after service tests pass.
 7. Build React Hook Form dialogs using the shared schemas and date picker.
-8. Replace the current dummy Assets UI data with TanStack Query API calls.
-9. Add integration tests for ownership, balance validation, atomic writes,
-   corrections, and the FD-interest non-double-counting case.
-10. Run formatting, lint, typecheck, tests, and the production build.
+8. Implement grouped holdings and the net-worth summary before the individual
+   asset-detail polish; the home dashboard consumes those summary groups.
+9. Replace the current dummy Assets UI data with TanStack Query API calls.
+10. Add integration tests for ownership, balance validation, atomic writes,
+    corrections, the FD-interest non-double-counting case, grouped totals, and
+    EMI principal/interest handling.
+11. Run formatting, lint, typecheck, tests, and the production build.
 
 ## Required acceptance scenarios
 
@@ -367,3 +511,11 @@ schema barrel. Add indexes for `user_id + occurred_on`, `asset_id`, and
 8. An emergency external use of ৳10,000 lowers portfolio current value by
    ৳10,000 and creates an auditable history entry.
 9. A correction never removes the original transaction from history.
+10. Three FDs, three agricultural plots, and three receivables remain separate
+    ledger-backed records while their dashboard groups show the correct count
+    and aggregate current value without adding it twice to gross assets.
+11. A financed flat shows its property value and its linked outstanding loan;
+    net worth equals gross assets less that loan.
+12. A ৳30,000 EMI with ৳24,000 principal and ৳6,000 interest lowers bank/cash
+    by ৳30,000, lowers the liability by ৳24,000, creates a ৳6,000 Budget
+    expense, and does not automatically increase the flat's value.
