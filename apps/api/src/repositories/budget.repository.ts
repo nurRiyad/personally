@@ -110,6 +110,7 @@ export class D1BudgetRepository {
       id: m.id,
       month: m.month,
       note: m.note,
+      cashInPocket: m.cash_in_pocket ?? 0,
       version: m.version,
       summary: {
         earnedAmount: earned,

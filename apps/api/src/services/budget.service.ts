@@ -51,7 +51,7 @@ export class BudgetService {
       );
     const t = now();
     await this.repo.run(
-      'INSERT INTO budget_months VALUES (?,?,?,?,?,?,?)',
+      'INSERT INTO budget_months (id,user_id,month,note,created_at,updated_at,version) VALUES (?,?,?,?,?,?,?)',
       id(),
       user,
       input.month,
@@ -64,9 +64,19 @@ export class BudgetService {
   }
   async patchMonth(user: string, key: string, x: any) {
     const m = await this.check(user, key, x.monthVersion);
+    const fields: string[] = [],
+      values: any[] = [];
+    if (x.note !== undefined) {
+      fields.push('note=?');
+      values.push(x.note);
+    }
+    if (x.cashInPocket !== undefined) {
+      fields.push('cash_in_pocket=?');
+      values.push(x.cashInPocket);
+    }
     await this.repo.run(
-      'UPDATE budget_months SET note=?,version=version+1,updated_at=? WHERE id=? AND version=?',
-      x.note,
+      `UPDATE budget_months SET ${fields.join(',')},version=version+1,updated_at=? WHERE id=? AND version=?`,
+      ...values,
       now(),
       m.id,
       m.version,

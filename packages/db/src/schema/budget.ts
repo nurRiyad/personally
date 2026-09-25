@@ -15,6 +15,7 @@ export const budgetMonths = sqliteTable(
       .references(() => users.id),
     month: text('month').notNull(),
     note: text('note'),
+    cashInPocket: integer('cash_in_pocket').notNull().default(0),
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
     version: integer('version').notNull().default(1),

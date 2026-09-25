@@ -6,7 +6,7 @@ This is the implementation reference for the authenticated monthly-budget featur
 
 The protected web route is `/budget`. A user works with one calendar month at a time, identified by a timezone-safe `YYYY-MM` key. A month is explicitly created when it does not exist; a `GET` never creates one.
 
-Within an existing month, the user can review Income, Planned, Spent, and Remaining totals; manage recurring income sources and received-income entries; manage budget groups (called **blocks** in the UI) and recurring budget items; record and delete expenses; inspect source/item activity in the sidebar; edit a monthly note; and copy the planned structure to the next month. Copying can include recurring sources/items only or all sources/items. It always creates an empty note and does not copy income or expense history.
+Within an existing month, the user can review Income, Planned, Spent, and Remaining totals; record cash carried in their pocket and see the resulting expected bank balance; manage recurring income sources and received-income entries; manage budget groups (called **blocks** in the UI) and recurring budget items; record and delete expenses; inspect source/item activity in the sidebar; edit a monthly note; and copy the planned structure to the next month. Copying can include recurring sources/items only or all sources/items. It always creates an empty note, cash-in-pocket value, and does not copy income or expense history.
 
 There is no demo seed data, shopping-list persistence, activity editing, reordering, group editing, or year-summary UI/API in this implementation.
 
@@ -66,7 +66,7 @@ Item `remaining` is planned minus spent; income-source `remaining` is planned mi
 
 `packages/db/migrations/0004_monthly_budget.sql` is the migration source of truth; `packages/db/src/schema/budget.ts` mirrors it. The tables are:
 
-- `budget_months`: owner, unique month key, note, timestamps, and optimistic-lock version.
+- `budget_months`: owner, unique month key, note, cash-in-pocket value, timestamps, and optimistic-lock version.
 - `budget_income_sources` and `budget_income_entries`: planned and actual income.
 - `budget_groups` and `budget_items`: planned spending structure and metadata.
 - `budget_expenses`: actual spending against an item.

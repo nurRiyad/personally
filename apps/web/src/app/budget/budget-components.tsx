@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pencil, Plus } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
@@ -46,25 +47,48 @@ export function CircularProgress({ value }: { value: number }) {
 }
 
 export function SummaryCard({
+  icon,
   label,
-  amount,
+  plannedAmount,
+  actualAmount,
   detail,
-  tone,
 }: {
+  icon: ReactNode;
   label: string;
-  amount: string;
+  plannedAmount: number;
+  actualAmount: number;
   detail: string;
-  tone?: 'green' | 'amber';
 }) {
   return (
-    <Card className="p-5">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-        {amount}
-      </p>
-      <p
-        className={`mt-2 text-xs ${tone === 'amber' ? 'text-amber-700' : tone === 'green' ? 'text-emerald-700' : 'text-slate-500'}`}
-      >
+    <Card className="p-5 text-slate-950 sm:p-6">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm font-medium text-slate-600">{label}</p>
+        <span
+          className="rounded-xl bg-slate-100 p-2 text-slate-600 ring-1 ring-slate-200"
+          aria-hidden="true"
+        >
+          {icon}
+        </span>
+      </div>
+      <div className="mt-5 grid grid-cols-2 gap-4">
+        <div className="min-w-0">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            Planned
+          </p>
+          <p className="mt-1 whitespace-nowrap text-lg font-semibold tracking-tight tabular-nums sm:text-xl">
+            {currency(plannedAmount)}
+          </p>
+        </div>
+        <div className="min-w-0 border-l border-slate-200 pl-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            Actual
+          </p>
+          <p className="mt-1 whitespace-nowrap text-lg font-semibold tracking-tight tabular-nums sm:text-xl">
+            {currency(actualAmount)}
+          </p>
+        </div>
+      </div>
+      <p className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500">
         {detail}
       </p>
     </Card>

@@ -1,0 +1,1 @@
+ALTER TABLE `budget_months` ADD `cash_in_pocket` integer DEFAULT 0 NOT NULL;

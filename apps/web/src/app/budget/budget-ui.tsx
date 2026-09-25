@@ -16,9 +16,12 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
+  Pencil,
+  PiggyBank,
   Plus,
   Receipt,
   Trash2,
+  WalletCards,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
@@ -26,6 +29,7 @@ import { Dialog } from '../../components/ui/dialog';
 import { Select } from '../../components/ui/select';
 import {
   BudgetItemForm,
+  CashInPocketForm,
   EditIncomeBlockForm,
   ExpenseForm,
   IncomeForm,
@@ -41,6 +45,7 @@ import {
   totalSpent,
   totalSpentForMonth,
   totalIncome,
+  totalPlannedIncome,
   totalPlanned,
   type BudgetGroup,
   type BudgetItem,
@@ -84,6 +89,7 @@ const fromApi = (value: ApiBudgetMonth): BudgetMonth => ({
       })),
     })),
   ),
+  cashInPocket: value.cashInPocket,
 });
 
 const monthKey = (offset: number) => {
@@ -102,6 +108,7 @@ export function BudgetWorkspace() {
   const [loadError, setLoadError] = useState('');
   const [showCreateConfirmation, setShowCreateConfirmation] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [editingCashInPocket, setEditingCashInPocket] = useState(false);
   const [dialog, setDialog] = useState<
     | 'expense'
     | 'income'
@@ -141,6 +148,7 @@ export function BudgetWorkspace() {
     incomeBlocks: [],
     items: [],
     shopping: [],
+    cashInPocket: 0,
   };
   const refresh = async (key = selectedKey) => {
     setLoading(true);
@@ -173,7 +181,10 @@ export function BudgetWorkspace() {
   const planned = totalPlanned(month);
   const spent = totalSpentForMonth(month);
   const income = totalIncome(month);
-  const remaining = income - spent;
+  const plannedIncome = totalPlannedIncome(month);
+  const plannedRemaining = plannedIncome - planned;
+  const actualRemaining = income - spent;
+  const expectedBankBalance = actualRemaining - month.cashInPocket;
   const grouped = useMemo(
     () =>
       Object.fromEntries(
@@ -210,10 +221,12 @@ export function BudgetWorkspace() {
   };
   const moveMonth = (offset: number) => {
     const next = monthKey(Number(selectedKey.slice(5)) - 9 + offset);
+    setEditingCashInPocket(false);
     setReturnMonthKey(selectedKey);
     setSelectedKey(next);
   };
   const selectMonth = (key: string) => {
+    setEditingCashInPocket(false);
     setReturnMonthKey(selectedKey);
     setSelectedKey(key);
   };
@@ -473,30 +486,28 @@ export function BudgetWorkspace() {
       </header>
       <section
         aria-label="Monthly summary"
-        className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4"
+        className="mt-6 grid gap-3 md:grid-cols-3"
       >
         <SummaryCard
+          icon={<WalletCards className="size-5" />}
           label="Income"
-          amount={currency(income)}
+          plannedAmount={plannedIncome}
+          actualAmount={income}
           detail={`${month.incomeBlocks.length} income sources`}
-          tone="green"
         />
         <SummaryCard
-          label="Planned"
-          amount={currency(planned)}
-          detail={`${month.items.length} budget items`}
+          icon={<Receipt className="size-5" />}
+          label="Spend"
+          plannedAmount={planned}
+          actualAmount={spent}
+          detail={`${percentage(spent, planned)}% of planned spend used`}
         />
         <SummaryCard
-          label="Spent"
-          amount={currency(spent)}
-          detail={`${percentage(spent, planned)}% of plan used`}
-          tone={spent / planned > 0.85 ? 'amber' : undefined}
-        />
-        <SummaryCard
+          icon={<PiggyBank className="size-5" />}
           label="Remaining"
-          amount={currency(remaining)}
-          detail="Available this month"
-          tone={remaining >= 0 ? 'green' : 'amber'}
+          plannedAmount={plannedRemaining}
+          actualAmount={actualRemaining}
+          detail="Income minus spending"
         />
       </section>
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.8fr)]">
@@ -884,6 +895,70 @@ export function BudgetWorkspace() {
                 </div>
               </>
             )}
+          </Card>
+          <Card key={month.key} className="p-5 sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-slate-500">
+                  Cash position
+                </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Track cash you are carrying to calculate what should remain in
+                  your bank.
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                className="min-h-9 shrink-0 px-3"
+                aria-label="Edit cash in pocket"
+                onClick={() => setEditingCashInPocket(true)}
+              >
+                <Pencil className="size-4" aria-hidden="true" />
+              </Button>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Cash in pocket
+                </p>
+                <p className="mt-1 text-lg font-semibold tracking-tight tabular-nums text-slate-950">
+                  {currency(month.cashInPocket)}
+                </p>
+              </div>
+              <div className="border-l border-slate-200 pl-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Expected in bank
+                </p>
+                <p className="mt-1 text-lg font-semibold tracking-tight tabular-nums text-slate-950">
+                  {currency(expectedBankBalance)}
+                </p>
+              </div>
+            </div>
+            {editingCashInPocket && (
+              <CashInPocketForm
+                cashInPocket={month.cashInPocket}
+                onSubmit={(cashInPocket) => {
+                  void budgetPatch(`/budget/months/${selectedKey}`, {
+                    cashInPocket,
+                    monthVersion: version,
+                  })
+                    .then(async () => {
+                      await refresh();
+                      setEditingCashInPocket(false);
+                    })
+                    .catch((error) =>
+                      reportMutationError(
+                        error,
+                        'Unable to save cash in pocket.',
+                      ),
+                    );
+                }}
+              />
+            )}
+            <p className="mt-3 text-xs text-slate-500">
+              Actual remaining {currency(actualRemaining)} − cash in pocket =
+              expected bank balance.
+            </p>
           </Card>
           <Card className="p-5 sm:p-6">
             <p className="text-sm font-medium text-slate-500">Monthly note</p>

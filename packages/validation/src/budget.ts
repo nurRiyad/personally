@@ -19,8 +19,16 @@ export const budgetMonthInputSchema = z
   .object({ month: monthKeySchema, note: note.optional() })
   .strict();
 export const budgetMonthPatchSchema = z
-  .object({ note, monthVersion: version })
-  .strict();
+  .object({
+    note: note.optional(),
+    cashInPocket: amount.optional(),
+    monthVersion: version,
+  })
+  .strict()
+  .refine(
+    (value) => value.note !== undefined || value.cashInPocket !== undefined,
+    'Provide a field to update.',
+  );
 export const incomeSourceInputSchema = z
   .object({
     name,
@@ -109,6 +117,7 @@ export const budgetMonthResponseSchema = z.object({
   id: z.string(),
   month: monthKeySchema,
   note: z.string().nullable(),
+  cashInPocket: amount,
   version: z.number().int(),
   summary,
   incomeSources: z.array(

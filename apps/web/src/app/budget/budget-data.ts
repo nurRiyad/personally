@@ -38,6 +38,7 @@ export type BudgetMonth = {
   items: BudgetItem[];
   shopping: ShoppingItem[];
   note: string;
+  cashInPocket: number;
 };
 export const monthLabel = (key: string) =>
   new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(
@@ -57,6 +58,8 @@ export const totalPlanned = (month: BudgetMonth) =>
   month.items.reduce((total, item) => total + item.planned, 0);
 export const totalSpentForMonth = (month: BudgetMonth) =>
   month.items.reduce((total, item) => total + totalSpent(item), 0);
+export const totalPlannedIncome = (month: BudgetMonth) =>
+  month.incomeBlocks.reduce((total, block) => total + block.planned, 0);
 export const totalIncome = (month: BudgetMonth) =>
   month.incomeBlocks.reduce(
     (total, block) =>

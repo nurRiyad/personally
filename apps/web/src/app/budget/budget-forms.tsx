@@ -6,7 +6,12 @@ import { Calendar } from '../../components/ui/calendar';
 import { Input } from '../../components/ui/input';
 import { Select } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
-import type { BudgetGroup, BudgetItem, IncomeBlock } from './budget-data';
+import {
+  totalSpent,
+  type BudgetGroup,
+  type BudgetItem,
+  type IncomeBlock,
+} from './budget-data';
 
 function FieldError({ message }: { message?: string }) {
   return message ? (
@@ -49,6 +54,42 @@ export function MonthlyNoteForm({
   );
 }
 
+export function CashInPocketForm({
+  cashInPocket,
+  onSubmit,
+}: {
+  cashInPocket: number;
+  onSubmit: (amount: number) => void;
+}) {
+  const form = useForm({ defaultValues: { amount: String(cashInPocket) } });
+  return (
+    <form
+      className="mt-5 flex gap-2"
+      onSubmit={form.handleSubmit((values) => onSubmit(Number(values.amount)))}
+    >
+      <label className="min-w-0 flex-1">
+        <span className="sr-only">Cash in pocket</span>
+        <Input
+          inputMode="numeric"
+          placeholder="0"
+          aria-label="Cash in pocket"
+          {...form.register('amount', {
+            required: 'Enter the cash amount.',
+            min: { value: 0, message: 'Amount cannot be negative.' },
+            max: { value: 999999999, message: 'Amount is too large.' },
+            validate: (value) =>
+              Number.isInteger(Number(value)) || 'Enter a whole taka amount.',
+          })}
+        />
+        <FieldError message={form.formState.errors.amount?.message} />
+      </label>
+      <Button type="submit" variant="secondary" className="shrink-0">
+        Save
+      </Button>
+    </form>
+  );
+}
+
 export function IncomeForm({
   block,
   onSubmit,
@@ -61,9 +102,16 @@ export function IncomeForm({
     note?: string;
   }) => void;
 }) {
+  const remainingIncome = block
+    ? Math.max(
+        0,
+        block.planned -
+          block.income.reduce((total, entry) => total + entry.amount, 0),
+      )
+    : 0;
   const form = useForm({
     defaultValues: {
-      amount: '',
+      amount: remainingIncome ? String(remainingIncome) : '',
       date: new Date().toISOString().slice(0, 10),
       note: '',
     },
@@ -246,9 +294,12 @@ export function ExpenseForm({
     note?: string;
   }) => void;
 }) {
+  const remainingSpend = item
+    ? Math.max(0, item.planned - totalSpent(item))
+    : 0;
   const form = useForm({
     defaultValues: {
-      amount: '',
+      amount: remainingSpend ? String(remainingSpend) : '',
       category: item?.name ?? '',
       date: new Date().toISOString().slice(0, 10),
       note: '',
