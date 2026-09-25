@@ -85,12 +85,12 @@ export function BudgetRow({
   const spent = totalSpent(item);
   const remaining = item.planned - spent;
   return (
-    <div className="border-t border-slate-100 px-5 py-4 first:border-t-0 sm:px-6">
+    <div className="border-t border-slate-100 px-5 py-4 transition-colors hover:bg-slate-50 first:border-t-0 sm:px-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
           aria-label={`Open ${item.name} expense activity`}
-          className="grid min-w-0 flex-1 grid-cols-1 gap-4 rounded-lg text-left transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 sm:grid-cols-[210px_minmax(0,1fr)] sm:items-center"
+          className="grid min-w-0 flex-1 cursor-pointer grid-cols-1 gap-4 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 sm:grid-cols-[210px_minmax(0,1fr)] sm:items-center"
           onClick={onActivity}
         >
           <div className="min-w-0 sm:shrink-0">
@@ -131,7 +131,7 @@ export function BudgetRow({
         <div className="flex gap-2 sm:ml-2">
           <Button
             variant="ghost"
-            className="min-h-9 px-3"
+            className="min-h-9 cursor-pointer px-3"
             aria-label={`Edit ${item.name}`}
             onClick={onEdit}
           >
@@ -139,7 +139,7 @@ export function BudgetRow({
           </Button>
           <Button
             variant="secondary"
-            className="min-h-9 px-3"
+            className="min-h-9 cursor-pointer px-3"
             onClick={onExpense}
           >
             <Plus className="size-4" aria-hidden="true" /> Expense
@@ -167,12 +167,12 @@ export function IncomeRow({
   );
   const remaining = block.planned - received;
   return (
-    <div className="border-t border-slate-100 px-5 py-4 first:border-t-0 sm:px-6">
+    <div className="border-t border-slate-100 px-5 py-4 transition-colors hover:bg-slate-50 first:border-t-0 sm:px-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
           aria-label={`Open ${block.name} income activity`}
-          className="grid min-w-0 flex-1 grid-cols-1 gap-4 rounded-lg text-left transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 sm:grid-cols-[210px_minmax(0,1fr)] sm:items-center"
+          className="grid min-w-0 flex-1 cursor-pointer grid-cols-1 gap-4 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 sm:grid-cols-[210px_minmax(0,1fr)] sm:items-center"
           onClick={onActivity}
         >
           <div className="min-w-0 sm:shrink-0">
@@ -213,7 +213,7 @@ export function IncomeRow({
         <div className="flex gap-2 sm:ml-2">
           <Button
             variant="ghost"
-            className="min-h-9 px-3"
+            className="min-h-9 cursor-pointer px-3"
             aria-label={`Edit ${block.name}`}
             onClick={onEdit}
           >
@@ -221,7 +221,7 @@ export function IncomeRow({
           </Button>
           <Button
             variant="secondary"
-            className="min-h-9 px-3"
+            className="min-h-9 cursor-pointer px-3"
             onClick={onIncome}
           >
             <Plus className="size-4" aria-hidden="true" /> Income

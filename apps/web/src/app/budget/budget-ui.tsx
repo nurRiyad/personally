@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   getBudget,
   createBudget,
@@ -93,11 +92,11 @@ const monthKey = (offset: number) => {
 };
 
 export function BudgetWorkspace() {
-  const router = useRouter();
   const [months, setMonths] = useState<Record<string, BudgetMonth>>({});
   const [selectedKey, setSelectedKey] = useState(() =>
     new Date().toISOString().slice(0, 7),
   );
+  const [returnMonthKey, setReturnMonthKey] = useState<string>();
   const [version, setVersion] = useState<number>();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -211,7 +210,12 @@ export function BudgetWorkspace() {
   };
   const moveMonth = (offset: number) => {
     const next = monthKey(Number(selectedKey.slice(5)) - 9 + offset);
+    setReturnMonthKey(selectedKey);
     setSelectedKey(next);
+  };
+  const selectMonth = (key: string) => {
+    setReturnMonthKey(selectedKey);
+    setSelectedKey(key);
   };
   const addExpense = (values: {
     amount: number;
@@ -356,7 +360,11 @@ export function BudgetWorkspace() {
         <Button
           variant="ghost"
           className="mb-6 px-3"
-          onClick={() => router.back()}
+          onClick={() =>
+            setSelectedKey(
+              returnMonthKey ?? monthKey(Number(selectedKey.slice(5)) - 9 - 1),
+            )
+          }
         >
           <ArrowLeft className="size-4" />
           Back
@@ -439,7 +447,7 @@ export function BudgetWorkspace() {
             value={monthLabel(selectedKey)}
             options={Object.keys(months).map(monthLabel)}
             onValueChange={(value) =>
-              setSelectedKey(
+              selectMonth(
                 Object.keys(months).find((key) => monthLabel(key) === value) ??
                   selectedKey,
               )
