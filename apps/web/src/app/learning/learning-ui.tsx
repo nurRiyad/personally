@@ -43,7 +43,7 @@ function Frame({ children }: { children: ReactNode }) {
   return (
     <main
       id="main-content"
-      className="page-transition mx-auto w-full max-w-6xl px-5 py-7 sm:px-8 sm:py-8"
+      className="page-transition mx-auto w-full max-w-7xl px-5 py-7 sm:px-8 sm:py-8"
     >
       {children}
     </main>

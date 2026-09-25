@@ -93,7 +93,7 @@ export default function Home() {
     <main>
       <HomeAuthRedirect />
       <section className="overflow-hidden bg-[#f8faf8]">
-        <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 pb-20 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[1fr_0.88fr] lg:items-center lg:gap-16 lg:pb-28">
+        <div className="mx-auto grid w-full max-w-7xl gap-12 px-5 pb-20 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[1fr_0.88fr] lg:items-center lg:gap-16 lg:pb-28">
           <div className="max-w-2xl animate-rise-in">
             <p className="inline-flex rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-semibold tracking-wide text-emerald-800">
               One considered space, for your whole life
@@ -122,7 +122,7 @@ export default function Home() {
         aria-label="Why Personally"
         className="border-y border-slate-200 bg-white"
       >
-        <div className="mx-auto grid w-full max-w-6xl divide-y divide-slate-200 px-5 sm:px-8 md:grid-cols-3 md:divide-x md:divide-y-0">
+        <div className="mx-auto grid w-full max-w-7xl divide-y divide-slate-200 px-5 sm:px-8 md:grid-cols-3 md:divide-x md:divide-y-0">
           {benefits.map(([title, description]) => (
             <div
               key={title}
@@ -141,7 +141,7 @@ export default function Home() {
 
       <section
         id="modules"
-        className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 sm:py-28"
+        className="mx-auto w-full max-w-7xl px-5 py-20 sm:px-8 sm:py-28"
       >
         <div className="max-w-2xl">
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -196,7 +196,7 @@ export default function Home() {
       </section>
 
       <section id="how-it-works" className="bg-slate-950 text-white">
-        <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+        <div className="mx-auto grid w-full max-w-7xl gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
               A more considered rhythm
@@ -223,7 +223,7 @@ export default function Home() {
       </section>
 
       <section className="bg-amber-50">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-8 px-5 py-20 sm:px-8 sm:py-24 lg:flex-row lg:items-end">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-start justify-between gap-8 px-5 py-20 sm:px-8 sm:py-24 lg:flex-row lg:items-end">
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-amber-800">
               Start where you are

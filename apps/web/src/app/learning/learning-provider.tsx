@@ -328,7 +328,7 @@ function TimerProvider({ children }: { children: ReactNode }) {
       {error && (
         <p
           role="alert"
-          className="mx-auto mt-3 max-w-6xl px-5 text-sm text-rose-700"
+          className="mx-auto mt-3 max-w-7xl px-5 text-sm text-rose-700"
         >
           {error}
         </p>

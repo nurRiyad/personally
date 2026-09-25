@@ -16,11 +16,9 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
-  Pencil,
   Plus,
   Receipt,
   Trash2,
-  Wallet,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
@@ -48,6 +46,12 @@ import {
   type BudgetItem,
   type BudgetMonth,
 } from './budget-data';
+import {
+  BudgetRow,
+  CircularProgress,
+  IncomeRow,
+  SummaryCard,
+} from './budget-components';
 
 const fromApi = (value: ApiBudgetMonth): BudgetMonth => ({
   key: value.month,
@@ -87,273 +91,6 @@ const monthKey = (offset: number) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 };
 
-function Progress({
-  value,
-  tone = 'emerald',
-}: {
-  value: number;
-  tone?: 'emerald' | 'amber';
-}) {
-  return (
-    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-      <div
-        className={`h-full rounded-full ${tone === 'amber' ? 'bg-amber-400' : 'bg-emerald-500'}`}
-        style={{ width: `${value}%` }}
-      />
-    </div>
-  );
-}
-
-function CircularProgress({ value }: { value: number }) {
-  return (
-    <div
-      className="relative flex size-[68px] shrink-0 items-center justify-center rounded-full"
-      style={{
-        background: `conic-gradient(#10b981 ${value}%, #e2e8f0 ${value}% 100%)`,
-      }}
-      role="img"
-      aria-label={`${value}% of budget spent`}
-    >
-      <div className="flex size-[52px] items-center justify-center rounded-full bg-white">
-        <span className="text-base font-semibold leading-none text-slate-950">
-          {value}%
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function SummaryCard({
-  label,
-  amount,
-  detail,
-  tone,
-}: {
-  label: string;
-  amount: string;
-  detail: string;
-  tone?: 'green' | 'amber';
-}) {
-  return (
-    <Card className="p-5">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-        {amount}
-      </p>
-      <p
-        className={`mt-2 text-xs ${tone === 'amber' ? 'text-amber-700' : tone === 'green' ? 'text-emerald-700' : 'text-slate-500'}`}
-      >
-        {detail}
-      </p>
-    </Card>
-  );
-}
-
-function BudgetRow({
-  item,
-  onEdit,
-  onExpense,
-  onActivity,
-}: {
-  item: BudgetItem;
-  onEdit: () => void;
-  onExpense: () => void;
-  onActivity: () => void;
-}) {
-  const spent = totalSpent(item);
-  const remaining = item.planned - spent;
-  const activate = () => onActivity();
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      aria-label={`Open ${item.name} expense activity`}
-      className="group cursor-pointer border-t border-slate-100 px-5 py-4 outline-none transition-colors first:border-t-0 hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 sm:px-6"
-      onClick={activate}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          activate();
-        }
-      }}
-    >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0 sm:w-[210px] sm:shrink-0">
-          <div className="flex min-w-0 items-center gap-2">
-            <p
-              className="max-w-[150px] truncate font-medium text-slate-900"
-              title={item.name}
-            >
-              {item.name}
-            </p>
-            {item.recurring && (
-              <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
-                Recurring
-              </span>
-            )}
-          </div>
-          <p className="mt-1 text-xs text-slate-500">
-            {item.expenses.length}{' '}
-            {item.expenses.length === 1 ? 'expense' : 'expenses'}
-          </p>
-          <div className="mt-3 max-w-[175px]">
-            <Progress
-              value={percentage(spent, item.planned)}
-              tone={remaining < 0 ? 'amber' : 'emerald'}
-            />
-          </div>
-        </div>
-        <div className="grid flex-1 grid-cols-3 gap-3 text-right text-sm sm:min-w-0 sm:gap-4">
-          <div>
-            <p className="text-xs text-slate-400">Planned</p>
-            <p className="mt-1 font-medium text-slate-700">
-              {currency(item.planned)}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-400">Spent</p>
-            <p className="mt-1 font-medium text-slate-700">{currency(spent)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-400">Remaining</p>
-            <p
-              className={`mt-1 font-semibold ${remaining < 0 ? 'text-amber-700' : 'text-emerald-700'}`}
-            >
-              {currency(remaining)}
-            </p>
-          </div>
-        </div>
-        <div
-          className="flex gap-2 sm:ml-2"
-          onClick={(event) => event.stopPropagation()}
-          onKeyDown={(event) => event.stopPropagation()}
-        >
-          <Button
-            variant="ghost"
-            className="min-h-9 px-3"
-            aria-label={`Edit ${item.name}`}
-            onClick={onEdit}
-          >
-            <Pencil className="size-4" />
-          </Button>
-          <Button
-            variant="secondary"
-            className="min-h-9 px-3"
-            onClick={onExpense}
-          >
-            <Plus className="size-4" /> Expense
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function IncomeRow({
-  block,
-  onIncome,
-  onEdit,
-  onActivity,
-}: {
-  block: BudgetMonth['incomeBlocks'][number];
-  onIncome: () => void;
-  onEdit: () => void;
-  onActivity: () => void;
-}) {
-  const received = block.income.reduce(
-    (total, entry) => total + entry.amount,
-    0,
-  );
-  const remaining = block.planned - received;
-  const activate = () => onActivity();
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      aria-label={`Open ${block.name} income activity`}
-      className="group cursor-pointer border-t border-slate-100 px-5 py-4 outline-none transition-colors first:border-t-0 hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 sm:px-6"
-      onClick={activate}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          activate();
-        }
-      }}
-    >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0 sm:w-[210px] sm:shrink-0">
-          <div className="flex min-w-0 items-center gap-2">
-            <p
-              className="max-w-[150px] truncate font-medium text-slate-900"
-              title={block.name}
-            >
-              {block.name}
-            </p>
-            {block.recurring && (
-              <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
-                Recurring
-              </span>
-            )}
-          </div>
-          <p className="mt-1 text-xs text-slate-500">
-            {block.income.length}{' '}
-            {block.income.length === 1 ? 'income' : 'incomes'}
-          </p>
-          <div className="mt-3 max-w-[175px]">
-            <Progress
-              value={percentage(received, block.planned)}
-              tone={remaining < 0 ? 'amber' : 'emerald'}
-            />
-          </div>
-        </div>
-        <div className="grid flex-1 grid-cols-3 gap-3 text-right text-sm sm:min-w-0 sm:gap-4">
-          <div>
-            <p className="text-xs text-slate-400">Planned</p>
-            <p className="mt-1 font-medium text-slate-700">
-              {currency(block.planned)}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-400">Earned</p>
-            <p className="mt-1 font-medium text-slate-700">
-              {currency(received)}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-400">Remaining</p>
-            <p
-              className={`mt-1 font-semibold ${remaining < 0 ? 'text-amber-700' : 'text-emerald-700'}`}
-            >
-              {currency(remaining)}
-            </p>
-          </div>
-        </div>
-        <div
-          className="flex gap-2 sm:ml-2"
-          onClick={(event) => event.stopPropagation()}
-          onKeyDown={(event) => event.stopPropagation()}
-        >
-          <Button
-            variant="ghost"
-            className="min-h-9 px-3"
-            aria-label={`Edit ${block.name}`}
-            onClick={onEdit}
-          >
-            <Pencil className="size-4" />
-          </Button>
-          <Button
-            variant="secondary"
-            className="min-h-9 px-3"
-            onClick={onIncome}
-          >
-            <Plus className="size-4" /> Income
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function BudgetWorkspace() {
   const [months, setMonths] = useState<Record<string, BudgetMonth>>({});
   const [selectedKey, setSelectedKey] = useState(() =>
@@ -376,7 +113,6 @@ export function BudgetWorkspace() {
     | 'copy'
     | 'group'
     | 'item'
-    | 'activity'
     | 'note-edit'
     | null
   >(null);
@@ -393,6 +129,9 @@ export function BudgetWorkspace() {
     'Flexible spending': false,
   });
   const savedMonth = months[selectedKey];
+  const reportMutationError = (error: unknown, fallback: string) => {
+    setLoadError(error instanceof Error ? error.message : fallback);
+  };
   const month: BudgetMonth = savedMonth ?? {
     key: selectedKey,
     note: '',
@@ -466,7 +205,6 @@ export function BudgetWorkspace() {
     setActiveIncomeBlockId(blockId);
     setDialog('income');
   };
-  const updateMonth = (_next: BudgetMonth) => void refresh();
   const moveMonth = (offset: number) => {
     const next = monthKey(Number(selectedKey.slice(5)) - 9 + offset);
     setSelectedKey(next);
@@ -506,10 +244,12 @@ export function BudgetWorkspace() {
       receivedOn: values.date,
       note: values.note || null,
       monthVersion: version,
-    }).then(async () => {
-      setDialog(null);
-      await refresh();
-    });
+    })
+      .then(async () => {
+        setDialog(null);
+        await refresh();
+      })
+      .catch((error) => reportMutationError(error, 'Unable to save income.'));
   };
   const addIncomeBlock = (values: {
     name: string;
@@ -521,38 +261,43 @@ export function BudgetWorkspace() {
       plannedAmount: values.planned,
       isRecurring: values.recurring,
       monthVersion: version,
-    }).then(async () => {
-      setDialog(null);
-      await refresh();
-    });
+    })
+      .then(async () => {
+        setDialog(null);
+        await refresh();
+      })
+      .catch((error) =>
+        reportMutationError(error, 'Unable to add income source.'),
+      );
   };
   const editItem = (values: {
     name: string;
     planned: number;
-    group: BudgetGroup;
     recurring: boolean;
   }) => {
     if (!activeItemId) return;
-    const groupId = undefined;
     void budgetPatch(`/budget/items/${activeItemId}`, {
       name: values.name,
       plannedAmount: values.planned,
       isRecurring: values.recurring,
       monthVersion: version,
-      ...(groupId ? { groupId } : {}),
-    }).then(async () => {
-      setDialog(null);
-      await refresh();
-    });
+    })
+      .then(async () => {
+        setDialog(null);
+        await refresh();
+      })
+      .catch((error) => reportMutationError(error, 'Unable to save item.'));
   };
   const addGroup = (name: string) => {
     void budgetRequest(`/budget/months/${selectedKey}/groups`, {
       name,
       monthVersion: version,
-    }).then(async () => {
-      setDialog(null);
-      await refresh();
-    });
+    })
+      .then(async () => {
+        setDialog(null);
+        await refresh();
+      })
+      .catch((error) => reportMutationError(error, 'Unable to add block.'));
   };
   const addItem = (values: {
     name: string;
@@ -577,7 +322,8 @@ export function BudgetWorkspace() {
       .then(async () => {
         setDialog(null);
         await refresh();
-      });
+      })
+      .catch((error) => reportMutationError(error, 'Unable to add item.'));
   };
   const copyBudget = (all: boolean) => {
     const next = monthKey(Number(selectedKey.slice(5)) - 9 + 1);
@@ -596,13 +342,13 @@ export function BudgetWorkspace() {
   };
   if (loading && !savedMonth)
     return (
-      <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-8 text-slate-600">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-8 text-slate-600">
         Loading budget…
       </main>
     );
   if (!savedMonth)
     return (
-      <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-8">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-8">
         <h1 className="text-3xl font-semibold">Budget</h1>
         <p className="mt-3 text-slate-600">
           No budget exists for {monthLabel(selectedKey)}.
@@ -610,17 +356,30 @@ export function BudgetWorkspace() {
         <Button
           className="mt-5"
           onClick={async () => {
-            await createBudget(selectedKey);
-            await refresh();
+            try {
+              await createBudget(selectedKey);
+              await refresh();
+            } catch (error) {
+              reportMutationError(error, 'Unable to create this budget.');
+            }
           }}
         >
           Create month
         </Button>
-        {loadError && <p className="mt-3 text-sm text-red-600">{loadError}</p>}
+        {loadError && (
+          <p className="mt-3 text-sm text-red-600" role="alert">
+            {loadError}
+          </p>
+        )}
       </main>
     );
   return (
-    <main className="page-transition mx-auto w-full max-w-6xl flex-1 px-5 py-6 sm:px-8 sm:py-8">
+    <main className="page-transition mx-auto w-full max-w-7xl flex-1 px-5 py-6 sm:px-8 sm:py-8">
+      {loadError && (
+        <p className="mb-4 text-sm text-red-700" role="alert">
+          {loadError}
+        </p>
+      )}
       <header className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950">
           Budget
@@ -712,7 +471,7 @@ export function BudgetWorkspace() {
                 variant="secondary"
                 onClick={() => setDialog('income-block')}
               >
-                <Plus className="size-4" /> Add item
+                <Plus className="size-4" /> Add source
               </Button>
             </div>
             {month.incomeBlocks.map((block) => (
@@ -798,7 +557,7 @@ export function BudgetWorkspace() {
                     </Button>
                     <Button
                       variant="ghost"
-                      className="min-h-8 shrink-0 px-2"
+                      className="min-h-8 shrink-0 px-2 text-red-700 hover:bg-red-50 hover:text-red-800"
                       aria-label={`Delete ${group}`}
                       onClick={() => {
                         setActiveGroup(group);
@@ -1167,15 +926,19 @@ export function BudgetWorkspace() {
                     isRecurring: values.recurring,
                     monthVersion: version,
                   },
-                ).then(async () => {
-                  setDialog(null);
-                  await refresh();
-                });
+                )
+                  .then(async () => {
+                    setDialog(null);
+                    await refresh();
+                  })
+                  .catch((error) =>
+                    reportMutationError(error, 'Unable to save income source.'),
+                  );
               }}
             />
             <Button
               variant="ghost"
-              className="w-full"
+              className="w-full text-red-700 hover:bg-red-50 hover:text-red-800"
               onClick={() => setDialog('income-delete')}
             >
               Delete income source
@@ -1208,7 +971,7 @@ export function BudgetWorkspace() {
                 Cancel
               </Button>
               <Button
-                variant="ghost"
+                variant="destructive"
                 className="flex-1"
                 onClick={() =>
                   void budgetDelete(
@@ -1256,7 +1019,7 @@ export function BudgetWorkspace() {
               Cancel
             </Button>
             <Button
-              variant="ghost"
+              variant="destructive"
               className="flex-1"
               onClick={() => {
                 if (!activeIncomeEntryId) return;
@@ -1337,7 +1100,7 @@ export function BudgetWorkspace() {
             <BudgetItemForm item={selectedItem} onSubmit={editItem} />
             <Button
               variant="ghost"
-              className="w-full"
+              className="w-full text-red-700 hover:bg-red-50 hover:text-red-800"
               onClick={() => setDialog('item-delete')}
             >
               Delete item
@@ -1370,7 +1133,7 @@ export function BudgetWorkspace() {
                 Cancel
               </Button>
               <Button
-                variant="ghost"
+                variant="destructive"
                 className="flex-1"
                 onClick={() =>
                   void budgetDelete(`/budget/items/${selectedItem.id}`, {
@@ -1389,68 +1152,6 @@ export function BudgetWorkspace() {
                 Delete item
               </Button>
             </div>
-          </div>
-        )}
-      </Dialog>
-      <Dialog
-        open={dialog === 'activity'}
-        title={`${selectedItem?.name ?? 'Item'} activity`}
-        description="Every expense recorded against this budget item."
-        onClose={() => setDialog(null)}
-      >
-        {selectedItem && (
-          <div className="space-y-5">
-            <div className="grid grid-cols-3 gap-3 rounded-xl bg-slate-50 p-4 text-sm">
-              <div>
-                <p className="text-xs text-slate-500">Planned</p>
-                <p className="mt-1 font-semibold text-slate-900">
-                  {currency(selectedItem.planned)}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500">Spent</p>
-                <p className="mt-1 font-semibold text-slate-900">
-                  {currency(totalSpent(selectedItem))}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500">Left</p>
-                <p className="mt-1 font-semibold text-emerald-700">
-                  {currency(selectedItem.planned - totalSpent(selectedItem))}
-                </p>
-              </div>
-            </div>
-            <div className="divide-y divide-slate-100">
-              {selectedItem.expenses.length ? (
-                [...selectedItem.expenses]
-                  .sort((a, b) => b.date.localeCompare(a.date))
-                  .map((expense) => (
-                    <div
-                      key={expense.id}
-                      className="flex items-center justify-between gap-3 py-3"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-slate-800">
-                          {expense.note || 'Expense'}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {expense.date}
-                        </p>
-                      </div>
-                      <p className="font-semibold text-slate-700">
-                        {currency(expense.amount)}
-                      </p>
-                    </div>
-                  ))
-              ) : (
-                <p className="py-3 text-sm text-slate-500">
-                  No expenses recorded yet.
-                </p>
-              )}
-            </div>
-            <Button className="w-full" onClick={() => setDialog('expense')}>
-              <Plus className="size-4" /> Add expense
-            </Button>
           </div>
         )}
       </Dialog>
@@ -1487,7 +1188,7 @@ export function BudgetWorkspace() {
                 Cancel
               </Button>
               <Button
-                variant="ghost"
+                variant="destructive"
                 className="flex-1"
                 onClick={() =>
                   void getBudget(selectedKey)

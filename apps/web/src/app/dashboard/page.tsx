@@ -118,7 +118,7 @@ const modules: Module[] = [
 export default function Dashboard() {
   return (
     <ProtectedRoute>
-      <main className="page-transition mx-auto w-full max-w-6xl flex-1 px-5 py-16 sm:px-8 sm:py-20">
+      <main className="page-transition mx-auto w-full max-w-7xl flex-1 px-5 py-16 sm:px-8 sm:py-20">
         <section className="mx-auto max-w-3xl text-center">
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
             Your personal workspace

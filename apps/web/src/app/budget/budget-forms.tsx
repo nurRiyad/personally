@@ -8,16 +8,11 @@ import { Select } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
 import type { BudgetGroup, BudgetItem, IncomeBlock } from './budget-data';
 
-const groups: BudgetGroup[] = [
-  'Essentials',
-  'Family & personal',
-  'Savings',
-  'Flexible spending',
-];
-
 function FieldError({ message }: { message?: string }) {
   return message ? (
-    <p className="mt-1 text-xs text-red-600">{message}</p>
+    <p className="mt-1 text-xs text-red-600" role="alert">
+      {message}
+    </p>
   ) : null;
 }
 
@@ -37,8 +32,7 @@ export function MonthlyNoteForm({
       <label className="block text-sm font-medium text-slate-700">
         <span className="mb-2 block">Note</span>
         <Textarea
-          autoFocus
-          placeholder="Add a note about this month"
+          placeholder="Add a note about this month…"
           {...form.register('note', {
             maxLength: {
               value: 2000,
@@ -109,7 +103,7 @@ export function IncomeForm({
           Note <span className="font-normal text-slate-400">(optional)</span>
         </span>
         <Textarea
-          placeholder="e.g. Client A invoice"
+          placeholder="e.g. Client A invoice…"
           {...form.register('note')}
         />
       </label>
@@ -146,8 +140,7 @@ export function NewIncomeBlockForm({
       <label className="block text-sm font-medium text-slate-700">
         Income source
         <Input
-          placeholder="e.g. Consulting"
-          autoFocus
+          placeholder="e.g. Consulting…"
           {...form.register('name', { required: 'Enter an income source' })}
         />
       </label>
@@ -307,7 +300,7 @@ export function ExpenseForm({
                   'Family support',
                 ]
           }
-          onValueChange={(value) =>
+          onValueChange={(value: string) =>
             form.setValue('category', value, { shouldDirty: true })
           }
         />
@@ -323,7 +316,10 @@ export function ExpenseForm({
         <span className="mb-2 block">
           Note <span className="font-normal text-slate-400">(optional)</span>
         </span>
-        <Textarea placeholder="What was this for?" {...form.register('note')} />
+        <Textarea
+          placeholder="What was this for?…"
+          {...form.register('note')}
+        />
       </label>
       <Button type="submit" className="w-full">
         Save expense
@@ -340,18 +336,14 @@ export function BudgetItemForm({
   onSubmit: (value: {
     name: string;
     planned: number;
-    group: BudgetGroup;
     recurring: boolean;
-    note: string;
   }) => void;
 }) {
   const form = useForm({
     defaultValues: {
       name: item.name,
       planned: String(item.planned),
-      group: item.group,
       recurring: item.recurring,
-      note: '',
     },
   });
   return (
@@ -376,18 +368,6 @@ export function BudgetItemForm({
           {...form.register('planned', { required: true, min: 0 })}
         />
       </label>
-      <label className="block text-sm font-medium text-slate-700">
-        <span className="mb-2 block">Group</span>
-        <Select
-          label="Group"
-          className="w-full"
-          value={form.watch('group')}
-          options={groups}
-          onValueChange={(value) =>
-            form.setValue('group', value as BudgetGroup)
-          }
-        />
-      </label>
       <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
         <input
           type="checkbox"
@@ -395,12 +375,6 @@ export function BudgetItemForm({
           {...form.register('recurring')}
         />{' '}
         Recurring item
-      </label>
-      <label className="block text-sm font-medium text-slate-700">
-        <span className="mb-2 block">
-          Note <span className="font-normal text-slate-400">(optional)</span>
-        </span>
-        <Textarea {...form.register('note')} />
       </label>
       <Button type="submit" className="w-full">
         Save changes
@@ -423,8 +397,7 @@ export function NewGroupForm({
       <label className="block text-sm font-medium text-slate-700">
         Block name
         <Input
-          placeholder="e.g. Travel"
-          autoFocus
+          placeholder="e.g. Travel…"
           {...form.register('name', { required: 'Enter a block name' })}
         />
       </label>
@@ -462,8 +435,7 @@ export function NewBudgetItemForm({
       <label className="block text-sm font-medium text-slate-700">
         Item name
         <Input
-          placeholder="e.g. Transport"
-          autoFocus
+          placeholder="e.g. Transport…"
           {...form.register('name', { required: 'Enter an item name' })}
         />
       </label>

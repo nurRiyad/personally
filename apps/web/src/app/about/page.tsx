@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export default function About() {
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-16 sm:px-8">
+    <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-16 sm:px-8">
       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
         About Personally
       </p>

@@ -7,7 +7,7 @@ export const metadata = {
 export default function SettingsPage() {
   return (
     <ProtectedRoute>
-      <main className="page-transition mx-auto w-full max-w-6xl flex-1 px-5 py-16 sm:px-8 sm:py-20">
+      <main className="page-transition mx-auto w-full max-w-7xl flex-1 px-5 py-16 sm:px-8 sm:py-20">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
           Account
         </p>
