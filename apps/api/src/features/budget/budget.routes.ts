@@ -1,5 +1,6 @@
 import { Hono, type Context } from 'hono';
 import * as s from '@personally/validation';
+import { createAuthConfig } from '../../utils/config';
 import { requireAuth, validateBody } from '../../middleware';
 import type { Env } from '../../types/env';
 import { D1BudgetRepository } from './budget.repository';
@@ -10,7 +11,10 @@ const param = (c: Context<Env>, name: string) => c.req.param(name)!;
 const serviceFor = (c: Context<Env>) => new BudgetService(new D1BudgetRepository(c.env.DB));
 
 export const budgetRoutes = new Hono<Env>();
-budgetRoutes.use('*', requireAuth);
+budgetRoutes.use('*', async (c, next) => {
+  c.set('authConfig', createAuthConfig(c.env));
+  await requireAuth(c, next);
+});
 budgetRoutes.get('/months', async (c) => {
   const year = Number(c.req.query('year'));
   if (!Number.isInteger(year)) throw new AppError('VALIDATION_ERROR', 'A valid year is required.', 400);
