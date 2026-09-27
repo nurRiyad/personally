@@ -22,7 +22,7 @@ export function SiteFooter() {
             Personally
           </Link>
           <p className="mt-3 text-sm leading-6 text-slate-500">
-            A private workspace for your budget, assets, and learning—so every next step feels easier to see.
+            Plan monthly income and spending, track assets and their activity, and organize learning goals and time.
           </p>
         </div>
 

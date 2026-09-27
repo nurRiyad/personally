@@ -1,4 +1,11 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description: 'Terms for using Personally to manage budget records, assets, and learning activities.',
+  alternates: { canonical: '/terms' },
+};
 
 export default function Terms() {
   return (
@@ -10,22 +17,19 @@ export default function Terms() {
         <section>
           <h2 className="text-lg font-semibold text-slate-950">Use the app responsibly</h2>
           <p className="mt-2">
-            Personally is a personal organization tool. Keep your account secure and use the service only for lawful,
-            personal purposes.
+            Personally provides tools to record monthly income and expenses, assets and related activity, and learning goals, tasks, and time. You are responsible for keeping your sign-in credentials secure and using the service lawfully.
           </p>
         </section>
         <section>
           <h2 className="text-lg font-semibold text-slate-950">Your information</h2>
           <p className="mt-2">
-            You are responsible for the accuracy of the information you enter. Keep independent records for important
-            financial, tax, or legal decisions.
+            You are responsible for the information you enter and should review it for accuracy. Personally displays and organizes your records; it does not connect to financial institutions or independently verify balances or transactions. Keep any records you need outside the service as well.
           </p>
         </section>
         <section>
           <h2 className="text-lg font-semibold text-slate-950">Important notice</h2>
           <p className="mt-2">
-            Personally provides organization and research support, not financial, investment, legal, or professional
-            advice. Features may change as the project develops.
+            Personally is an organizational tool, not financial, investment, tax, legal, or other professional advice. Do not rely on its calculations or records as a substitute for professional guidance or official statements. Features may change as the service develops.
           </p>
         </section>
       </div>

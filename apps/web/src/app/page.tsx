@@ -7,25 +7,25 @@ import { HomeAuthRedirect } from './components/home-auth-redirect';
 export const metadata: Metadata = {
   title: 'Your life, thoughtfully organized',
   description:
-    'Personally brings your budget, assets, and learning into one private workspace for clearer everyday decisions.',
+    'Plan monthly income and spending, track assets and activity, and organize learning goals, tasks, and study time in one workspace.',
   alternates: { canonical: '/' },
   openGraph: {
     title: 'Personally | Your life, thoughtfully organized',
-    description: 'A private workspace for your budget, assets, and learning.',
+    description: 'Plan monthly income and spending, track assets and activity, and organize learning goals, tasks, and study time.',
     type: 'website',
     url: '/',
   },
   twitter: {
     card: 'summary',
     title: 'Personally | Your life, thoughtfully organized',
-    description: 'A private workspace for your budget, assets, and learning.',
+    description: 'Plan monthly income and spending, track assets and activity, and organize learning goals, tasks, and study time.',
   },
 };
 
 const benefits = [
-  ['Clarity, not clutter', 'Bring the pieces of your everyday life into focus.'],
-  ['Built around you', 'A personal workspace designed for your own decisions.'],
-  ['See the connections', 'Understand progress across money, belongings, and growth.'],
+  ['A month at a glance', 'Compare planned income and spending with what you record.'],
+  ['A living asset record', 'Group assets by type and follow balances through recorded activity.'],
+  ['Learning with structure', 'Break outcomes into tasks and keep track of time spent.'],
 ] as const;
 
 const modules = [
@@ -33,7 +33,7 @@ const modules = [
     href: '/budget',
     eyebrow: 'Monthly Budget',
     title: 'Make room for what matters.',
-    description: 'Plan monthly spending with a calmer, clearer view of where your money goes.',
+    description: 'Set up monthly income sources and spending groups, record transactions, and compare your plan with actuals.',
     color: 'bg-emerald-50 text-emerald-800',
     icon: <path d="M5 7.5h14v9H5zM8 12h.01M16 12h.01" />,
     preview: <BudgetPreview />,
@@ -42,7 +42,7 @@ const modules = [
     href: '/assets',
     eyebrow: 'Asset Management',
     title: 'Keep what you own in view.',
-    description: 'Build a simple picture of your assets, so the bigger picture stays close at hand.',
+    description: 'Group assets by type, record dated activity, and review balances and changes over time.',
     color: 'bg-violet-50 text-violet-800',
     icon: <path d="M4.5 19.5h15M6.5 19.5v-10h11v10M9 9.5V5.5h6v4M9.5 14h.01M14.5 14h.01" />,
     preview: <AssetsPreview />,
@@ -51,7 +51,7 @@ const modules = [
     href: '/learning',
     eyebrow: 'Learning Management',
     title: 'Give your curiosity a home.',
-    description: 'Hold on to the knowledge you are building and move forward with intention.',
+    description: 'Organize learning outcomes into epics and tasks, set time targets, and track study sessions.',
     color: 'bg-amber-50 text-amber-800',
     icon: <path d="M5 5.5h5.5a2 2 0 0 1 2 2v11a2 2 0 0 0-2-2H5zM20 5.5h-5.5a2 2 0 0 0-2 2v11a2 2 0 0 1 2-2H20z" />,
     preview: <LearningPreview />,
@@ -59,9 +59,9 @@ const modules = [
 ] as const;
 
 const steps = [
-  ['01', 'Gather your essentials', 'Give your budget, assets, and learning a shared place to live.'],
-  ['02', 'Find the signal', 'See the context that helps everyday decisions feel less uncertain.'],
-  ['03', 'Move forward steadily', 'Turn a clearer picture into the next thoughtful step.'],
+  ['01', 'Plan your month', 'Set expected income and spending, then record what comes in and goes out.'],
+  ['02', 'Track what you own', 'Create asset types and entries, then record activity to keep balances current.'],
+  ['03', 'Make time for learning', 'Define an outcome, split it into tasks, and record time as you work.'],
 ] as const;
 
 export default function Home() {
@@ -72,14 +72,14 @@ export default function Home() {
         <div className="mx-auto grid w-full max-w-7xl gap-12 px-5 pb-20 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[1fr_0.88fr] lg:items-center lg:gap-16 lg:pb-28">
           <div className="max-w-2xl animate-rise-in">
             <p className="inline-flex rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-semibold tracking-wide text-emerald-800">
-              One considered space, for your whole life
+              Budget, assets, and learning in one workspace
             </p>
             <h1 className="mt-6 text-5xl font-semibold tracking-[-0.055em] text-slate-950 text-balance sm:text-6xl lg:text-7xl">
-              The life you’re building, in clearer view.
+              Make a little more sense of your money, assets, and goals.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl">
-              Personally brings your budget, assets, and learning into one private workspace—so the next step feels
-              easier to see.
+              Plan a monthly budget, keep an up-to-date record of what you own, and turn learning goals into trackable
+              tasks—all in one place.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <ButtonLink href="/dashboard">
@@ -112,7 +112,7 @@ export default function Home() {
             Three places to understand what matters to you.
           </h2>
           <p className="mt-4 text-base leading-7 text-slate-600">
-            Each area stands on its own, while helping you see a more complete personal picture.
+            Use each workspace on its own, with tools shaped around the way that area works.
           </p>
         </div>
         <div className="mt-12 grid gap-5 lg:grid-cols-3">
@@ -146,9 +146,9 @@ export default function Home() {
       <section id="how-it-works" className="bg-slate-950 text-white">
         <div className="mx-auto grid w-full max-w-7xl gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">A more considered rhythm</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">How it works</p>
             <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-4xl">
-              Less time piecing things together. More room to act on what you know.
+              Keep useful records, review your progress, and decide what to do next.
             </h2>
           </div>
           <ol className="grid gap-7 sm:grid-cols-3 sm:gap-5">
@@ -168,10 +168,10 @@ export default function Home() {
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-amber-800">Start where you are</p>
             <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-slate-950 text-balance sm:text-4xl">
-              A more thoughtful view of your life is waiting.
+              Start with the part of your life you want to organize.
             </h2>
             <p className="mt-4 text-base leading-7 text-slate-700">
-              Step into your workspace and explore the foundations of Personally.
+              Open your workspace to plan a month, track an asset, or organize a learning goal.
             </p>
           </div>
           <ButtonLink href="/dashboard" className="shrink-0">
@@ -199,7 +199,7 @@ function HeroPreview() {
         <div className="rounded-[1.5rem] bg-slate-950 p-6 sm:p-8">
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold text-white">Your overview</span>
-            <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300">September</span>
+            <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300">Monthly view</span>
           </div>
           <p className="mt-8 text-sm text-slate-400">A calm moment to check in</p>
           <p className="mt-2 text-3xl font-semibold tracking-tight text-white">Everything, in context.</p>
