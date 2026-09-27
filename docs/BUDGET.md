@@ -22,7 +22,7 @@ The switcher starts at the current local month. Its previous/next arithmetic cur
 
 ## API
 
-All routes are mounted below `/budget`, require authentication, return `{ data: ... }`, and scope reads/writes to the authenticated user. `apps/api/src/routes/index.ts` constructs `BudgetController`, `BudgetService`, and `D1BudgetRepository` for the route tree.
+All routes are mounted below `/budget`, require authentication, return `{ data: ... }`, and scope reads/writes to the authenticated user. Budget code lives in `apps/api/src/features/budget/`: `budget.routes.ts` handles HTTP concerns, `budget.service.ts` contains application behavior, and `budget.repository.ts` owns D1 queries.
 
 | Method         | Path                                      | Purpose                                                        |
 | -------------- | ----------------------------------------- | -------------------------------------------------------------- |
@@ -77,7 +77,7 @@ For local database work, use Wrangler local D1 as documented in `docs/DEVELOPMEN
 
 ## Change checklist
 
-1. Keep the dependency direction Route → Controller → Service → Repository → D1.
+1. Keep the dependency direction Route → Service → Repository → D1. Do not add a controller layer; keep HTTP request/response handling in routes.
 2. Update shared Zod schemas with request or response changes.
 3. Scope all queries through the authenticated owner and retain version checks on writes.
 4. Update the frontend client and mapper with any response-shape change.

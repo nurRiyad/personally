@@ -15,12 +15,13 @@ Route → Service → Repository → Database
 ```
 
 - `apps/api/src/index.ts` is the single Worker entrypoint. It creates the Hono app, mounts the route tree, registers shared error handling, and exports the Worker. Do not create a separate `app.ts` entrypoint.
-- `apps/api/src/features/` groups feature code together (`auth`, `budget`, `assets`, `learning`, `health`). Each feature owns its routes, service, and repository where needed. `features/index.ts` mounts the route tree; individual feature route files define paths, validate HTTP input, call services, and format HTTP responses.
+- `apps/api/src/features/` groups feature code together (`auth`, `budget`, `assets`, `learning`, `health`). Every feature has feature-local route, service, and repository modules, including small features such as health. `features/index.ts` mounts the route tree; individual feature route files define paths, validate HTTP input, call services, and format HTTP responses.
 - Services contain application and domain behavior and stay independent of Hono. They receive repository dependencies through constructors so tests can provide in-memory fakes.
 - Repositories contain persistence interfaces and D1/Drizzle implementations. They must not format HTTP responses or know about Hono.
 - `apps/api/src/middleware/` contains request-pipeline concerns: CORS, validation, authentication, and the global error handler. If a function receives a Hono context and calls `next`, it belongs here. Pure helpers that do not participate in the request pipeline belong in `utils/`.
 - `apps/api/src/utils/` contains shared non-request utilities such as error classes, normalization helpers, and other framework-independent helpers. Do not put Hono middleware in this folder.
-- Keep dependency construction in a small feature-level factory or route composition helper; do not recreate controller factories inside every request handler.
+- Services receive repository interfaces through constructors so unit tests can provide small in-memory fakes. Keep database access in repositories and business behavior in services, even when the behavior is brief.
+- Routes may construct a feature service with its D1 repository using a small `serviceFor` helper. Keep construction out of individual handlers and avoid a separate controller layer.
 
 ### Validation and Errors
 

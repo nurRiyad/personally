@@ -422,7 +422,7 @@ because the client may be stale or malicious.
 Follow the existing direction:
 
 ```text
-Route → Controller → AssetService → AssetRepository → D1/Drizzle
+Route → Service → Repository → D1/Drizzle
 ```
 
 Suggested endpoints:
