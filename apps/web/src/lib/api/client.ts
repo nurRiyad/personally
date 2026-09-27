@@ -30,25 +30,13 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}) {
   if (response.status === 204) return undefined as T;
   const body: unknown = await response.json().catch(() => undefined);
   if (!response.ok) {
-    if (
-      response.status === 401 &&
-      getAccessToken() &&
-      !path.startsWith('/auth/')
-    )
+    if (response.status === 401 && getAccessToken() && !path.startsWith('/auth/'))
       window.dispatchEvent(new CustomEvent('personally:session-expired'));
     const parsed = apiErrorSchema.safeParse(body);
     if (parsed.success) {
-      throw new ApiError(
-        parsed.data.error.message,
-        response.status,
-        parsed.data.error.code,
-        parsed.data.error.fields,
-      );
+      throw new ApiError(parsed.data.error.message, response.status, parsed.data.error.code, parsed.data.error.fields);
     }
-    throw new ApiError(
-      'Something went wrong. Please try again.',
-      response.status,
-    );
+    throw new ApiError('Something went wrong. Please try again.', response.status);
   }
   return body as T;
 }

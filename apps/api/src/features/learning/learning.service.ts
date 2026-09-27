@@ -17,26 +17,12 @@ import type {
   patchManualSchema,
   deleteManualSchema,
 } from '@personally/validation';
-import type {
-  LearningRepository,
-  EpicAggregate,
-  TaskAggregate,
-  TimeRow,
-  Change,
-} from '../repositories/learning.repository';
+import type { LearningRepository, EpicAggregate, TaskAggregate, TimeRow, Change } from './learning.repository';
 type ManualRow = TimeRow;
-import {
-  AppError,
-  LearningConflictError,
-  NotFoundError,
-} from '../utils/errors';
+import { AppError, LearningConflictError, NotFoundError } from '../../utils/errors';
 
 const iso = (value: number) => new Date(value).toISOString();
-const timestamps = (row: {
-  createdAt: number;
-  updatedAt: number;
-  completedAt: number | null;
-}) => ({
+const timestamps = (row: { createdAt: number; updatedAt: number; completedAt: number | null }) => ({
   createdAt: iso(row.createdAt),
   updatedAt: iso(row.updatedAt),
   completedAt: row.completedAt === null ? null : iso(row.completedAt),
@@ -56,9 +42,7 @@ export function taskDTO(row: TaskAggregate) {
     ...row,
     ...timestamps(row),
     actualMinutes,
-    averageSessionMinutes: row.sessions
-      ? Math.round(row.timerMinutes / row.sessions)
-      : 0,
+    averageSessionMinutes: row.sessions ? Math.round(row.timerMinutes / row.sessions) : 0,
     differenceMinutes: actualMinutes - row.targetMinutes,
     percentageUsed: (actualMinutes / row.targetMinutes) * 100,
   };
@@ -127,11 +111,7 @@ export class LearningService {
     });
     return this.epic(user, id);
   }
-  async patchEpic(
-    user: string,
-    id: string,
-    input: z.infer<typeof epicPatchSchema>,
-  ) {
+  async patchEpic(user: string, id: string, input: z.infer<typeof epicPatchSchema>) {
     const epic = await this.ownedEpic(user, id);
     checkVersion(epic.version, input.version);
     const { version: _v, ...values } = input;
@@ -174,16 +154,8 @@ export class LearningService {
     const epic = await this.ownedEpic(user, id);
     checkVersion(epic.version, version);
     const existing = await this.repo.taskIds(id);
-    if (
-      ids.length !== existing.length ||
-      new Set(ids).size !== ids.length ||
-      existing.some((t) => !ids.includes(t))
-    )
-      throw new AppError(
-        'INVALID_ORDER',
-        'Include every task exactly once.',
-        400,
-      );
+    if (ids.length !== existing.length || new Set(ids).size !== ids.length || existing.some((t) => !ids.includes(t)))
+      throw new AppError('INVALID_ORDER', 'Include every task exactly once.', 400);
     await this.repo.mutate(
       epic,
       ids.map((task, index) => ({
@@ -194,12 +166,7 @@ export class LearningService {
     );
     return this.epic(user, id);
   }
-  async patchTask(
-    user: string,
-    epicId: string,
-    id: string,
-    input: z.infer<typeof taskPatchSchema>,
-  ) {
+  async patchTask(user: string, epicId: string, id: string, input: z.infer<typeof taskPatchSchema>) {
     const epic = await this.ownedEpic(user, epicId),
       task = await this.ownedTask(user, epicId, id);
     checkVersion(task.version, input.version);
@@ -207,12 +174,7 @@ export class LearningService {
     await this.repo.mutate(epic, [{ kind: 'task', id, values }]);
     return this.task(user, epicId, id);
   }
-  async status(
-    user: string,
-    epicId: string,
-    id: string,
-    input: z.infer<typeof statusInputSchema>,
-  ) {
+  async status(user: string, epicId: string, id: string, input: z.infer<typeof statusInputSchema>) {
     const epic = await this.ownedEpic(user, epicId),
       task = await this.ownedTask(user, epicId, id);
     checkVersion(task.version, input.version);
@@ -222,8 +184,7 @@ export class LearningService {
         id,
         values: {
           status: input.status,
-          completedAt:
-            input.status === 'Done' ? (task.completedAt ?? Date.now()) : null,
+          completedAt: input.status === 'Done' ? (task.completedAt ?? Date.now()) : null,
         },
       },
     ]);
@@ -237,11 +198,7 @@ export class LearningService {
   }
   private validateSession(input: SessionInput) {
     if (Date.parse(input.endedAt) > Date.now() + 60000)
-      throw new AppError(
-        'INVALID_TIME',
-        'A session cannot end in the future.',
-        400,
-      );
+      throw new AppError('INVALID_TIME', 'A session cannot end in the future.', 400);
   }
   private sessionRow(taskId: string, input: SessionInput): TimeRow {
     return {
@@ -250,9 +207,7 @@ export class LearningService {
       taskId,
       startedAt: Date.parse(input.startedAt),
       endedAt: Date.parse(input.endedAt),
-      entryDate: new Date(Date.parse(input.startedAt))
-        .toISOString()
-        .slice(0, 10),
+      entryDate: new Date(Date.parse(input.startedAt)).toISOString().slice(0, 10),
       minutes: input.durationMinutes,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -265,17 +220,9 @@ export class LearningService {
       row.endedAt !== Date.parse(input.endedAt) ||
       row.minutes !== input.durationMinutes
     )
-      throw new LearningConflictError(
-        'This session ID has already been used for different time.',
-      );
+      throw new LearningConflictError('This session ID has already been used for different time.');
   }
-  async saveSession(
-    user: string,
-    epicId: string,
-    id: string,
-    version: number,
-    input: SessionInput,
-  ) {
+  async saveSession(user: string, epicId: string, id: string, version: number, input: SessionInput) {
     const epic = await this.ownedEpic(user, epicId),
       task = await this.ownedTask(user, epicId, id);
     const previous = await this.repo.time(id, input.id);
@@ -285,9 +232,7 @@ export class LearningService {
     }
     checkVersion(task.version, version);
     if (task.status !== 'In progress')
-      throw new LearningConflictError(
-        'Set this task to In progress before saving a timer session.',
-      );
+      throw new LearningConflictError('Set this task to In progress before saving a timer session.');
     this.validateSession(input);
     try {
       await this.repo.mutate(epic, [
@@ -301,34 +246,21 @@ export class LearningService {
     }
     return this.task(user, epicId, id);
   }
-  async complete(
-    user: string,
-    epicId: string,
-    id: string,
-    input: CompleteInput,
-  ) {
+  async complete(user: string, epicId: string, id: string, input: CompleteInput) {
     const epic = await this.ownedEpic(user, epicId),
       task = await this.ownedTask(user, epicId, id);
-    const previous = input.session
-      ? await this.repo.time(id, input.session.id)
-      : undefined;
+    const previous = input.session ? await this.repo.time(id, input.session.id) : undefined;
     if (previous && input.session) this.sameSession(previous, input.session);
     if (task.status === 'Done') {
       if (input.session && !previous)
-        throw new LearningConflictError(
-          'Completed tasks cannot accept a new timer session.',
-        );
+        throw new LearningConflictError('Completed tasks cannot accept a new timer session.');
       if (input.comment !== undefined && input.comment !== task.comment)
-        throw new LearningConflictError(
-          'Completion was already saved. Edit the notes separately.',
-        );
+        throw new LearningConflictError('Completion was already saved. Edit the notes separately.');
       return taskDTO(task);
     }
     checkVersion(task.version, input.version);
     if (task.status === 'Blocked' || task.status === 'Cancelled')
-      throw new LearningConflictError(
-        'Change this task to Todo or In progress before completing it.',
-      );
+      throw new LearningConflictError('Change this task to Todo or In progress before completing it.');
     const changes: Change[] = [];
     if (input.session && !previous) {
       this.validateSession(input.session);
@@ -350,13 +282,10 @@ export class LearningService {
       await this.repo.mutate(epic, changes);
     } catch (error) {
       const current = await this.ownedTask(user, epicId, id);
-      const saved = input.session
-        ? await this.repo.time(id, input.session.id)
-        : undefined;
+      const saved = input.session ? await this.repo.time(id, input.session.id) : undefined;
       if (current.status !== 'Done' || (input.session && !saved)) throw error;
       if (saved && input.session) this.sameSession(saved, input.session);
-      if (input.comment !== undefined && input.comment !== current.comment)
-        throw error;
+      if (input.comment !== undefined && input.comment !== current.comment) throw error;
     }
     return this.task(user, epicId, id);
   }
@@ -365,22 +294,11 @@ export class LearningService {
     const r = await this.repo.times(id, q);
     return page(r.rows.map(timeDTO), r.total, q);
   }
-  async createTime(
-    user: string,
-    epic: string,
-    id: string,
-    input: z.infer<typeof createTimeSchema>,
-  ) {
-    if (input.type === 'stopwatch')
-      return this.saveSession(user, epic, id, input.version, input);
+  async createTime(user: string, epic: string, id: string, input: z.infer<typeof createTimeSchema>) {
+    if (input.type === 'stopwatch') return this.saveSession(user, epic, id, input.version, input);
     return this.createManual(user, epic, id, input);
   }
-  async createManual(
-    user: string,
-    epicId: string,
-    id: string,
-    input: z.infer<typeof createManualSchema>,
-  ) {
+  async createManual(user: string, epicId: string, id: string, input: z.infer<typeof createManualSchema>) {
     const epic = await this.ownedEpic(user, epicId),
       task = await this.ownedTask(user, epicId, id);
     const same = (r: ManualRow) => {
@@ -416,13 +334,7 @@ export class LearningService {
     }
     return timeDTO(row);
   }
-  async patchManual(
-    user: string,
-    epicId: string,
-    id: string,
-    entryId: string,
-    input: z.infer<typeof patchTimeSchema>,
-  ) {
+  async patchManual(user: string, epicId: string, id: string, entryId: string, input: z.infer<typeof patchTimeSchema>) {
     const epic = await this.ownedEpic(user, epicId),
       task = await this.ownedTask(user, epicId, id),
       entry = await this.repo.time(id, entryId);

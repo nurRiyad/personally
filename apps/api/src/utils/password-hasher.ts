@@ -4,19 +4,11 @@ const KEY_LENGTH = 256;
 const SALT_LENGTH = 16;
 const ALGORITHM = `pbkdf2-sha256-v1:${ITERATIONS}`;
 
-const bytesToBase64 = (bytes: Uint8Array) =>
-  btoa(String.fromCharCode(...bytes));
-const base64ToBytes = (value: string) =>
-  Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
+const bytesToBase64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes));
+const base64ToBytes = (value: string) => Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
 
 async function derive(password: string, salt: Uint8Array) {
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(password),
-    'PBKDF2',
-    false,
-    ['deriveBits'],
-  );
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
   const saltBuffer = new Uint8Array(salt).buffer as ArrayBuffer;
   return new Uint8Array(
     await crypto.subtle.deriveBits(
@@ -45,8 +37,7 @@ export async function verifyPassword(password: string, encoded: string) {
   const actual = await derive(password, base64ToBytes(saltValue));
   if (expected.length !== actual.length) return false;
   let difference = 0;
-  for (let index = 0; index < expected.length; index += 1)
-    difference |= expected[index] ^ actual[index];
+  for (let index = 0; index < expected.length; index += 1) difference |= expected[index] ^ actual[index];
   return difference === 0;
 }
 

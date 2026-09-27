@@ -24,16 +24,12 @@ const editableKinds = [
 const dateSchema = z.string().refine((value) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T00:00:00.000Z`);
-  return (
-    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
-  );
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }, 'Choose a valid date.');
 const amountSchema = z.number().int().positive().max(999_999_999);
 const idSchema = z.string().uuid();
 
-export const assetTypeInputSchema = z
-  .object({ name: z.string().trim().min(1).max(60) })
-  .strict();
+export const assetTypeInputSchema = z.object({ name: z.string().trim().min(1).max(60) }).strict();
 export const assetTypeResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -72,10 +68,7 @@ export const assetPatchSchema = z
     isReceivable: z.boolean().optional(),
   })
   .strict()
-  .refine(
-    (value) => Object.keys(value).length > 0,
-    'Provide at least one field to update.',
-  );
+  .refine((value) => Object.keys(value).length > 0, 'Provide at least one field to update.');
 export type AssetPatchInput = z.infer<typeof assetPatchSchema>;
 export const assetResponseSchema = z.object({
   id: z.string(),
@@ -108,9 +101,7 @@ export const assetListQuerySchema = z
   .strict();
 export const assetActivityEndpointSchema = z.union([
   z.object({ assetId: idSchema }).strict(),
-  z
-    .object({ endpoint: z.enum(['outside', 'growth_return', 'personal_use']) })
-    .strict(),
+  z.object({ endpoint: z.enum(['outside', 'growth_return', 'personal_use']) }).strict(),
 ]);
 export type AssetActivityEndpoint = z.infer<typeof assetActivityEndpointSchema>;
 export const assetActivityInputSchema = z
@@ -124,14 +115,10 @@ export const assetActivityInputSchema = z
   })
   .strict()
   .superRefine((value, ctx) => {
-    const srcAssetId =
-      'assetId' in value.source ? value.source.assetId : undefined;
-    const srcEndpoint =
-      'endpoint' in value.source ? value.source.endpoint : undefined;
-    const dstAssetId =
-      'assetId' in value.destination ? value.destination.assetId : undefined;
-    const dstEndpoint =
-      'endpoint' in value.destination ? value.destination.endpoint : undefined;
+    const srcAssetId = 'assetId' in value.source ? value.source.assetId : undefined;
+    const srcEndpoint = 'endpoint' in value.source ? value.source.endpoint : undefined;
+    const dstAssetId = 'assetId' in value.destination ? value.destination.assetId : undefined;
+    const dstEndpoint = 'endpoint' in value.destination ? value.destination.endpoint : undefined;
     const srcAsset = srcAssetId !== undefined;
     const dstAsset = dstAssetId !== undefined;
     const valid =
@@ -212,9 +199,7 @@ export const assetDashboardResponseSchema = z.object({
   recentActivity: z.array(assetActivityResponseSchema),
   series: z.array(z.object({ date: dateSchema, value: z.number() })),
 });
-export type AssetDashboardResponse = z.infer<
-  typeof assetDashboardResponseSchema
->;
+export type AssetDashboardResponse = z.infer<typeof assetDashboardResponseSchema>;
 export const assetDetailResponseSchema = assetResponseSchema.extend({
   activities: z.array(assetActivityResponseSchema),
   series: z.array(z.object({ date: dateSchema, value: z.number() })),

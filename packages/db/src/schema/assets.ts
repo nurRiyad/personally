@@ -14,23 +14,12 @@ export const assets = sqliteTable(
       .references(() => assetTypes.id, { onDelete: 'restrict' }),
     name: text('name').notNull(),
     detail: text('detail').notNull().default(''),
-    isLiquid: integer('is_liquid', { mode: 'boolean' })
-      .notNull()
-      .default(false),
-    isReceivable: integer('is_receivable', { mode: 'boolean' })
-      .notNull()
-      .default(false),
+    isLiquid: integer('is_liquid', { mode: 'boolean' }).notNull().default(false),
+    isReceivable: integer('is_receivable', { mode: 'boolean' }).notNull().default(false),
     openedOn: text('opened_on').notNull(),
     archivedAt: integer('archived_at'),
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
   },
-  (t) => [
-    index('asset_owner_type_active').on(
-      t.userId,
-      t.assetTypeId,
-      t.archivedAt,
-      t.name,
-    ),
-  ],
+  (t) => [index('asset_owner_type_active').on(t.userId, t.assetTypeId, t.archivedAt, t.name)],
 );

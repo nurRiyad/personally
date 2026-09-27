@@ -11,11 +11,7 @@ export class AppError extends Error {
 
 export class ConflictError extends AppError {
   constructor() {
-    super(
-      'ACCOUNT_CONFLICT',
-      'Unable to create account with those details.',
-      409,
-    );
+    super('ACCOUNT_CONFLICT', 'Unable to create account with those details.', 409);
   }
 }
 

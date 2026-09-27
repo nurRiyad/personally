@@ -1,27 +1,9 @@
 'use client';
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  getCurrentUser,
-  login,
-  logout,
-  register,
-  type AuthUser,
-} from '../../lib/api/auth';
-import {
-  clearAccessToken,
-  getAccessToken,
-  setAccessToken,
-} from '../../lib/auth/storage';
+import { getCurrentUser, login, logout, register, type AuthUser } from '../../lib/api/auth';
+import { clearAccessToken, getAccessToken, setAccessToken } from '../../lib/auth/storage';
 import type { LoginRequest, RegisterRequest } from '@personally/validation';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
@@ -47,17 +29,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setStatus('unauthenticated');
       if (pathname !== '/auth') {
-        router.replace(
-          `/auth?returnTo=${encodeURIComponent(pathname || '/dashboard')}`,
-        );
+        router.replace(`/auth?returnTo=${encodeURIComponent(pathname || '/dashboard')}`);
       }
     };
     window.addEventListener('personally:session-expired', handleSessionExpired);
-    return () =>
-      window.removeEventListener(
-        'personally:session-expired',
-        handleSessionExpired,
-      );
+    return () => window.removeEventListener('personally:session-expired', handleSessionExpired);
   }, [pathname, router]);
 
   const refresh = useCallback(async () => {

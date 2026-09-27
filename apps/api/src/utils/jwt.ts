@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
-import { UnauthorizedError } from '../utils/errors';
+import { UnauthorizedError } from './errors';
 
 type JwtConfig = {
   secret: string;
@@ -28,8 +28,7 @@ export async function verifyAccessToken(token: string, config: JwtConfig) {
       issuer: config.issuer,
       audience: config.audience,
     });
-    if (payload.type !== 'access' || typeof payload.sub !== 'string')
-      throw new Error('Invalid subject');
+    if (payload.type !== 'access' || typeof payload.sub !== 'string') throw new Error('Invalid subject');
     return { userId: payload.sub };
   } catch {
     throw new UnauthorizedError('Invalid or expired token.');

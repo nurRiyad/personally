@@ -3,9 +3,7 @@ export const healthSchema = z.object({
   data: z.object({ status: z.literal('ok') }),
 });
 
-const passwordSchema = z
-  .string()
-  .min(8, 'Password must be at least 8 characters.');
+const passwordSchema = z.string().min(8, 'Password must be at least 8 characters.');
 
 export const registerRequestSchema = z
   .object({

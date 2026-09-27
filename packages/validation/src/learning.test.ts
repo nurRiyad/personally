@@ -23,18 +23,13 @@ describe('learning form contracts', () => {
     });
   });
   it('requires epic time and rejects impossible calendar dates', () => {
-    expect(
-      learningEpicSchema.safeParse({ name: 'Epic', targetDate: '2026-12-01' })
-        .success,
-    ).toBe(false);
+    expect(learningEpicSchema.safeParse({ name: 'Epic', targetDate: '2026-12-01' }).success).toBe(false);
     expect(calendarDateSchema.safeParse('2026-02-29').success).toBe(false);
     expect(calendarDateSchema.safeParse('2028-02-29').success).toBe(true);
   });
   it('rejects negative, zero and fractional manual time', () => {
     for (const minutes of ['-1', '0', '1.5', '1441'])
-      expect(
-        manualTimeSchema.safeParse({ date: '2026-09-14', minutes }).success,
-      ).toBe(false);
+      expect(manualTimeSchema.safeParse({ date: '2026-09-14', minutes }).success).toBe(false);
   });
   it('rounds timer intervals up to the next whole minute', () => {
     const value = {
@@ -44,9 +39,7 @@ describe('learning form contracts', () => {
       durationMinutes: 2,
     };
     expect(sessionInputSchema.safeParse(value).success).toBe(true);
-    expect(
-      sessionInputSchema.safeParse({ ...value, durationMinutes: 1 }).success,
-    ).toBe(false);
+    expect(sessionInputSchema.safeParse({ ...value, durationMinutes: 1 }).success).toBe(false);
   });
   it('stores a non-zero interval shorter than a minute as one minute', () => {
     const value = {
@@ -56,8 +49,6 @@ describe('learning form contracts', () => {
       durationMinutes: 1,
     };
     expect(sessionInputSchema.safeParse(value).success).toBe(true);
-    expect(
-      sessionInputSchema.safeParse({ ...value, durationMinutes: 0 }).success,
-    ).toBe(false);
+    expect(sessionInputSchema.safeParse({ ...value, durationMinutes: 0 }).success).toBe(false);
   });
 });

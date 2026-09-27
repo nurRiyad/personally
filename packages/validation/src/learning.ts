@@ -1,11 +1,7 @@
 import { z } from 'zod';
 
 const name = z.string().trim().min(1, 'Name is required.').max(120);
-const description = z
-  .string()
-  .trim()
-  .min(1, 'Description is required.')
-  .max(500);
+const description = z.string().trim().min(1, 'Description is required.').max(500);
 const minutes = z.number().int().positive().max(5256000);
 const note = z.string().trim().max(500).nullable();
 export const calendarDateSchema = z
@@ -13,17 +9,9 @@ export const calendarDateSchema = z
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a valid date.')
   .refine((value) => {
     const date = new Date(`${value}T00:00:00Z`);
-    return (
-      !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
-    );
+    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
   }, 'Use a valid date.');
-export const taskStatusSchema = z.enum([
-  'Todo',
-  'In progress',
-  'Done',
-  'Blocked',
-  'Cancelled',
-]);
+export const taskStatusSchema = z.enum(['Todo', 'In progress', 'Done', 'Blocked', 'Cancelled']);
 export const epicInputSchema = z
   .object({
     name,
@@ -42,20 +30,10 @@ export const taskInputSchema = z
     comment: note.optional(),
   })
   .strict();
-export const versionSchema = z
-  .object({ version: z.number().int().positive() })
-  .strict();
-export const epicPatchSchema = epicInputSchema
-  .partial()
-  .extend(versionSchema.shape)
-  .strict();
-export const taskPatchSchema = taskInputSchema
-  .partial()
-  .extend(versionSchema.shape)
-  .strict();
-export const statusInputSchema = versionSchema
-  .extend({ status: taskStatusSchema })
-  .strict();
+export const versionSchema = z.object({ version: z.number().int().positive() }).strict();
+export const epicPatchSchema = epicInputSchema.partial().extend(versionSchema.shape).strict();
+export const taskPatchSchema = taskInputSchema.partial().extend(versionSchema.shape).strict();
+export const statusInputSchema = versionSchema.extend({ status: taskStatusSchema }).strict();
 export const orderInputSchema = versionSchema
   .extend({ taskIds: z.array(z.string().min(1).max(100)).max(10000) })
   .strict();
@@ -68,15 +46,10 @@ export const sessionInputSchema = z
   })
   .strict()
   .refine(
-    (value) =>
-      Math.ceil(
-        (Date.parse(value.endedAt) - Date.parse(value.startedAt)) / 60000,
-      ) === value.durationMinutes,
+    (value) => Math.ceil((Date.parse(value.endedAt) - Date.parse(value.startedAt)) / 60000) === value.durationMinutes,
     'Duration must match the elapsed minutes rounded up to the next whole minute.',
   );
-export const saveSessionSchema = versionSchema
-  .extend({ session: sessionInputSchema })
-  .strict();
+export const saveSessionSchema = versionSchema.extend({ session: sessionInputSchema }).strict();
 export const completeInputSchema = versionSchema
   .extend({
     session: sessionInputSchema.optional(),
@@ -95,9 +68,7 @@ export const createManualSchema = manualEntryInputSchema
 export const patchManualSchema = manualEntryInputSchema
   .extend({ ...versionSchema.shape, entryVersion: z.number().int().positive() })
   .strict();
-export const deleteManualSchema = versionSchema
-  .extend({ entryVersion: z.number().int().positive() })
-  .strict();
+export const deleteManualSchema = versionSchema.extend({ entryVersion: z.number().int().positive() }).strict();
 export const stopwatchTimeInputSchema = z
   .object({
     type: z.literal('stopwatch'),
@@ -116,10 +87,7 @@ export const manualTimeInputSchema = z.object({
   date: calendarDateSchema,
   minutes: z.number().int().min(1).max(1440),
 });
-export const timeInputSchema = z.discriminatedUnion('type', [
-  stopwatchTimeInputSchema,
-  manualTimeInputSchema,
-]);
+export const timeInputSchema = z.discriminatedUnion('type', [stopwatchTimeInputSchema, manualTimeInputSchema]);
 export const createTimeSchema = z.discriminatedUnion('type', [
   stopwatchTimeInputSchema.extend({ version: z.number().int().positive() }),
   manualTimeInputSchema.extend({ version: z.number().int().positive() }),
@@ -154,9 +122,7 @@ export const epicQuerySchema = pageQuerySchema
 export const taskQuerySchema = pageQuerySchema
   .extend({
     status: z.union([taskStatusSchema, z.literal('All')]).default('All'),
-    sort: z
-      .enum(['weight-desc', 'weight-asc', 'name', 'manual'])
-      .default('weight-desc'),
+    sort: z.enum(['weight-desc', 'weight-asc', 'name', 'manual']).default('weight-desc'),
   })
   .strict();
 export const learningEpicSchema = epicInputSchema.extend({

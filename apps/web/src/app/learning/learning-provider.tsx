@@ -1,34 +1,11 @@
 'use client';
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQuery,
-  useQueryClient,
-  useMutation,
-} from '@tanstack/react-query';
-import {
-  type LearningTask,
-  type SessionInput,
-  type CompleteInput,
-  taskResponseSchema,
-} from '@personally/validation';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { QueryClient, QueryClientProvider, useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { type LearningTask, type SessionInput, type CompleteInput, taskResponseSchema } from '@personally/validation';
 import { ProtectedRoute, useAuth } from '../../components/auth';
 import { Button } from '../../components/ui/button';
 import { Dialog } from '../../components/ui/dialog';
-import {
-  getTask,
-  taskPath,
-  learningRecord,
-  jsonRequest,
-} from '../../lib/api/learning';
+import { getTask, taskPath, learningRecord, jsonRequest } from '../../lib/api/learning';
 import { ApiError } from '../../lib/api/client';
 
 export function LearningProvider({ children }: { children: ReactNode }) {
@@ -41,23 +18,14 @@ export function LearningProvider({ children }: { children: ReactNode }) {
     </ProtectedRoute>
   );
 }
-function AccountLearning({
-  children,
-  userId,
-}: {
-  children: ReactNode;
-  userId: string;
-}) {
+function AccountLearning({ children, userId }: { children: ReactNode; userId: string }) {
   const [client] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
             staleTime: 15000,
-            retry: (count, error) =>
-              !(
-                error instanceof ApiError && [401, 404].includes(error.status)
-              ) && count < 1,
+            retry: (count, error) => !(error instanceof ApiError && [401, 404].includes(error.status)) && count < 1,
           },
           mutations: { retry: false },
         },
@@ -79,10 +47,7 @@ function AccountLearning({
   );
 }
 const UserKey = createContext('');
-export function useLearningQuery<T>(
-  key: readonly unknown[],
-  fn: () => Promise<T>,
-) {
+export function useLearningQuery<T>(key: readonly unknown[], fn: () => Promise<T>) {
   const user = useContext(UserKey);
   return useQuery({ queryKey: ['learning', user, ...key], queryFn: fn });
 }
@@ -123,11 +88,7 @@ type TimerValue = {
   start: (task: LearningTask) => Promise<void>;
   pause: () => void;
   resume: () => void;
-  finish: (
-    task: LearningTask,
-    complete?: boolean,
-    notes?: Pending['notes'],
-  ) => Promise<void>;
+  finish: (task: LearningTask, complete?: boolean, notes?: Pending['notes']) => Promise<void>;
   retry: () => Promise<void>;
   discard: () => void;
 };
@@ -223,9 +184,7 @@ function TimerProvider({ children }: { children: ReactNode }) {
     try {
       let current = await getTask(task.epicId, task.id);
       if (!['Todo', 'In progress'].includes(current.status))
-        throw new Error(
-          'Change the task to Todo or In progress before starting.',
-        );
+        throw new Error('Change the task to Todo or In progress before starting.');
       if (current.status === 'Todo')
         current = await learningRecord(
           `${taskPath(task.epicId, task.id)}/status`,
@@ -267,19 +226,14 @@ function TimerProvider({ children }: { children: ReactNode }) {
     });
     setNow(Date.now());
   }
-  async function finish(
-    task: LearningTask,
-    complete = false,
-    notes?: Pending['notes'],
-  ) {
+  async function finish(task: LearningTask, complete = false, notes?: Pending['notes']) {
     if (locked.current) return;
     if (pendingRef.current) {
       await save(pendingRef.current);
       return;
     }
     const running = activeRef.current;
-    if (running && running.task.id !== task.id)
-      throw new Error('Save the active task timer first.');
+    if (running && running.task.id !== task.id) throw new Error('Save the active task timer first.');
     const endedAt = running?.pausedAt ?? Date.now(),
       elapsedMilliseconds = running ? endedAt - running.startedAt : 0,
       durationMinutes = running ? Math.ceil(elapsedMilliseconds / 60000) : 0;
@@ -301,12 +255,7 @@ function TimerProvider({ children }: { children: ReactNode }) {
     changePending(value);
     await save(value);
   }
-  const seconds = active
-    ? Math.max(
-        0,
-        Math.floor(((active.pausedAt ?? now) - active.startedAt) / 1000),
-      )
-    : 0;
+  const seconds = active ? Math.max(0, Math.floor(((active.pausedAt ?? now) - active.startedAt) / 1000)) : 0;
   const value: TimerValue = {
     active,
     pending,
@@ -326,10 +275,7 @@ function TimerProvider({ children }: { children: ReactNode }) {
   return (
     <TimerContext.Provider value={value}>
       {error && (
-        <p
-          role="alert"
-          className="mx-auto mt-3 max-w-7xl px-5 text-sm text-rose-700"
-        >
+        <p role="alert" className="mx-auto mt-3 max-w-7xl px-5 text-sm text-rose-700">
           {error}
         </p>
       )}

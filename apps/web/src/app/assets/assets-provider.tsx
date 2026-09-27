@@ -21,10 +21,7 @@ function AccountAssets({ children }: { children: ReactNode }) {
         defaultOptions: {
           queries: {
             staleTime: 15000,
-            retry: (count, error) =>
-              !(
-                error instanceof ApiError && [401, 404].includes(error.status)
-              ) && count < 1,
+            retry: (count, error) => !(error instanceof ApiError && [401, 404].includes(error.status)) && count < 1,
           },
           mutations: { retry: false },
         },

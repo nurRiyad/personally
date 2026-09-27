@@ -18,13 +18,7 @@ export class D1UserRepository implements UserRepository {
     return this.db
       .select()
       .from(users)
-      .where(
-        or(
-          eq(users.username, identifier),
-          eq(users.email, identifier),
-          eq(users.phone, identifier),
-        ),
-      )
+      .where(or(eq(users.username, identifier), eq(users.email, identifier), eq(users.phone, identifier)))
       .get();
   }
   async findById(id: string) {

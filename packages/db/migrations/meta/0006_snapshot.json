@@ -1245,12 +1245,7 @@
         },
         "asset_activity_destination_date": {
           "name": "asset_activity_destination_date",
-          "columns": [
-            "destination_asset_id",
-            "activity_date",
-            "created_at",
-            "id"
-          ],
+          "columns": ["destination_asset_id", "activity_date", "created_at", "id"],
           "isUnique": false
         }
       },

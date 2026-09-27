@@ -18,15 +18,11 @@ export function SiteFooter() {
     <footer className="border-t border-slate-200 bg-white">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-10 sm:px-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-sm">
-          <Link
-            href="/"
-            className="text-lg font-semibold tracking-tight text-slate-950"
-          >
+          <Link href="/" className="text-lg font-semibold tracking-tight text-slate-950">
             Personally
           </Link>
           <p className="mt-3 text-sm leading-6 text-slate-500">
-            A private workspace for your budget, assets, and learning—so every
-            next step feels easier to see.
+            A private workspace for your budget, assets, and learning—so every next step feels easier to see.
           </p>
         </div>
 
@@ -36,22 +32,14 @@ export function SiteFooter() {
         >
           <div className="flex flex-wrap gap-x-5 gap-y-2">
             {navigation.map(([href, label]) => (
-              <Link
-                key={href}
-                href={href}
-                className="text-slate-600 transition-colors hover:text-slate-950"
-              >
+              <Link key={href} href={href} className="text-slate-600 transition-colors hover:text-slate-950">
                 {label}
               </Link>
             ))}
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-2 border-slate-200 sm:border-l sm:pl-8">
             {secondaryNavigation.map(([href, label]) => (
-              <Link
-                key={href}
-                href={href}
-                className="text-slate-500 transition-colors hover:text-slate-950"
-              >
+              <Link key={href} href={href} className="text-slate-500 transition-colors hover:text-slate-950">
                 {label}
               </Link>
             ))}

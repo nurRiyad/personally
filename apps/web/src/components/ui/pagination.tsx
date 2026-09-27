@@ -6,11 +6,7 @@ type PaginationProps = {
   onPageChange: (page: number) => void;
 };
 
-export function Pagination({
-  page,
-  totalPages,
-  onPageChange,
-}: PaginationProps) {
+export function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
   if (totalPages < 2) return null;
 
   return (
@@ -26,27 +22,22 @@ export function Pagination({
       >
         Previous
       </Button>
-      <div
-        className="flex items-center gap-1"
-        aria-label={`Page ${page} of ${totalPages}`}
-      >
-        {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-          (pageNumber) => (
-            <ButtonLink
-              key={pageNumber}
-              href="#learning-list"
-              aria-current={pageNumber === page ? 'page' : undefined}
-              onClick={(event) => {
-                event.preventDefault();
-                onPageChange(pageNumber);
-              }}
-              variant={pageNumber === page ? 'secondary' : 'ghost'}
-              className="min-h-9 min-w-9 px-2"
-            >
-              {pageNumber}
-            </ButtonLink>
-          ),
-        )}
+      <div className="flex items-center gap-1" aria-label={`Page ${page} of ${totalPages}`}>
+        {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+          <ButtonLink
+            key={pageNumber}
+            href="#learning-list"
+            aria-current={pageNumber === page ? 'page' : undefined}
+            onClick={(event) => {
+              event.preventDefault();
+              onPageChange(pageNumber);
+            }}
+            variant={pageNumber === page ? 'secondary' : 'ghost'}
+            className="min-h-9 min-w-9 px-2"
+          >
+            {pageNumber}
+          </ButtonLink>
+        ))}
       </div>
       <Button
         variant="ghost"

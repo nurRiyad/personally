@@ -1,11 +1,5 @@
 import { sql } from 'drizzle-orm';
-import {
-  sqliteTable,
-  text,
-  integer,
-  index,
-  check,
-} from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index, check } from 'drizzle-orm/sqlite-core';
 import { users } from './users';
 export const learningEpics = sqliteTable(
   'learning_epics',
@@ -26,10 +20,7 @@ export const learningEpics = sqliteTable(
   },
   (t) => [
     index('learning_epics_owner_created').on(t.userId, t.createdAt, t.id),
-    check(
-      'learning_epics_target',
-      sql`${t.targetMinutes} > 0 AND typeof(${t.targetMinutes}) = 'integer'`,
-    ),
+    check('learning_epics_target', sql`${t.targetMinutes} > 0 AND typeof(${t.targetMinutes}) = 'integer'`),
     check('learning_epics_version', sql`${t.version} >= 1`),
   ],
 );

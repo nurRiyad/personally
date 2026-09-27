@@ -4,14 +4,11 @@ import type { ComponentProps } from 'react';
 type ButtonVariant = 'default' | 'secondary' | 'ghost' | 'destructive';
 
 const variants: Record<ButtonVariant, string> = {
-  default:
-    'bg-slate-950 text-white shadow-sm hover:bg-slate-800 focus-visible:ring-slate-950',
+  default: 'bg-slate-950 text-white shadow-sm hover:bg-slate-800 focus-visible:ring-slate-950',
   secondary:
     'border border-slate-200 bg-white text-slate-950 shadow-sm hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-slate-950',
-  ghost:
-    'text-slate-700 hover:bg-slate-100 hover:text-slate-950 focus-visible:ring-slate-950',
-  destructive:
-    'bg-red-700 text-white shadow-sm hover:bg-red-800 focus-visible:ring-red-700',
+  ghost: 'text-slate-700 hover:bg-slate-100 hover:text-slate-950 focus-visible:ring-slate-950',
+  destructive: 'bg-red-700 text-white shadow-sm hover:bg-red-800 focus-visible:ring-red-700',
 };
 
 const baseClassName =
@@ -23,13 +20,7 @@ export function ButtonLink({
   className = '',
   ...props
 }: ComponentProps<typeof Link> & { variant?: ButtonVariant }) {
-  return (
-    <Link
-      href={href}
-      className={`${baseClassName} ${variants[variant]} ${className}`}
-      {...props}
-    />
-  );
+  return <Link href={href} className={`${baseClassName} ${variants[variant]} ${className}`} {...props} />;
 }
 
 export function Button({
@@ -37,10 +28,5 @@ export function Button({
   className = '',
   ...props
 }: ComponentProps<'button'> & { variant?: ButtonVariant }) {
-  return (
-    <button
-      className={`${baseClassName} ${variants[variant]} ${className}`}
-      {...props}
-    />
-  );
+  return <button className={`${baseClassName} ${variants[variant]} ${className}`} {...props} />;
 }

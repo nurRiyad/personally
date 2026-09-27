@@ -32,11 +32,7 @@ export function AddAssetTypeForm({
     >
       <label className="block text-sm font-medium text-slate-700">
         <span className="mb-2 block">Type name</span>
-        <Input
-          autoComplete="off"
-          placeholder="e.g. Gold, Business, or Agricultural land…"
-          {...form.register('name')}
-        />
+        <Input autoComplete="off" placeholder="e.g. Gold, Business, or Agricultural land…" {...form.register('name')} />
         <p className="mt-1 text-xs text-red-600" role="alert">
           {form.formState.errors.name?.message}
         </p>

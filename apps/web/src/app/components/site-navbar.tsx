@@ -38,21 +38,11 @@ export function SiteNavbar() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 sm:px-8">
-        <Link
-          href="/"
-          className="text-lg font-semibold tracking-tight text-slate-950"
-        >
+        <Link href="/" className="text-lg font-semibold tracking-tight text-slate-950">
           Personally
         </Link>
-        <nav
-          aria-label="Primary navigation"
-          className="hidden items-center gap-5 text-sm md:flex"
-        >
-          <ButtonLink
-            href="/dashboard"
-            variant="ghost"
-            className="min-h-0 px-3 py-2 text-slate-600"
-          >
+        <nav aria-label="Primary navigation" className="hidden items-center gap-5 text-sm md:flex">
+          <ButtonLink href="/dashboard" variant="ghost" className="min-h-0 px-3 py-2 text-slate-600">
             Dashboard
           </ButtonLink>
           {status === 'authenticated' ? (
@@ -77,12 +67,8 @@ export function SiteNavbar() {
                   className="absolute right-0 top-12 z-10 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-950/10"
                 >
                   <div className="border-b border-slate-100 px-4 py-3">
-                    <p className="truncate text-sm font-semibold text-slate-950">
-                      {user?.username}
-                    </p>
-                    <p className="truncate text-xs text-slate-500">
-                      {user?.email}
-                    </p>
+                    <p className="truncate text-sm font-semibold text-slate-950">{user?.username}</p>
+                    <p className="truncate text-xs text-slate-500">{user?.email}</p>
                   </div>
                   <div className="p-2">
                     <Link
@@ -110,11 +96,7 @@ export function SiteNavbar() {
               ) : null}
             </div>
           ) : status === 'unauthenticated' ? (
-            <ButtonLink
-              href="/auth"
-              variant="secondary"
-              className="min-h-0 px-4 py-2"
-            >
+            <ButtonLink href="/auth" variant="secondary" className="min-h-0 px-4 py-2">
               Sign In
             </ButtonLink>
           ) : (

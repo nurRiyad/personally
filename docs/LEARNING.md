@@ -24,16 +24,15 @@ The active timer is browser state. It uses timestamps to calculate elapsed minut
 
 The API follows:
 
-`Route → Controller → Service → Repository → D1`
+`Route → Service → Repository → D1`
 
-Learning routes are protected by the existing auth middleware and mounted under `/learning`. Dependency composition occurs in `apps/api/src/routes/index.ts`; the Worker entrypoint remains unchanged.
+Learning routes are protected by the existing auth middleware and mounted under `/learning`. The feature owns its route, service, and repository modules; the Worker entrypoint remains unchanged.
 
 Relevant modules:
 
-- `apps/api/src/routes/learning.routes.ts` — HTTP methods and paths.
-- `apps/api/src/controllers/learning.controller.ts` — thin Hono adapters.
-- `apps/api/src/services/learning.service.ts` — ownership checks, domain rules, calculations, idempotency, and version conflicts.
-- `apps/api/src/repositories/learning.repository.ts` — D1/Drizzle persistence, aggregates, pagination, guarded writes, and cascades.
+- `apps/api/src/features/learning/learning.routes.ts` — HTTP methods, paths, validation, and response formatting.
+- `apps/api/src/features/learning/learning.service.ts` — ownership checks, domain rules, calculations, idempotency, and version conflicts.
+- `apps/api/src/features/learning/learning.repository.ts` — D1/Drizzle persistence, aggregates, pagination, guarded writes, and cascades.
 - `apps/api/tests/learning.integration.test.ts` — local Miniflare/D1 contract and concurrency coverage.
 
 Responses use `{ data: ... }`; paginated responses also include `meta.page`, `meta.pageSize`, `meta.total`, and `meta.totalPages`. Invalid input returns 400, missing or foreign-owned resources return 404, stale versions and invalid domain transitions return 409, and unauthenticated requests return 401.

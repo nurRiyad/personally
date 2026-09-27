@@ -2,10 +2,10 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { readFile, readdir } from 'node:fs/promises';
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 import app from '../src/index';
-import { signAccessToken } from '../src/security/jwt';
-import { createAuthConfig } from '../src/config';
+import { signAccessToken } from '../src/utils/jwt';
+import { createAuthConfig } from '../src/utils/config';
 import { createDb } from '@personally/db';
-import { D1LearningRepository } from '../src/repositories/learning.repository';
+import { D1LearningRepository } from '../src/features/learning/learning.repository';
 import * as s from '@personally/validation';
 
 // Uses the same local D1 engine as Wrangler, isolated from the developer's data.
@@ -19,12 +19,7 @@ const runtime = new Miniflare(
 );
 let db: D1Database, token: string, otherToken: string;
 const secret = crypto.randomUUID();
-async function request(
-  path: string,
-  method = 'GET',
-  body?: unknown,
-  access = token,
-) {
+async function request(path: string, method = 'GET', body?: unknown, access = token) {
   const response = await app.request(
     `http://localhost${path}`,
     {
@@ -39,12 +34,7 @@ async function request(
   );
   return response;
 }
-async function record<T>(
-  path: string,
-  schema: { parse(value: unknown): T },
-  method = 'GET',
-  body?: unknown,
-) {
+async function record<T>(path: string, schema: { parse(value: unknown): T }, method = 'GET', body?: unknown) {
   const r = await request(path, method, body);
   const json = (await r.json()) as { data: unknown };
   expect(r.status, JSON.stringify(json)).toBeLessThan(300);
@@ -66,12 +56,7 @@ async function newEpic() {
   return record('/learning/epics', s.epicResponseSchema, 'POST', epicInput);
 }
 async function newTask(epicId: string) {
-  return record(
-    `/learning/epics/${epicId}/tasks`,
-    s.taskResponseSchema,
-    'POST',
-    taskInput,
-  );
+  return record(`/learning/epics/${epicId}/tasks`, s.taskResponseSchema, 'POST', taskInput);
 }
 const ep = (id: string) => `/learning/epics/${id}`;
 const tp = (e: string, t: string) => `${ep(e)}/tasks/${t}`;
@@ -88,9 +73,7 @@ function session(minutes = 5): s.SessionInput {
 beforeAll(async () => {
   db = await runtime.getD1Database('DB');
   const dir = new URL('../../../packages/db/migrations/', import.meta.url);
-  for (const name of (await readdir(dir))
-    .filter((n) => n.endsWith('.sql'))
-    .sort()) {
+  for (const name of (await readdir(dir)).filter((n) => n.endsWith('.sql')).sort()) {
     const statements = (await readFile(new URL(name, dir), 'utf8'))
       .split('--> statement-breakpoint')
       .map((v) => v.trim())
@@ -102,25 +85,10 @@ beforeAll(async () => {
       .prepare(
         'INSERT INTO users (id,username,email,phone,password_hash,password_algorithm,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)',
       )
-      .bind(
-        id,
-        id,
-        `${id}@example.test`,
-        id,
-        'not-a-login-hash',
-        'test',
-        Date.now(),
-        Date.now(),
-      )
+      .bind(id, id, `${id}@example.test`, id, 'not-a-login-hash', 'test', Date.now(), Date.now())
       .run();
-  token = await signAccessToken(
-    'learning-owner',
-    createAuthConfig({ JWT_SECRET: secret }),
-  );
-  otherToken = await signAccessToken(
-    'learning-other',
-    createAuthConfig({ JWT_SECRET: secret }),
-  );
+  token = await signAccessToken('learning-owner', createAuthConfig({ JWT_SECRET: secret }));
+  otherToken = await signAccessToken('learning-other', createAuthConfig({ JWT_SECRET: secret }));
 }, 30000);
 afterAll(() => runtime.dispose());
 
@@ -140,12 +108,8 @@ describe('learning API with local D1', () => {
         { DB: db, JWT_SECRET: secret },
       );
       expect(response.status).toBe(204);
-      expect(response.headers.get('Access-Control-Allow-Methods')).toContain(
-        method,
-      );
-      expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
-        'http://localhost:3000',
-      );
+      expect(response.headers.get('Access-Control-Allow-Methods')).toContain(method);
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3000');
     }
   });
   it('creates, updates, fetches, and filters empty epics without fixture data', async () => {
@@ -161,37 +125,22 @@ describe('learning API with local D1', () => {
     expect(edited.name).toBe('Changed epic');
     expect(edited.version).toBe(2);
     const list = s.epicListResponseSchema.parse(
-      await (
-        await request('/learning/epics?status=Todo&sort=name&pageSize=1')
-      ).json(),
+      await (await request('/learning/epics?status=Todo&sort=name&pageSize=1')).json(),
     );
     expect(list.data).toHaveLength(1);
     expect(list.meta.total).toBeGreaterThan(0);
-    expect((await record(ep(epic.id), s.epicResponseSchema)).comment).toBe(
-      'Private comment',
-    );
+    expect((await record(ep(epic.id), s.epicResponseSchema)).comment).toBe('Private comment');
   });
   it('enforces ownership, nested IDs, authentication, real dates, and JSON numbers', async () => {
     const epic = await newEpic(),
       task = await newTask(epic.id),
       other = await newEpic();
+    expect((await request(ep(epic.id), 'GET', undefined, otherToken)).status).toBe(404);
     expect(
-      (await request(ep(epic.id), 'GET', undefined, otherToken)).status,
-    ).toBe(404);
-    expect(
-      (
-        await request(
-          tp(epic.id, task.id),
-          'PATCH',
-          { version: task.version, name: 'steal' },
-          otherToken,
-        )
-      ).status,
+      (await request(tp(epic.id, task.id), 'PATCH', { version: task.version, name: 'steal' }, otherToken)).status,
     ).toBe(404);
     expect((await request(tp(other.id, task.id))).status).toBe(404);
-    expect(
-      (await request('/learning/summary', 'GET', undefined, '')).status,
-    ).toBe(401);
+    expect((await request('/learning/summary', 'GET', undefined, '')).status).toBe(401);
     expect(
       (
         await request('/learning/epics', 'POST', {
@@ -249,9 +198,7 @@ describe('learning API with local D1', () => {
     expect(task.sessions).toBe(2);
     expect(task.averageSessionMinutes).toBe(6);
     expect(task.manualMinutes).toBe(50);
-    expect(
-      (await record(ep(epic.id), s.epicResponseSchema)).actualMinutes,
-    ).toBe(62);
+    expect((await record(ep(epic.id), s.epicResponseSchema)).actualMinutes).toBe(62);
     expect(
       (
         await request(`${path}/times`, 'POST', {
@@ -283,18 +230,13 @@ describe('learning API with local D1', () => {
       minutes: 50,
     });
     task = await record(path, s.taskResponseSchema);
-    entry = await record(
-      `${path}/times/${entry.id}`,
-      s.timeResponseSchema,
-      'PATCH',
-      {
-        version: task.version,
-        entryVersion: entry.version,
-        date: '2026-09-12',
-        minutes: 25,
-        type: 'manual',
-      },
-    );
+    entry = await record(`${path}/times/${entry.id}`, s.timeResponseSchema, 'PATCH', {
+      version: task.version,
+      entryVersion: entry.version,
+      date: '2026-09-12',
+      minutes: 25,
+      type: 'manual',
+    });
     expect(
       (
         await request(`${path}/times/${entry.id}`, 'DELETE', {
@@ -323,18 +265,14 @@ describe('learning API with local D1', () => {
       version: first.version,
       weight: 1,
     });
-    second = await record(
-      `${tp(epic.id, second.id)}/status`,
-      s.taskResponseSchema,
-      'PATCH',
-      { version: second.version, status: 'Blocked' },
-    );
-    first = await record(
-      `${tp(epic.id, first.id)}/complete`,
-      s.taskResponseSchema,
-      'POST',
-      { version: first.version, comment: 'Learned it' },
-    );
+    second = await record(`${tp(epic.id, second.id)}/status`, s.taskResponseSchema, 'PATCH', {
+      version: second.version,
+      status: 'Blocked',
+    });
+    first = await record(`${tp(epic.id, first.id)}/complete`, s.taskResponseSchema, 'POST', {
+      version: first.version,
+      comment: 'Learned it',
+    });
     let aggregate = await record(ep(epic.id), s.epicResponseSchema);
     expect(aggregate.progress).toBe(20);
     expect(aggregate.status).toBe('Todo');
@@ -346,12 +284,10 @@ describe('learning API with local D1', () => {
         })
       ).status,
     ).toBe(409);
-    await record(
-      `${tp(epic.id, second.id)}/status`,
-      s.taskResponseSchema,
-      'PATCH',
-      { version: second.version, status: 'Cancelled' },
-    );
+    await record(`${tp(epic.id, second.id)}/status`, s.taskResponseSchema, 'PATCH', {
+      version: second.version,
+      status: 'Cancelled',
+    });
     aggregate = await record(ep(epic.id), s.epicResponseSchema);
     expect(aggregate.progress).toBe(100);
     expect(aggregate.status).toBe('Done');
@@ -379,18 +315,8 @@ describe('learning API with local D1', () => {
       session: saved,
       comment: 'Reflection',
     };
-    const completed = await record(
-      `${path}/complete`,
-      s.taskResponseSchema,
-      'POST',
-      body,
-    );
-    const repeated = await record(
-      `${path}/complete`,
-      s.taskResponseSchema,
-      'POST',
-      body,
-    );
+    const completed = await record(`${path}/complete`, s.taskResponseSchema, 'POST', body);
+    const repeated = await record(`${path}/complete`, s.taskResponseSchema, 'POST', body);
     expect(repeated.sessions).toBe(1);
     expect(repeated.completedAt).toBe(completed.completedAt);
     expect(repeated.actualMinutes).toBe(8);
@@ -434,12 +360,8 @@ describe('learning API with local D1', () => {
       ]),
     ).rejects.toThrow();
     expect(await repo.time(task.id, time.id)).toBeUndefined();
-    expect((await repo.epic('learning-owner', epic.id))!.version).toBe(
-      snapshot.version,
-    );
-    await repo.mutate(snapshot, [
-      { kind: 'task', id: task.id, values: { weight: 2 } },
-    ]);
+    expect((await repo.epic('learning-owner', epic.id))!.version).toBe(snapshot.version);
+    await repo.mutate(snapshot, [{ kind: 'task', id: task.id, values: { weight: 2 } }]);
     await expect(
       repo.mutate(snapshot, [
         {
@@ -486,9 +408,7 @@ describe('learning API with local D1', () => {
       taskIds: [second.id, first.id],
     });
     const list = s.taskListResponseSchema.parse(
-      await (
-        await request(`${ep(epic.id)}/tasks?sort=manual&pageSize=1`)
-      ).json(),
+      await (await request(`${ep(epic.id)}/tasks?sort=manual&pageSize=1`)).json(),
     );
     expect(list.data[0].id).toBe(second.id);
     expect(list.meta.total).toBe(2);
@@ -505,16 +425,8 @@ describe('learning API with local D1', () => {
       minutes: 5,
     });
     const latest = await record(ep(epic.id), s.epicResponseSchema);
-    expect(
-      (await request(ep(epic.id), 'DELETE', { version: latest.version }))
-        .status,
-    ).toBe(204);
+    expect((await request(ep(epic.id), 'DELETE', { version: latest.version })).status).toBe(204);
     expect((await request(path)).status).toBe(404);
-    expect(
-      await db
-        .prepare('SELECT id FROM learning_task_times WHERE id=?')
-        .bind(entry.id)
-        .first(),
-    ).toBeNull();
+    expect(await db.prepare('SELECT id FROM learning_task_times WHERE id=?').bind(entry.id).first()).toBeNull();
   });
 });

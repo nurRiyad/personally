@@ -1,13 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import {
-  getBudget,
-  createBudget,
-  budgetDelete,
-  budgetPatch,
-  budgetRequest,
-} from '../../lib/api/budget';
+import { getBudget, createBudget, budgetDelete, budgetPatch, budgetRequest } from '../../lib/api/budget';
 import type { BudgetMonth as ApiBudgetMonth } from '@personally/validation';
 import {
   ArrowLeft,
@@ -51,12 +45,7 @@ import {
   type BudgetItem,
   type BudgetMonth,
 } from './budget-data';
-import {
-  BudgetRow,
-  CircularProgress,
-  IncomeRow,
-  SummaryCard,
-} from './budget-components';
+import { BudgetRow, CircularProgress, IncomeRow, SummaryCard } from './budget-components';
 
 const fromApi = (value: ApiBudgetMonth): BudgetMonth => ({
   key: value.month,
@@ -99,9 +88,7 @@ const monthKey = (offset: number) => {
 
 export function BudgetWorkspace() {
   const [months, setMonths] = useState<Record<string, BudgetMonth>>({});
-  const [selectedKey, setSelectedKey] = useState(() =>
-    new Date().toISOString().slice(0, 7),
-  );
+  const [selectedKey, setSelectedKey] = useState(() => new Date().toISOString().slice(0, 7));
   const [returnMonthKey, setReturnMonthKey] = useState<string>();
   const [version, setVersion] = useState<number>();
   const [loading, setLoading] = useState(true);
@@ -175,9 +162,7 @@ export function BudgetWorkspace() {
     void refresh(selectedKey);
   }, [selectedKey]);
   const selectedItem = month.items.find((item) => item.id === activeItemId);
-  const selectedIncomeBlock = month.incomeBlocks.find(
-    (block) => block.id === activeIncomeBlockId,
-  );
+  const selectedIncomeBlock = month.incomeBlocks.find((block) => block.id === activeIncomeBlockId);
   const planned = totalPlanned(month);
   const spent = totalSpentForMonth(month);
   const income = totalIncome(month);
@@ -187,12 +172,10 @@ export function BudgetWorkspace() {
   const expectedBankBalance = actualRemaining - month.cashInPocket;
   const grouped = useMemo(
     () =>
-      Object.fromEntries(
-        groups.map((group) => [
-          group,
-          month.items.filter((item) => item.group === group),
-        ]),
-      ) as Record<BudgetGroup, BudgetItem[]>,
+      Object.fromEntries(groups.map((group) => [group, month.items.filter((item) => item.group === group)])) as Record<
+        BudgetGroup,
+        BudgetItem[]
+      >,
     [month],
   );
   const recentActivity = useMemo(
@@ -230,16 +213,10 @@ export function BudgetWorkspace() {
     setReturnMonthKey(selectedKey);
     setSelectedKey(key);
   };
-  const addExpense = (values: {
-    amount: number;
-    category: string;
-    date: string;
-    note?: string;
-  }) => {
+  const addExpense = (values: { amount: number; category: string; date: string; note?: string }) => {
     const item =
-      month.items.find(
-        (entry) => entry.id === activeItemId || entry.name === values.category,
-      ) ?? month.items.find((entry) => entry.name === 'Food')!;
+      month.items.find((entry) => entry.id === activeItemId || entry.name === values.category) ??
+      month.items.find((entry) => entry.name === 'Food')!;
     void budgetRequest(`/budget/items/${item.id}/expenses`, {
       amount: values.amount,
       spentOn: values.date,
@@ -250,16 +227,9 @@ export function BudgetWorkspace() {
         setDialog(null);
         await refresh();
       })
-      .catch((error) =>
-        setLoadError(error?.message ?? 'Unable to save expense.'),
-      );
+      .catch((error) => setLoadError(error?.message ?? 'Unable to save expense.'));
   };
-  const addIncome = (values: {
-    amount: number;
-    blockId: string;
-    date: string;
-    note?: string;
-  }) => {
+  const addIncome = (values: { amount: number; blockId: string; date: string; note?: string }) => {
     void budgetRequest(`/budget/income-sources/${values.blockId}/income`, {
       amount: values.amount,
       receivedOn: values.date,
@@ -272,11 +242,7 @@ export function BudgetWorkspace() {
       })
       .catch((error) => reportMutationError(error, 'Unable to save income.'));
   };
-  const addIncomeBlock = (values: {
-    name: string;
-    planned: number;
-    recurring: boolean;
-  }) => {
+  const addIncomeBlock = (values: { name: string; planned: number; recurring: boolean }) => {
     void budgetRequest(`/budget/months/${selectedKey}/income-sources`, {
       name: values.name,
       plannedAmount: values.planned,
@@ -287,15 +253,9 @@ export function BudgetWorkspace() {
         setDialog(null);
         await refresh();
       })
-      .catch((error) =>
-        reportMutationError(error, 'Unable to add income source.'),
-      );
+      .catch((error) => reportMutationError(error, 'Unable to add income source.'));
   };
-  const editItem = (values: {
-    name: string;
-    planned: number;
-    recurring: boolean;
-  }) => {
+  const editItem = (values: { name: string; planned: number; recurring: boolean }) => {
     if (!activeItemId) return;
     void budgetPatch(`/budget/items/${activeItemId}`, {
       name: values.name,
@@ -320,13 +280,7 @@ export function BudgetWorkspace() {
       })
       .catch((error) => reportMutationError(error, 'Unable to add block.'));
   };
-  const addItem = (values: {
-    name: string;
-    planned: number;
-    group: BudgetGroup;
-    recurring: boolean;
-    note: string;
-  }) => {
+  const addItem = (values: { name: string; planned: number; group: BudgetGroup; recurring: boolean; note: string }) => {
     void getBudget(selectedKey)
       .then((data) => {
         const groupId = data.groups.find((g) => g.name === values.group)?.id;
@@ -357,39 +311,24 @@ export function BudgetWorkspace() {
         setDialog(null);
         setSelectedKey(next);
       })
-      .catch((error) =>
-        setLoadError(error?.message ?? 'Unable to copy this budget.'),
-      );
+      .catch((error) => setLoadError(error?.message ?? 'Unable to copy this budget.'));
   };
   if (loading && !savedMonth)
-    return (
-      <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-8 text-slate-600">
-        Loading budget…
-      </main>
-    );
+    return <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-8 text-slate-600">Loading budget…</main>;
   if (!savedMonth)
     return (
       <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-8">
         <Button
           variant="ghost"
           className="mb-6 px-3"
-          onClick={() =>
-            setSelectedKey(
-              returnMonthKey ?? monthKey(Number(selectedKey.slice(5)) - 9 - 1),
-            )
-          }
+          onClick={() => setSelectedKey(returnMonthKey ?? monthKey(Number(selectedKey.slice(5)) - 9 - 1))}
         >
           <ArrowLeft className="size-4" />
           Back
         </Button>
         <h1 className="text-3xl font-semibold">Budget</h1>
-        <p className="mt-3 text-slate-600">
-          No budget exists for {monthLabel(selectedKey)}.
-        </p>
-        <Button
-          className="mt-5"
-          onClick={() => setShowCreateConfirmation(true)}
-        >
+        <p className="mt-3 text-slate-600">No budget exists for {monthLabel(selectedKey)}.</p>
+        <Button className="mt-5" onClick={() => setShowCreateConfirmation(true)}>
           Create month
         </Button>
         <Dialog
@@ -401,11 +340,7 @@ export function BudgetWorkspace() {
           }}
         >
           <div className="flex flex-wrap justify-end gap-3">
-            <Button
-              variant="secondary"
-              disabled={creating}
-              onClick={() => setShowCreateConfirmation(false)}
-            >
+            <Button variant="secondary" disabled={creating} onClick={() => setShowCreateConfirmation(false)}>
               Cancel
             </Button>
             <Button
@@ -442,16 +377,9 @@ export function BudgetWorkspace() {
         </p>
       )}
       <header className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950">
-          Budget
-        </h1>
+        <h1 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950">Budget</h1>
         <div className="order-3 flex w-full items-center justify-center gap-1 sm:order-2 sm:w-auto">
-          <Button
-            variant="ghost"
-            className="min-h-10 px-3"
-            aria-label="Previous month"
-            onClick={() => moveMonth(-1)}
-          >
+          <Button variant="ghost" className="min-h-10 px-3" aria-label="Previous month" onClick={() => moveMonth(-1)}>
             <ArrowLeft className="size-4" />
           </Button>
           <Select
@@ -460,18 +388,10 @@ export function BudgetWorkspace() {
             value={monthLabel(selectedKey)}
             options={Object.keys(months).map(monthLabel)}
             onValueChange={(value) =>
-              selectMonth(
-                Object.keys(months).find((key) => monthLabel(key) === value) ??
-                  selectedKey,
-              )
+              selectMonth(Object.keys(months).find((key) => monthLabel(key) === value) ?? selectedKey)
             }
           />
-          <Button
-            variant="ghost"
-            className="min-h-10 px-3"
-            aria-label="Next month"
-            onClick={() => moveMonth(1)}
-          >
+          <Button variant="ghost" className="min-h-10 px-3" aria-label="Next month" onClick={() => moveMonth(1)}>
             <ArrowRight className="size-4" />
           </Button>
         </div>
@@ -484,10 +404,7 @@ export function BudgetWorkspace() {
           </Button>
         </div>
       </header>
-      <section
-        aria-label="Monthly summary"
-        className="mt-6 grid gap-3 md:grid-cols-3"
-      >
+      <section aria-label="Monthly summary" className="mt-6 grid gap-3 md:grid-cols-3">
         <SummaryCard
           icon={<WalletCards className="size-5" />}
           label="Income"
@@ -515,21 +432,12 @@ export function BudgetWorkspace() {
           <Card>
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-5 sm:px-6">
               <div>
-                <h2
-                  id="income-heading"
-                  className="text-lg font-semibold text-slate-950"
-                >
+                <h2 id="income-heading" className="text-lg font-semibold text-slate-950">
                   Income
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Add sources and record what you received this month.
-                </p>
+                <p className="mt-1 text-sm text-slate-500">Add sources and record what you received this month.</p>
               </div>
-              <Button
-                className="min-h-9 px-3"
-                variant="secondary"
-                onClick={() => setDialog('income-block')}
-              >
+              <Button className="min-h-9 px-3" variant="secondary" onClick={() => setDialog('income-block')}>
                 <Plus className="size-4" /> Add source
               </Button>
             </div>
@@ -553,31 +461,17 @@ export function BudgetWorkspace() {
           <Card>
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-5 sm:px-6">
               <div>
-                <h2 className="text-lg font-semibold text-slate-950">
-                  Your budget
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Plan on the left, review what happened on the right.
-                </p>
+                <h2 className="text-lg font-semibold text-slate-950">Your budget</h2>
+                <p className="mt-1 text-sm text-slate-500">Plan on the left, review what happened on the right.</p>
               </div>
-              <Button
-                variant="secondary"
-                className="min-h-9 px-3"
-                onClick={() => setDialog('group')}
-              >
+              <Button variant="secondary" className="min-h-9 px-3" onClick={() => setDialog('group')}>
                 <Plus className="size-4" /> Add block
               </Button>
             </div>
             {groups.map((group) => {
               const items = grouped[group] ?? [];
-              const groupPlanned = items.reduce(
-                (sum, item) => sum + item.planned,
-                0,
-              );
-              const groupSpent = items.reduce(
-                (sum, item) => sum + totalSpent(item),
-                0,
-              );
+              const groupPlanned = items.reduce((sum, item) => sum + item.planned, 0);
+              const groupSpent = items.reduce((sum, item) => sum + totalSpent(item), 0);
               return (
                 <div key={group}>
                   <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/70 px-5 py-3 sm:px-6">
@@ -591,9 +485,7 @@ export function BudgetWorkspace() {
                       }
                     >
                       <span>
-                        <span className="font-semibold text-slate-800">
-                          {group}
-                        </span>
+                        <span className="font-semibold text-slate-800">{group}</span>
                         <span className="ml-3 text-xs text-slate-500">
                           {currency(groupSpent)} / {currency(groupPlanned)}
                         </span>
@@ -666,41 +558,27 @@ export function BudgetWorkspace() {
                     >
                       <ArrowLeft className="size-4" /> All activity
                     </a>
-                    <h2
-                      className="mt-1 truncate text-xl font-semibold text-slate-950"
-                      title={selectedItem.name}
-                    >
+                    <h2 className="mt-1 truncate text-xl font-semibold text-slate-950" title={selectedItem.name}>
                       {selectedItem.name}
                     </h2>
                   </div>
                   <div className="justify-self-end">
-                    <CircularProgress
-                      value={percentage(
-                        totalSpent(selectedItem),
-                        selectedItem.planned,
-                      )}
-                    />
+                    <CircularProgress value={percentage(totalSpent(selectedItem), selectedItem.planned)} />
                   </div>
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-3 rounded-xl bg-slate-50 px-4 py-4 text-sm">
                   <div>
                     <p className="text-xs text-slate-500">Planned</p>
-                    <p className="mt-1 font-semibold text-slate-900">
-                      {currency(selectedItem.planned)}
-                    </p>
+                    <p className="mt-1 font-semibold text-slate-900">{currency(selectedItem.planned)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500">Spent</p>
-                    <p className="mt-1 font-semibold text-slate-900">
-                      {currency(totalSpent(selectedItem))}
-                    </p>
+                    <p className="mt-1 font-semibold text-slate-900">{currency(totalSpent(selectedItem))}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500">Left</p>
                     <p className="mt-1 font-semibold text-emerald-700">
-                      {currency(
-                        selectedItem.planned - totalSpent(selectedItem),
-                      )}
+                      {currency(selectedItem.planned - totalSpent(selectedItem))}
                     </p>
                   </div>
                 </div>
@@ -709,21 +587,12 @@ export function BudgetWorkspace() {
                     [...selectedItem.expenses]
                       .sort((a, b) => b.date.localeCompare(a.date))
                       .map((expense) => (
-                        <div
-                          key={expense.id}
-                          className="flex items-center justify-between gap-3 py-2.5"
-                        >
+                        <div key={expense.id} className="flex items-center justify-between gap-3 py-2.5">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-slate-800">
-                              {expense.note || 'Expense'}
-                            </p>
-                            <p className="mt-0.5 text-xs text-slate-500">
-                              {expense.date}
-                            </p>
+                            <p className="truncate text-sm font-medium text-slate-800">{expense.note || 'Expense'}</p>
+                            <p className="mt-0.5 text-xs text-slate-500">{expense.date}</p>
                           </div>
-                          <p className="shrink-0 text-sm font-semibold text-slate-700">
-                            {currency(expense.amount)}
-                          </p>
+                          <p className="shrink-0 text-sm font-semibold text-slate-700">{currency(expense.amount)}</p>
                           <Button
                             variant="ghost"
                             className="min-h-8 shrink-0 px-2 text-red-700 hover:bg-red-50 hover:text-red-800"
@@ -738,23 +607,15 @@ export function BudgetWorkspace() {
                         </div>
                       ))
                   ) : (
-                    <p className="py-3 text-sm text-slate-500">
-                      No expenses recorded yet.
-                    </p>
+                    <p className="py-3 text-sm text-slate-500">No expenses recorded yet.</p>
                   )}
                 </div>
-                <Button
-                  className="mt-4 w-full"
-                  onClick={() => openExpense(selectedItem)}
-                >
+                <Button className="mt-4 w-full" onClick={() => openExpense(selectedItem)}>
                   <Plus className="size-4" /> Add expense
                 </Button>
               </div>
             ) : selectedIncomeBlock ? (
-              <div
-                key={selectedIncomeBlock.id}
-                className="activity-detail-enter"
-              >
+              <div key={selectedIncomeBlock.id} className="activity-detail-enter">
                 <div className="min-w-0 pt-0.5">
                   <a
                     href="#activity"
@@ -763,29 +624,19 @@ export function BudgetWorkspace() {
                   >
                     <ArrowLeft className="size-4" /> All activity
                   </a>
-                  <h2
-                    className="mt-1 truncate text-xl font-semibold text-slate-950"
-                    title={selectedIncomeBlock.name}
-                  >
+                  <h2 className="mt-1 truncate text-xl font-semibold text-slate-950" title={selectedIncomeBlock.name}>
                     {selectedIncomeBlock.name}
                   </h2>
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-3 rounded-xl bg-slate-50 px-4 py-4 text-sm">
                   <div>
                     <p className="text-xs text-slate-500">Planned</p>
-                    <p className="mt-1 font-semibold text-slate-900">
-                      {currency(selectedIncomeBlock.planned)}
-                    </p>
+                    <p className="mt-1 font-semibold text-slate-900">{currency(selectedIncomeBlock.planned)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500">Earned</p>
                     <p className="mt-1 font-semibold text-emerald-700">
-                      {currency(
-                        selectedIncomeBlock.income.reduce(
-                          (total, entry) => total + entry.amount,
-                          0,
-                        ),
-                      )}
+                      {currency(selectedIncomeBlock.income.reduce((total, entry) => total + entry.amount, 0))}
                     </p>
                   </div>
                   <div>
@@ -793,10 +644,7 @@ export function BudgetWorkspace() {
                     <p className="mt-1 font-semibold text-slate-900">
                       {currency(
                         selectedIncomeBlock.planned -
-                          selectedIncomeBlock.income.reduce(
-                            (total, entry) => total + entry.amount,
-                            0,
-                          ),
+                          selectedIncomeBlock.income.reduce((total, entry) => total + entry.amount, 0),
                       )}
                     </p>
                   </div>
@@ -806,21 +654,12 @@ export function BudgetWorkspace() {
                     [...selectedIncomeBlock.income]
                       .sort((a, b) => b.date.localeCompare(a.date))
                       .map((entry) => (
-                        <div
-                          key={entry.id}
-                          className="flex items-center justify-between gap-3 py-2.5"
-                        >
+                        <div key={entry.id} className="flex items-center justify-between gap-3 py-2.5">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-slate-800">
-                              {entry.note || 'Income'}
-                            </p>
-                            <p className="mt-0.5 text-xs text-slate-500">
-                              {entry.date}
-                            </p>
+                            <p className="truncate text-sm font-medium text-slate-800">{entry.note || 'Income'}</p>
+                            <p className="mt-0.5 text-xs text-slate-500">{entry.date}</p>
                           </div>
-                          <p className="shrink-0 text-sm font-semibold text-emerald-700">
-                            {currency(entry.amount)}
-                          </p>
+                          <p className="shrink-0 text-sm font-semibold text-emerald-700">{currency(entry.amount)}</p>
                           <Button
                             variant="ghost"
                             className="min-h-8 shrink-0 px-2 text-red-700 hover:bg-red-50 hover:text-red-800"
@@ -835,15 +674,10 @@ export function BudgetWorkspace() {
                         </div>
                       ))
                   ) : (
-                    <p className="py-3 text-sm text-slate-500">
-                      No income recorded yet.
-                    </p>
+                    <p className="py-3 text-sm text-slate-500">No income recorded yet.</p>
                   )}
                 </div>
-                <Button
-                  className="mt-4 w-full"
-                  onClick={() => openIncome(selectedIncomeBlock.id)}
-                >
+                <Button className="mt-4 w-full" onClick={() => openIncome(selectedIncomeBlock.id)}>
                   <Plus className="size-4" /> Add income
                 </Button>
               </div>
@@ -851,12 +685,8 @@ export function BudgetWorkspace() {
               <>
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-medium text-slate-500">
-                      Recent activity
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Select a budget row to inspect its logs.
-                    </p>
+                    <p className="text-sm font-medium text-slate-500">Recent activity</p>
+                    <p className="mt-1 text-sm text-slate-500">Select a budget row to inspect its logs.</p>
                   </div>
                   <Receipt className="size-5 text-slate-400" />
                 </div>
@@ -866,31 +696,19 @@ export function BudgetWorkspace() {
                       <button
                         key={entry.id}
                         className="flex w-full cursor-pointer items-center justify-between gap-3 py-3 text-left first:pt-0 last:pb-0 hover:text-slate-950"
-                        onClick={() =>
-                          setActiveItemId(
-                            month.items.find(
-                              (item) => item.name === entry.itemName,
-                            )?.id,
-                          )
-                        }
+                        onClick={() => setActiveItemId(month.items.find((item) => item.name === entry.itemName)?.id)}
                       >
                         <span className="min-w-0">
-                          <span className="block font-medium text-slate-800">
-                            {entry.note || entry.itemName}
-                          </span>
+                          <span className="block font-medium text-slate-800">{entry.note || entry.itemName}</span>
                           <span className="mt-1 block truncate text-xs text-slate-500">
                             {entry.group} · {entry.date}
                           </span>
                         </span>
-                        <span className="shrink-0 font-semibold text-slate-700">
-                          {currency(entry.amount)}
-                        </span>
+                        <span className="shrink-0 font-semibold text-slate-700">{currency(entry.amount)}</span>
                       </button>
                     ))
                   ) : (
-                    <p className="py-3 text-sm text-slate-500">
-                      No expenses recorded yet.
-                    </p>
+                    <p className="py-3 text-sm text-slate-500">No expenses recorded yet.</p>
                   )}
                 </div>
               </>
@@ -899,12 +717,9 @@ export function BudgetWorkspace() {
           <Card key={month.key} className="p-5 sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-slate-500">
-                  Cash position
-                </p>
+                <p className="text-sm font-medium text-slate-500">Cash position</p>
                 <p className="mt-1 text-sm text-slate-500">
-                  Track cash you are carrying to calculate what should remain in
-                  your bank.
+                  Track cash you are carrying to calculate what should remain in your bank.
                 </p>
               </div>
               <Button
@@ -918,17 +733,13 @@ export function BudgetWorkspace() {
             </div>
             <div className="mt-5 grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-4">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                  Cash in pocket
-                </p>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Cash in pocket</p>
                 <p className="mt-1 text-lg font-semibold tracking-tight tabular-nums text-slate-950">
                   {currency(month.cashInPocket)}
                 </p>
               </div>
               <div className="border-l border-slate-200 pl-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                  Expected in bank
-                </p>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Expected in bank</p>
                 <p className="mt-1 text-lg font-semibold tracking-tight tabular-nums text-slate-950">
                   {currency(expectedBankBalance)}
                 </p>
@@ -946,31 +757,20 @@ export function BudgetWorkspace() {
                       await refresh();
                       setEditingCashInPocket(false);
                     })
-                    .catch((error) =>
-                      reportMutationError(
-                        error,
-                        'Unable to save cash in pocket.',
-                      ),
-                    );
+                    .catch((error) => reportMutationError(error, 'Unable to save cash in pocket.'));
                 }}
               />
             )}
             <p className="mt-3 text-xs text-slate-500">
-              Actual remaining {currency(actualRemaining)} − cash in pocket =
-              expected bank balance.
+              Actual remaining {currency(actualRemaining)} − cash in pocket = expected bank balance.
             </p>
           </Card>
           <Card className="p-5 sm:p-6">
             <p className="text-sm font-medium text-slate-500">Monthly note</p>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              {month.note ||
-                'Add a note about this month when something changes.'}
+              {month.note || 'Add a note about this month when something changes.'}
             </p>
-            <Button
-              variant="secondary"
-              className="mt-5 w-full"
-              onClick={() => setDialog('note-edit')}
-            >
+            <Button variant="secondary" className="mt-5 w-full" onClick={() => setDialog('note-edit')}>
               Edit note
             </Button>
           </Card>
@@ -993,17 +793,13 @@ export function BudgetWorkspace() {
                 setDialog(null);
                 await refresh();
               })
-              .catch((error) =>
-                setLoadError(error?.message ?? 'Unable to save monthly note.'),
-              );
+              .catch((error) => setLoadError(error?.message ?? 'Unable to save monthly note.'));
           }}
         />
       </Dialog>
       <Dialog
         open={dialog === 'expense'}
-        title={
-          selectedItem ? `Add expense to ${selectedItem.name}` : 'Add expense'
-        }
+        title={selectedItem ? `Add expense to ${selectedItem.name}` : 'Add expense'}
         description="Record a purchase against this month’s plan."
         onClose={() => setDialog(null)}
       >
@@ -1015,12 +811,7 @@ export function BudgetWorkspace() {
         description="Record money received this month."
         onClose={() => setDialog(null)}
       >
-        <IncomeForm
-          block={month.incomeBlocks.find(
-            (block) => block.id === activeIncomeBlockId,
-          )}
-          onSubmit={addIncome}
-        />
+        <IncomeForm block={month.incomeBlocks.find((block) => block.id === activeIncomeBlockId)} onSubmit={addIncome} />
       </Dialog>
       <Dialog
         open={dialog === 'income-block'}
@@ -1041,22 +832,17 @@ export function BudgetWorkspace() {
             <EditIncomeBlockForm
               block={selectedIncomeBlock}
               onSubmit={(values) => {
-                void budgetPatch(
-                  `/budget/income-sources/${selectedIncomeBlock.id}`,
-                  {
-                    name: values.name,
-                    plannedAmount: values.planned,
-                    isRecurring: values.recurring,
-                    monthVersion: version,
-                  },
-                )
+                void budgetPatch(`/budget/income-sources/${selectedIncomeBlock.id}`, {
+                  name: values.name,
+                  plannedAmount: values.planned,
+                  isRecurring: values.recurring,
+                  monthVersion: version,
+                })
                   .then(async () => {
                     setDialog(null);
                     await refresh();
                   })
-                  .catch((error) =>
-                    reportMutationError(error, 'Unable to save income source.'),
-                  );
+                  .catch((error) => reportMutationError(error, 'Unable to save income source.'));
               }}
             />
             <Button
@@ -1082,35 +868,23 @@ export function BudgetWorkspace() {
             </p>
             <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
               <AlertTriangle className="mr-2 inline size-4" />
-              This source cannot be deleted while it has recorded income
-              entries. Delete those entries first.
+              This source cannot be deleted while it has recorded income entries. Delete those entries first.
             </p>
             <div className="flex gap-3">
-              <Button
-                variant="secondary"
-                className="flex-1"
-                onClick={() => setDialog('income-edit')}
-              >
+              <Button variant="secondary" className="flex-1" onClick={() => setDialog('income-edit')}>
                 Cancel
               </Button>
               <Button
                 variant="destructive"
                 className="flex-1"
                 onClick={() =>
-                  void budgetDelete(
-                    `/budget/income-sources/${selectedIncomeBlock.id}`,
-                    { monthVersion: version },
-                  )
+                  void budgetDelete(`/budget/income-sources/${selectedIncomeBlock.id}`, { monthVersion: version })
                     .then(async () => {
                       setDialog(null);
                       setActiveIncomeBlockId(undefined);
                       await refresh();
                     })
-                    .catch((error) =>
-                      setLoadError(
-                        error?.message ?? 'Unable to delete income source.',
-                      ),
-                    )
+                    .catch((error) => setLoadError(error?.message ?? 'Unable to delete income source.'))
                 }
               >
                 Delete source
@@ -1126,19 +900,13 @@ export function BudgetWorkspace() {
         onClose={() => setDialog(null)}
       >
         <div className="space-y-5">
-          <p className="text-sm text-slate-600">
-            Delete this recorded income entry?
-          </p>
+          <p className="text-sm text-slate-600">Delete this recorded income entry?</p>
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
             <AlertTriangle className="mr-2 inline size-4" />
             This permanently removes the recorded amount from this month.
           </p>
           <div className="flex gap-3">
-            <Button
-              variant="secondary"
-              className="flex-1"
-              onClick={() => setDialog(null)}
-            >
+            <Button variant="secondary" className="flex-1" onClick={() => setDialog(null)}>
               Cancel
             </Button>
             <Button
@@ -1146,20 +914,13 @@ export function BudgetWorkspace() {
               className="flex-1"
               onClick={() => {
                 if (!activeIncomeEntryId) return;
-                void budgetDelete(
-                  `/budget/income-entries/${activeIncomeEntryId}`,
-                  { monthVersion: version },
-                )
+                void budgetDelete(`/budget/income-entries/${activeIncomeEntryId}`, { monthVersion: version })
                   .then(async () => {
                     setDialog(null);
                     setActiveIncomeEntryId(undefined);
                     await refresh();
                   })
-                  .catch((error) =>
-                    setLoadError(
-                      error?.message ?? 'Unable to delete income entry.',
-                    ),
-                  );
+                  .catch((error) => setLoadError(error?.message ?? 'Unable to delete income entry.'));
               }}
             >
               Delete entry
@@ -1174,19 +935,13 @@ export function BudgetWorkspace() {
         onClose={() => setDialog(null)}
       >
         <div className="space-y-5">
-          <p className="text-sm text-slate-600">
-            Delete this recorded expense?
-          </p>
+          <p className="text-sm text-slate-600">Delete this recorded expense?</p>
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
             <AlertTriangle className="mr-2 inline size-4" />
             This permanently removes the recorded amount from this month.
           </p>
           <div className="flex gap-3">
-            <Button
-              variant="secondary"
-              className="flex-1"
-              onClick={() => setDialog(null)}
-            >
+            <Button variant="secondary" className="flex-1" onClick={() => setDialog(null)}>
               Cancel
             </Button>
             <Button
@@ -1202,9 +957,7 @@ export function BudgetWorkspace() {
                     setActiveExpenseId(undefined);
                     await refresh();
                   })
-                  .catch((error) =>
-                    setLoadError(error?.message ?? 'Unable to delete expense.'),
-                  );
+                  .catch((error) => setLoadError(error?.message ?? 'Unable to delete expense.'));
               }}
             >
               Delete expense
@@ -1244,15 +997,10 @@ export function BudgetWorkspace() {
             </p>
             <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
               <AlertTriangle className="mr-2 inline size-4" />
-              This item cannot be deleted while it has recorded expenses. Delete
-              its expenses first.
+              This item cannot be deleted while it has recorded expenses. Delete its expenses first.
             </p>
             <div className="flex gap-3">
-              <Button
-                variant="secondary"
-                className="flex-1"
-                onClick={() => setDialog('edit')}
-              >
+              <Button variant="secondary" className="flex-1" onClick={() => setDialog('edit')}>
                 Cancel
               </Button>
               <Button
@@ -1267,9 +1015,7 @@ export function BudgetWorkspace() {
                       setActiveItemId(undefined);
                       await refresh();
                     })
-                    .catch((error) =>
-                      setLoadError(error?.message ?? 'Unable to delete item.'),
-                    )
+                    .catch((error) => setLoadError(error?.message ?? 'Unable to delete item.'))
                 }
               >
                 Delete item
@@ -1299,15 +1045,10 @@ export function BudgetWorkspace() {
             </p>
             <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
               <AlertTriangle className="mr-2 inline size-4" />
-              This block cannot be deleted while it contains budget items. Move
-              or delete every item first.
+              This block cannot be deleted while it contains budget items. Move or delete every item first.
             </p>
             <div className="flex gap-3">
-              <Button
-                variant="secondary"
-                className="flex-1"
-                onClick={() => setDialog(null)}
-              >
+              <Button variant="secondary" className="flex-1" onClick={() => setDialog(null)}>
                 Cancel
               </Button>
               <Button
@@ -1316,9 +1057,7 @@ export function BudgetWorkspace() {
                 onClick={() =>
                   void getBudget(selectedKey)
                     .then((data) => {
-                      const id = data.groups.find(
-                        (group) => group.name === activeGroup,
-                      )?.id;
+                      const id = data.groups.find((group) => group.name === activeGroup)?.id;
                       if (!id) throw new Error('Block not found');
                       return budgetDelete(`/budget/groups/${id}`, {
                         monthVersion: version,
@@ -1329,9 +1068,7 @@ export function BudgetWorkspace() {
                       setActiveGroup(undefined);
                       await refresh();
                     })
-                    .catch((error) =>
-                      setLoadError(error?.message ?? 'Unable to delete block.'),
-                    )
+                    .catch((error) => setLoadError(error?.message ?? 'Unable to delete block.'))
                 }
               >
                 Delete block
@@ -1346,9 +1083,7 @@ export function BudgetWorkspace() {
         description="Add a planned amount to this block."
         onClose={() => setDialog(null)}
       >
-        {activeGroup && (
-          <NewBudgetItemForm group={activeGroup} onSubmit={addItem} />
-        )}
+        {activeGroup && <NewBudgetItemForm group={activeGroup} onSubmit={addItem} />}
       </Dialog>
       <Dialog
         open={dialog === 'copy'}
@@ -1359,13 +1094,10 @@ export function BudgetWorkspace() {
         <div className="space-y-5">
           <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
             <p>
-              <strong className="text-slate-900">{month.items.length}</strong>{' '}
-              budget items will be reviewed.
+              <strong className="text-slate-900">{month.items.length}</strong> budget items will be reviewed.
             </p>
             <p className="mt-1">
-              <strong className="text-slate-900">
-                {month.items.filter((item) => item.recurring).length}
-              </strong>{' '}
+              <strong className="text-slate-900">{month.items.filter((item) => item.recurring).length}</strong>{' '}
               recurring items will be copied with no expenses.
             </p>
           </div>

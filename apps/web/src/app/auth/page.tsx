@@ -6,10 +6,7 @@ import { useForm, type UseFormRegisterReturn } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useAuth, safeReturnTo } from '../../components/auth';
 import { ApiError } from '../../lib/api/client';
-import {
-  loginRequestSchema,
-  registerRequestSchema,
-} from '@personally/validation';
+import { loginRequestSchema, registerRequestSchema } from '@personally/validation';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -63,11 +60,7 @@ function Field({
         ) : null}
       </div>
       {error ? (
-        <p
-          id={`${id}-error`}
-          role="alert"
-          className="mt-2 text-xs text-red-600"
-        >
+        <p id={`${id}-error`} role="alert" className="mt-2 text-xs text-red-600">
           {error.message}
         </p>
       ) : null}
@@ -138,14 +131,10 @@ export default function AuthPage() {
   async function submit(values: Record<string, string>) {
     clearErrors();
     setFormError('');
-    const request =
-      mode === 'login'
-        ? loginRequestSchema.safeParse(values)
-        : registerRequestSchema.safeParse(values);
+    const request = mode === 'login' ? loginRequestSchema.safeParse(values) : registerRequestSchema.safeParse(values);
     if (!request.success) {
       setFormError('Please check the highlighted fields.');
-      for (const issue of request.error.issues)
-        setError(String(issue.path[0]), { message: issue.message });
+      for (const issue of request.error.issues) setError(String(issue.path[0]), { message: issue.message });
       return;
     }
     try {
@@ -160,11 +149,7 @@ export default function AuthPage() {
         for (const [key, messages] of Object.entries(error.fields))
           setError(key, { message: messages[0] ?? 'Invalid value.' });
       } else {
-        setFormError(
-          error instanceof ApiError
-            ? error.message
-            : 'Something went wrong. Please try again.',
-        );
+        setFormError(error instanceof ApiError ? error.message : 'Something went wrong. Please try again.');
       }
     } finally {
     }
@@ -180,19 +165,14 @@ export default function AuthPage() {
     <main className="page-transition flex flex-1 items-center justify-center bg-[#f8faf8] px-5 py-12 sm:px-8 sm:py-20">
       <Card className="w-full max-w-md p-7 sm:p-9">
         <div className="text-center">
-          <Link
-            href="/"
-            className="text-lg font-semibold tracking-tight text-slate-950"
-          >
+          <Link href="/" className="text-lg font-semibold tracking-tight text-slate-950">
             Personally
           </Link>
           <p className="mt-8 text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
             {mode === 'login' ? 'Welcome back' : 'Start with clarity'}
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-950">
-            {mode === 'login'
-              ? 'Sign in to your workspace'
-              : 'Create your account'}
+            {mode === 'login' ? 'Sign in to your workspace' : 'Create your account'}
           </h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">
             {mode === 'login'
@@ -201,11 +181,7 @@ export default function AuthPage() {
           </p>
         </div>
 
-        <form
-          className="mt-8 space-y-5"
-          noValidate
-          onSubmit={handleSubmit(submit)}
-        >
+        <form className="mt-8 space-y-5" noValidate onSubmit={handleSubmit(submit)}>
           {mode === 'login' ? (
             <Field
               id="identifier"
@@ -250,9 +226,7 @@ export default function AuthPage() {
             label="Password"
             registration={register('password')}
             type="password"
-            autoComplete={
-              mode === 'login' ? 'current-password' : 'new-password'
-            }
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             error={errors.password}
           />
           {mode === 'signup' ? (
@@ -276,10 +250,7 @@ export default function AuthPage() {
             </div>
           ) : null}
           {formError ? (
-            <p
-              role="alert"
-              className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700"
-            >
+            <p role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">
               {formError}
             </p>
           ) : null}

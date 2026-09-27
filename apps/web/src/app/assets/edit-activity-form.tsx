@@ -1,10 +1,6 @@
 'use client';
 
-import type {
-  AssetActivityInput,
-  AssetActivity,
-  AssetRecord,
-} from '../../lib/api/assets';
+import type { AssetActivityInput, AssetActivity, AssetRecord } from '../../lib/api/assets';
 import { AssetActivityForm } from './activity-form';
 
 export function EditActivityForm({
@@ -18,12 +14,5 @@ export function EditActivityForm({
   onCancel: () => void;
   onSave: (input: AssetActivityInput) => void;
 }) {
-  return (
-    <AssetActivityForm
-      assets={assets}
-      activity={activity}
-      onCancel={onCancel}
-      onSave={onSave}
-    />
-  );
+  return <AssetActivityForm assets={assets} activity={activity} onCancel={onCancel} onSave={onSave} />;
 }

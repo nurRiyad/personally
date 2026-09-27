@@ -13,14 +13,7 @@ type SelectProps = {
 
 function CaretIcon() {
   return (
-    <svg
-      aria-hidden="true"
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="currentColor"
-      className="size-4"
-    >
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="size-4">
       <path d="M11 6.5H5L8 10z" />
     </svg>
   );
@@ -43,17 +36,8 @@ function CheckIcon() {
   );
 }
 
-export function Select({
-  label,
-  value,
-  options,
-  items: providedItems,
-  onValueChange,
-  className = '',
-}: SelectProps) {
-  const items =
-    providedItems ??
-    options.map((option) => ({ label: option, value: option }));
+export function Select({ label, value, options, items: providedItems, onValueChange, className = '' }: SelectProps) {
+  const items = providedItems ?? options.map((option) => ({ label: option, value: option }));
   return (
     <BaseSelect.Root
       items={items}

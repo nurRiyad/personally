@@ -1,11 +1,41 @@
-type Row = Record<string, any>;
-export class D1BudgetRepository {
+export type BudgetRow = Record<string, any>;
+export type BudgetAggregate = {
+  summary: Record<string, number>;
+  incomeSources: {
+    id: string;
+    name: string;
+    plannedAmount: number;
+    isRecurring: boolean;
+    position: number;
+  }[];
+  groups: {
+    id: string;
+    name: string;
+    position: number;
+    items: {
+      id: string;
+      name: string;
+      plannedAmount: number;
+      isRecurring: boolean;
+      note: string | null;
+      position: number;
+    }[];
+  }[];
+  [key: string]: unknown;
+};
+type Row = BudgetRow;
+export interface BudgetRepository {
+  month(userId: string, key: string): Promise<Row | null>;
+  byId(userId: string, id: string): Promise<Row | null>;
+  list(userId: string, year: number): Promise<Row[]>;
+  aggregate(userId: string, key: string): Promise<BudgetAggregate | null>;
+  run(sql: string, ...args: any[]): Promise<D1Result>;
+}
+
+export class D1BudgetRepository implements BudgetRepository {
   constructor(private db: D1Database) {}
   async month(userId: string, key: string) {
-    return this.db
-      .prepare('SELECT * FROM budget_months WHERE user_id=? AND month=?')
-      .bind(userId, key)
-      .first<Row>();
+    return this.db.prepare('SELECT * FROM budget_months WHERE user_id=? AND month=?').bind(userId, key).first<Row>();
   }
   async byId(userId: string, id: string) {
     return this.db
@@ -16,9 +46,7 @@ export class D1BudgetRepository {
   async list(userId: string, year: number) {
     return (
       await this.db
-        .prepare(
-          'SELECT * FROM budget_months WHERE user_id=? AND month LIKE ? ORDER BY month',
-        )
+        .prepare('SELECT * FROM budget_months WHERE user_id=? AND month LIKE ? ORDER BY month')
         .bind(userId, `${year}-%`)
         .all<Row>()
     ).results;
@@ -33,31 +61,20 @@ export class D1BudgetRepository {
         .all<Row>()
         .then((x) => x.results);
     const [sources, entries, groups, items, expenses] = await Promise.all([
-      q(
-        'SELECT * FROM budget_income_sources WHERE budget_month_id=? ORDER BY position,id',
-        m.id,
-      ),
+      q('SELECT * FROM budget_income_sources WHERE budget_month_id=? ORDER BY position,id', m.id),
       q(
         'SELECT e.* FROM budget_income_entries e JOIN budget_income_sources s ON s.id=e.income_source_id WHERE s.budget_month_id=? ORDER BY e.received_on DESC,e.created_at DESC',
         m.id,
       ),
-      q(
-        'SELECT * FROM budget_groups WHERE budget_month_id=? ORDER BY position,id',
-        m.id,
-      ),
-      q(
-        'SELECT * FROM budget_items WHERE budget_month_id=? ORDER BY position,id',
-        m.id,
-      ),
+      q('SELECT * FROM budget_groups WHERE budget_month_id=? ORDER BY position,id', m.id),
+      q('SELECT * FROM budget_items WHERE budget_month_id=? ORDER BY position,id', m.id),
       q(
         'SELECT e.* FROM budget_expenses e JOIN budget_items i ON i.id=e.budget_item_id WHERE i.budget_month_id=? ORDER BY e.spent_on DESC,e.created_at DESC',
         m.id,
       ),
     ]);
-    const sum = (a: Row[], key: string) =>
-        a.reduce((n, x) => n + Number(x[key]), 0),
-      pct = (n: number, d: number) =>
-        d ? Math.min(100, Math.round((n / d) * 100)) : 0;
+    const sum = (a: Row[], key: string) => a.reduce((n, x) => n + Number(x[key]), 0),
+      pct = (n: number, d: number) => (d ? Math.min(100, Math.round((n / d) * 100)) : 0);
     const src = sources.map((s) => {
       const xs = entries.filter((e) => e.income_source_id === s.id);
       const earned = sum(xs, 'amount');
@@ -124,9 +141,7 @@ export class D1BudgetRepository {
         id: g.id,
         name: g.name,
         position: g.position,
-        items: its.filter(
-          (i) => items.find((x) => x.id === i.id)?.group_id === g.id,
-        ),
+        items: its.filter((i) => items.find((x) => x.id === i.id)?.group_id === g.id),
       })),
       recentActivity: expenses.slice(0, 10).map((e) => {
         const i = items.find((x) => x.id === e.budget_item_id)!;

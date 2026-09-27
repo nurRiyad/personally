@@ -63,20 +63,14 @@ export function LearningForm<T>({
     form.clearErrors();
     setSaved(false);
     const normalized = { ...values };
-    for (const field of fields)
-      if (field.optional && normalized[field.name] === '')
-        normalized[field.name] = null;
+    for (const field of fields) if (field.optional && normalized[field.name] === '') normalized[field.name] = null;
     const result = schema.safeParse(normalized);
     if (!result.success) {
       for (const issue of result.error.issues) {
-        const field = fields.find(
-          (item) => item.name === String(issue.path[0]),
-        );
+        const field = fields.find((item) => item.name === String(issue.path[0]));
         const value = field ? normalized[field.name] : undefined;
         const message =
-          field && !field.optional && (value === '' || value == null)
-            ? `${field.label} is required.`
-            : issue.message;
+          field && !field.optional && (value === '' || value == null) ? `${field.label} is required.` : issue.message;
         form.setError(String(issue.path[0]), { message });
       }
       return;
@@ -96,12 +90,7 @@ export function LearningForm<T>({
     }
   }
   return (
-    <form
-      aria-busy={isSubmitting}
-      onSubmit={form.handleSubmit(submit)}
-      className="space-y-5"
-      noValidate
-    >
+    <form aria-busy={isSubmitting} onSubmit={form.handleSubmit(submit)} className="space-y-5" noValidate>
       <fieldset disabled={isSubmitting} className="space-y-5">
         {fields.map((field) => {
           const inputId = `${id}-${field.name}`,
@@ -114,16 +103,12 @@ export function LearningForm<T>({
             'aria-describedby': error ? `${inputId}-error` : undefined,
             maxLength: field.max,
             min: field.type === 'number' ? 1 : undefined,
-            inputMode:
-              field.type === 'number' ? ('numeric' as const) : undefined,
+            inputMode: field.type === 'number' ? ('numeric' as const) : undefined,
             className: error ? 'border-rose-300 bg-rose-50/30' : undefined,
           };
           return (
             <div key={field.name}>
-              <label
-                htmlFor={inputId}
-                className="mb-2 block text-sm font-medium text-slate-700"
-              >
+              <label htmlFor={inputId} className="mb-2 block text-sm font-medium text-slate-700">
                 {field.label}
                 {field.optional ? ' (optional)' : ''}
               </label>
@@ -149,11 +134,7 @@ export function LearningForm<T>({
                 <Input {...props} type={field.type ?? 'text'} />
               )}
               {error && (
-                <p
-                  id={`${inputId}-error`}
-                  role="alert"
-                  className="mt-1.5 text-xs leading-4 text-rose-700"
-                >
+                <p id={`${inputId}-error`} role="alert" className="mt-1.5 text-xs leading-4 text-rose-700">
                   {String(error.message)}
                 </p>
               )}
@@ -162,31 +143,18 @@ export function LearningForm<T>({
         })}
       </fieldset>
       {errors.root && (
-        <p
-          role="alert"
-          aria-live="assertive"
-          className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700"
-        >
+        <p role="alert" aria-live="assertive" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
           {errors.root.message}
         </p>
       )}
       <div className="flex items-center justify-end gap-2">
         {!onCancel && (
-          <span
-            role="status"
-            aria-live="polite"
-            className="mr-auto text-xs text-slate-500"
-          >
+          <span role="status" aria-live="polite" className="mr-auto text-xs text-slate-500">
             {isDirty ? 'Unsaved changes' : saved ? 'Saved' : ''}
           </span>
         )}
         {onCancel && (
-          <Button
-            disabled={isSubmitting}
-            type="button"
-            variant="ghost"
-            onClick={onCancel}
-          >
+          <Button disabled={isSubmitting} type="button" variant="ghost" onClick={onCancel}>
             Cancel
           </Button>
         )}
@@ -298,9 +266,7 @@ export function StopwatchForm({
 }) {
   return (
     <LearningForm
-      fields={[
-        { name: 'minutes', label: 'Duration in minutes', type: 'number' },
-      ]}
+      fields={[{ name: 'minutes', label: 'Duration in minutes', type: 'number' }]}
       defaults={defaults}
       schema={stopwatchTimeEditSchema}
       onSubmit={onSubmit}

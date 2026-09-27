@@ -1,7 +1,5 @@
 import { z } from 'zod';
-export const monthKeySchema = z
-  .string()
-  .regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Use YYYY-MM.');
+export const monthKeySchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Use YYYY-MM.');
 export const budgetDateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD.')
@@ -15,9 +13,7 @@ const amount = z.number().int().min(0).max(999999999);
 const positive = amount.min(1, 'Amount must be greater than zero.');
 const version = z.number().int().positive();
 export const budgetVersionSchema = z.object({ monthVersion: version }).strict();
-export const budgetMonthInputSchema = z
-  .object({ month: monthKeySchema, note: note.optional() })
-  .strict();
+export const budgetMonthInputSchema = z.object({ month: monthKeySchema, note: note.optional() }).strict();
 export const budgetMonthPatchSchema = z
   .object({
     note: note.optional(),
@@ -25,10 +21,7 @@ export const budgetMonthPatchSchema = z
     monthVersion: version,
   })
   .strict()
-  .refine(
-    (value) => value.note !== undefined || value.cashInPocket !== undefined,
-    'Provide a field to update.',
-  );
+  .refine((value) => value.note !== undefined || value.cashInPocket !== undefined, 'Provide a field to update.');
 export const incomeSourceInputSchema = z
   .object({
     name,
@@ -53,9 +46,7 @@ export const incomeEntryInputSchema = z
     monthVersion: version,
   })
   .strict();
-export const budgetGroupInputSchema = z
-  .object({ name, monthVersion: version })
-  .strict();
+export const budgetGroupInputSchema = z.object({ name, monthVersion: version }).strict();
 export const budgetItemInputSchema = z
   .object({
     groupId: z.string().uuid(),
@@ -91,9 +82,7 @@ export const copyBudgetInputSchema = z
     monthVersion: version,
   })
   .strict();
-export const budgetMonthsQuerySchema = z
-  .object({ year: z.coerce.number().int().min(2000).max(9999) })
-  .strict();
+export const budgetMonthsQuerySchema = z.object({ year: z.coerce.number().int().min(2000).max(9999) }).strict();
 const summary = z.object({
   earnedAmount: z.number().int(),
   plannedAmount: z.number().int(),

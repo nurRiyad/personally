@@ -21,16 +21,8 @@ export function MobileNavigation() {
         className="inline-flex size-11 items-center justify-center rounded-full text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
       >
         <span className="sr-only">{isOpen ? 'Close menu' : 'Open menu'}</span>
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 24 24"
-          className="size-5 fill-none stroke-current stroke-2"
-        >
-          {isOpen ? (
-            <path d="m6 6 12 12M18 6 6 18" />
-          ) : (
-            <path d="M4 7h16M4 12h16M4 17h16" />
-          )}
+        <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 fill-none stroke-current stroke-2">
+          {isOpen ? <path d="m6 6 12 12M18 6 6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
         </svg>
       </button>
       {isOpen ? (
@@ -39,12 +31,7 @@ export function MobileNavigation() {
           className="absolute inset-x-4 top-[4.5rem] rounded-2xl border border-slate-200 bg-white p-3 shadow-xl shadow-slate-950/10"
         >
           <nav aria-label="Mobile navigation" className="grid gap-1">
-            <ButtonLink
-              href="/dashboard"
-              variant="ghost"
-              className="mt-2 w-full"
-              onClick={() => setIsOpen(false)}
-            >
+            <ButtonLink href="/dashboard" variant="ghost" className="mt-2 w-full" onClick={() => setIsOpen(false)}>
               Dashboard
             </ButtonLink>
             {status === 'authenticated' ? (
@@ -69,12 +56,7 @@ export function MobileNavigation() {
                 </button>
               </>
             ) : status === 'unauthenticated' ? (
-              <ButtonLink
-                href="/auth"
-                variant="secondary"
-                className="mt-1 w-full"
-                onClick={() => setIsOpen(false)}
-              >
+              <ButtonLink href="/auth" variant="secondary" className="mt-1 w-full" onClick={() => setIsOpen(false)}>
                 Sign In
               </ButtonLink>
             ) : null}

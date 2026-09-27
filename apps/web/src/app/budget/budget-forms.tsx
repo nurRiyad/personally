@@ -6,12 +6,7 @@ import { Calendar } from '../../components/ui/calendar';
 import { Input } from '../../components/ui/input';
 import { Select } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
-import {
-  totalSpent,
-  type BudgetGroup,
-  type BudgetItem,
-  type IncomeBlock,
-} from './budget-data';
+import { totalSpent, type BudgetGroup, type BudgetItem, type IncomeBlock } from './budget-data';
 
 function FieldError({ message }: { message?: string }) {
   return message ? (
@@ -21,19 +16,10 @@ function FieldError({ message }: { message?: string }) {
   ) : null;
 }
 
-export function MonthlyNoteForm({
-  note,
-  onSubmit,
-}: {
-  note: string;
-  onSubmit: (note: string) => void;
-}) {
+export function MonthlyNoteForm({ note, onSubmit }: { note: string; onSubmit: (note: string) => void }) {
   const form = useForm({ defaultValues: { note } });
   return (
-    <form
-      className="space-y-5"
-      onSubmit={form.handleSubmit((values) => onSubmit(values.note.trim()))}
-    >
+    <form className="space-y-5" onSubmit={form.handleSubmit((values) => onSubmit(values.note.trim()))}>
       <label className="block text-sm font-medium text-slate-700">
         <span className="mb-2 block">Note</span>
         <Textarea
@@ -63,10 +49,7 @@ export function CashInPocketForm({
 }) {
   const form = useForm({ defaultValues: { amount: String(cashInPocket) } });
   return (
-    <form
-      className="mt-5 flex gap-2"
-      onSubmit={form.handleSubmit((values) => onSubmit(Number(values.amount)))}
-    >
+    <form className="mt-5 flex gap-2" onSubmit={form.handleSubmit((values) => onSubmit(Number(values.amount)))}>
       <label className="min-w-0 flex-1">
         <span className="sr-only">Cash in pocket</span>
         <Input
@@ -77,8 +60,7 @@ export function CashInPocketForm({
             required: 'Enter the cash amount.',
             min: { value: 0, message: 'Amount cannot be negative.' },
             max: { value: 999999999, message: 'Amount is too large.' },
-            validate: (value) =>
-              Number.isInteger(Number(value)) || 'Enter a whole taka amount.',
+            validate: (value) => Number.isInteger(Number(value)) || 'Enter a whole taka amount.',
           })}
         />
         <FieldError message={form.formState.errors.amount?.message} />
@@ -95,19 +77,10 @@ export function IncomeForm({
   onSubmit,
 }: {
   block?: IncomeBlock;
-  onSubmit: (value: {
-    amount: number;
-    blockId: string;
-    date: string;
-    note?: string;
-  }) => void;
+  onSubmit: (value: { amount: number; blockId: string; date: string; note?: string }) => void;
 }) {
   const remainingIncome = block
-    ? Math.max(
-        0,
-        block.planned -
-          block.income.reduce((total, entry) => total + entry.amount, 0),
-      )
+    ? Math.max(0, block.planned - block.income.reduce((total, entry) => total + entry.amount, 0))
     : 0;
   const form = useForm({
     defaultValues: {
@@ -141,19 +114,13 @@ export function IncomeForm({
       </label>
       <label className="block text-sm font-medium text-slate-700">
         <span className="mb-2 block">Date received</span>
-        <Calendar
-          value={form.watch('date')}
-          onChange={(value) => form.setValue('date', value)}
-        />
+        <Calendar value={form.watch('date')} onChange={(value) => form.setValue('date', value)} />
       </label>
       <label className="block text-sm font-medium text-slate-700">
         <span className="mb-2 block">
           Note <span className="font-normal text-slate-400">(optional)</span>
         </span>
-        <Textarea
-          placeholder="e.g. Client A invoice…"
-          {...form.register('note')}
-        />
+        <Textarea placeholder="e.g. Client A invoice…" {...form.register('note')} />
       </label>
       <Button type="submit" className="w-full">
         Save income
@@ -165,11 +132,7 @@ export function IncomeForm({
 export function NewIncomeBlockForm({
   onSubmit,
 }: {
-  onSubmit: (value: {
-    name: string;
-    planned: number;
-    recurring: boolean;
-  }) => void;
+  onSubmit: (value: { name: string; planned: number; recurring: boolean }) => void;
 }) {
   const form = useForm({
     defaultValues: { name: '', planned: '', recurring: false },
@@ -187,10 +150,7 @@ export function NewIncomeBlockForm({
     >
       <label className="block text-sm font-medium text-slate-700">
         Income source
-        <Input
-          placeholder="e.g. Consulting…"
-          {...form.register('name', { required: 'Enter an income source' })}
-        />
+        <Input placeholder="e.g. Consulting…" {...form.register('name', { required: 'Enter an income source' })} />
       </label>
       <FieldError message={form.formState.errors.name?.message} />
       <label className="block text-sm font-medium text-slate-700">
@@ -206,11 +166,7 @@ export function NewIncomeBlockForm({
       </label>
       <FieldError message={form.formState.errors.planned?.message} />
       <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
-        <input
-          type="checkbox"
-          className="size-4 rounded border-slate-300"
-          {...form.register('recurring')}
-        />
+        <input type="checkbox" className="size-4 rounded border-slate-300" {...form.register('recurring')} />
         Recurring income
       </label>
       <Button type="submit" className="w-full">
@@ -225,11 +181,7 @@ export function EditIncomeBlockForm({
   onSubmit,
 }: {
   block: IncomeBlock;
-  onSubmit: (value: {
-    name: string;
-    planned: number;
-    recurring: boolean;
-  }) => void;
+  onSubmit: (value: { name: string; planned: number; recurring: boolean }) => void;
 }) {
   const form = useForm({
     defaultValues: {
@@ -251,9 +203,7 @@ export function EditIncomeBlockForm({
     >
       <label className="block text-sm font-medium text-slate-700">
         Income source
-        <Input
-          {...form.register('name', { required: 'Enter an income source' })}
-        />
+        <Input {...form.register('name', { required: 'Enter an income source' })} />
       </label>
       <FieldError message={form.formState.errors.name?.message} />
       <label className="block text-sm font-medium text-slate-700">
@@ -268,11 +218,7 @@ export function EditIncomeBlockForm({
       </label>
       <FieldError message={form.formState.errors.planned?.message} />
       <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
-        <input
-          type="checkbox"
-          className="size-4 rounded border-slate-300"
-          {...form.register('recurring')}
-        />
+        <input type="checkbox" className="size-4 rounded border-slate-300" {...form.register('recurring')} />
         Recurring income
       </label>
       <Button type="submit" className="w-full">
@@ -287,16 +233,9 @@ export function ExpenseForm({
   onSubmit,
 }: {
   item?: BudgetItem;
-  onSubmit: (value: {
-    amount: number;
-    category: string;
-    date: string;
-    note?: string;
-  }) => void;
+  onSubmit: (value: { amount: number; category: string; date: string; note?: string }) => void;
 }) {
-  const remainingSpend = item
-    ? Math.max(0, item.planned - totalSpent(item))
-    : 0;
+  const remainingSpend = item ? Math.max(0, item.planned - totalSpent(item)) : 0;
   const form = useForm({
     defaultValues: {
       amount: remainingSpend ? String(remainingSpend) : '',
@@ -340,37 +279,19 @@ export function ExpenseForm({
           label="Category"
           className="w-full"
           value={form.watch('category')}
-          options={
-            item
-              ? [item.name]
-              : [
-                  'Food',
-                  'Shopping',
-                  'Eating out',
-                  'Pocket money',
-                  'Family support',
-                ]
-          }
-          onValueChange={(value: string) =>
-            form.setValue('category', value, { shouldDirty: true })
-          }
+          options={item ? [item.name] : ['Food', 'Shopping', 'Eating out', 'Pocket money', 'Family support']}
+          onValueChange={(value: string) => form.setValue('category', value, { shouldDirty: true })}
         />
       </label>
       <label className="block text-sm font-medium text-slate-700">
         <span className="mb-2 block">Date</span>
-        <Calendar
-          value={form.watch('date')}
-          onChange={(value) => form.setValue('date', value)}
-        />
+        <Calendar value={form.watch('date')} onChange={(value) => form.setValue('date', value)} />
       </label>
       <label className="block text-sm font-medium text-slate-700">
         <span className="mb-2 block">
           Note <span className="font-normal text-slate-400">(optional)</span>
         </span>
-        <Textarea
-          placeholder="What was this for?…"
-          {...form.register('note')}
-        />
+        <Textarea placeholder="What was this for?…" {...form.register('note')} />
       </label>
       <Button type="submit" className="w-full">
         Save expense
@@ -384,11 +305,7 @@ export function BudgetItemForm({
   onSubmit,
 }: {
   item: BudgetItem;
-  onSubmit: (value: {
-    name: string;
-    planned: number;
-    recurring: boolean;
-  }) => void;
+  onSubmit: (value: { name: string; planned: number; recurring: boolean }) => void;
 }) {
   const form = useForm({
     defaultValues: {
@@ -414,18 +331,11 @@ export function BudgetItemForm({
       </label>
       <label className="block text-sm font-medium text-slate-700">
         <span className="mb-2 block">Planned amount</span>
-        <Input
-          inputMode="decimal"
-          {...form.register('planned', { required: true, min: 0 })}
-        />
+        <Input inputMode="decimal" {...form.register('planned', { required: true, min: 0 })} />
       </label>
       <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
-        <input
-          type="checkbox"
-          className="size-4 rounded border-slate-300"
-          {...form.register('recurring')}
-        />{' '}
-        Recurring item
+        <input type="checkbox" className="size-4 rounded border-slate-300" {...form.register('recurring')} /> Recurring
+        item
       </label>
       <Button type="submit" className="w-full">
         Save changes
@@ -434,23 +344,13 @@ export function BudgetItemForm({
   );
 }
 
-export function NewGroupForm({
-  onSubmit,
-}: {
-  onSubmit: (name: string) => void;
-}) {
+export function NewGroupForm({ onSubmit }: { onSubmit: (name: string) => void }) {
   const form = useForm({ defaultValues: { name: '' } });
   return (
-    <form
-      className="space-y-4"
-      onSubmit={form.handleSubmit((values) => onSubmit(values.name.trim()))}
-    >
+    <form className="space-y-4" onSubmit={form.handleSubmit((values) => onSubmit(values.name.trim()))}>
       <label className="block text-sm font-medium text-slate-700">
         Block name
-        <Input
-          placeholder="e.g. Travel…"
-          {...form.register('name', { required: 'Enter a block name' })}
-        />
+        <Input placeholder="e.g. Travel…" {...form.register('name', { required: 'Enter a block name' })} />
       </label>
       <FieldError message={form.formState.errors.name?.message} />
       <Button type="submit" className="w-full">
@@ -465,13 +365,7 @@ export function NewBudgetItemForm({
   onSubmit,
 }: {
   group: BudgetGroup;
-  onSubmit: (value: {
-    name: string;
-    planned: number;
-    group: BudgetGroup;
-    recurring: boolean;
-    note: string;
-  }) => void;
+  onSubmit: (value: { name: string; planned: number; group: BudgetGroup; recurring: boolean; note: string }) => void;
 }) {
   const form = useForm({
     defaultValues: { name: '', planned: '', recurring: false, note: '' },
@@ -479,16 +373,11 @@ export function NewBudgetItemForm({
   return (
     <form
       className="space-y-4"
-      onSubmit={form.handleSubmit((values) =>
-        onSubmit({ ...values, planned: Number(values.planned), group }),
-      )}
+      onSubmit={form.handleSubmit((values) => onSubmit({ ...values, planned: Number(values.planned), group }))}
     >
       <label className="block text-sm font-medium text-slate-700">
         Item name
-        <Input
-          placeholder="e.g. Transport…"
-          {...form.register('name', { required: 'Enter an item name' })}
-        />
+        <Input placeholder="e.g. Transport…" {...form.register('name', { required: 'Enter an item name' })} />
       </label>
       <FieldError message={form.formState.errors.name?.message} />
       <label className="block text-sm font-medium text-slate-700">
@@ -504,12 +393,8 @@ export function NewBudgetItemForm({
       </label>
       <FieldError message={form.formState.errors.planned?.message} />
       <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
-        <input
-          type="checkbox"
-          className="size-4 rounded border-slate-300"
-          {...form.register('recurring')}
-        />{' '}
-        Recurring item
+        <input type="checkbox" className="size-4 rounded border-slate-300" {...form.register('recurring')} /> Recurring
+        item
       </label>
       <label className="block text-sm font-medium text-slate-700">
         Note <span className="font-normal text-slate-400">(optional)</span>

@@ -12,7 +12,5 @@ export function RecordActivityForm({
   onCancel: () => void;
   onRecord: (input: AssetActivityInput) => void;
 }) {
-  return (
-    <AssetActivityForm assets={assets} onCancel={onCancel} onSave={onRecord} />
-  );
+  return <AssetActivityForm assets={assets} onCancel={onCancel} onSave={onRecord} />;
 }

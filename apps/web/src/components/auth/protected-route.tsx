@@ -6,8 +6,7 @@ import { useEffect } from 'react';
 import { useAuth } from './auth-provider';
 
 export function safeReturnTo(path: string | null | undefined) {
-  if (!path || !path.startsWith('/') || path.startsWith('//'))
-    return '/dashboard';
+  if (!path || !path.startsWith('/') || path.startsWith('//')) return '/dashboard';
   return path;
 }
 
@@ -17,10 +16,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (status === 'unauthenticated')
-      router.replace(
-        `/auth?returnTo=${encodeURIComponent(pathname || '/dashboard')}`,
-      );
+    if (status === 'unauthenticated') router.replace(`/auth?returnTo=${encodeURIComponent(pathname || '/dashboard')}`);
   }, [pathname, router, status]);
 
   if (status !== 'authenticated')

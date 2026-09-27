@@ -1,9 +1,6 @@
 'use client';
 
-import {
-  assetCreateSchema,
-  type AssetCreateInput,
-} from '@personally/validation';
+import { assetCreateSchema, type AssetCreateInput } from '@personally/validation';
 import { Controller, useForm } from 'react-hook-form';
 import type { AssetType } from '../../lib/api/assets';
 import { Button } from '../../components/ui/button';
@@ -31,8 +28,7 @@ export function AddAssetForm({
       isReceivable: false,
     },
   });
-  const error = (name: keyof AssetCreateInput) =>
-    form.formState.errors[name]?.message;
+  const error = (name: keyof AssetCreateInput) => form.formState.errors[name]?.message;
   const submit = (values: AssetCreateInput) => {
     const parsed = assetCreateSchema.safeParse(values);
     if (!parsed.success) {
@@ -47,17 +43,13 @@ export function AddAssetForm({
   };
   return (
     <form className="space-y-5" onSubmit={form.handleSubmit(submit)} noValidate>
-      <p className="text-sm text-slate-600">
-        A positive opening balance is saved as an activity in the ledger.
-      </p>
+      <p className="text-sm text-slate-600">A positive opening balance is saved as an activity in the ledger.</p>
       <Controller
         control={form.control}
         name="typeId"
         render={({ field }) => (
           <div>
-            <p className="mb-2 text-sm font-medium text-slate-700">
-              Asset type
-            </p>
+            <p className="mb-2 text-sm font-medium text-slate-700">Asset type</p>
             <Select
               label="Asset type"
               value={field.value}
@@ -113,30 +105,16 @@ export function AddAssetForm({
         <Input autoComplete="off" {...form.register('detail')} />
       </label>
       <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-        <input
-          type="checkbox"
-          className="mt-0.5 size-4 accent-emerald-700"
-          {...form.register('isLiquid')}
-        />
+        <input type="checkbox" className="mt-0.5 size-4 accent-emerald-700" {...form.register('isLiquid')} />
         <span>
-          <span className="block font-medium text-slate-800">
-            This asset is liquid money
-          </span>
-          <span className="mt-1 block text-xs text-slate-500">
-            Include its balance in your liquid money total.
-          </span>
+          <span className="block font-medium text-slate-800">This asset is liquid money</span>
+          <span className="mt-1 block text-xs text-slate-500">Include its balance in your liquid money total.</span>
         </span>
       </label>
       <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-        <input
-          type="checkbox"
-          className="mt-0.5 size-4 accent-emerald-700"
-          {...form.register('isReceivable')}
-        />
+        <input type="checkbox" className="mt-0.5 size-4 accent-emerald-700" {...form.register('isReceivable')} />
         <span>
-          <span className="block font-medium text-slate-800">
-            Money is owed to me
-          </span>
+          <span className="block font-medium text-slate-800">Money is owed to me</span>
           <span className="mt-1 block text-xs text-slate-500">
             Track this holding as money lent and allow repayments against it.
           </span>

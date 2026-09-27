@@ -1,16 +1,12 @@
-import type { D1BudgetRepository } from '../repositories/budget.repository';
-import { AppError, NotFoundError } from '../utils/errors';
+import type { BudgetAggregate, BudgetRepository } from './budget.repository';
+import { AppError, NotFoundError } from '../../utils/errors';
 const id = () => crypto.randomUUID(),
   now = () => Date.now();
 const conflict = () => {
-  throw new AppError(
-    'BUDGET_CONFLICT',
-    'This budget changed. Refresh and try again.',
-    409,
-  );
+  throw new AppError('BUDGET_CONFLICT', 'This budget changed. Refresh and try again.', 409);
 };
 export class BudgetService {
-  constructor(private repo: D1BudgetRepository) {}
+  constructor(private repo: BudgetRepository) {}
   private async month(user: string, key: string) {
     const m = await this.repo.month(user, key);
     if (!m) throw new NotFoundError();
@@ -44,11 +40,7 @@ export class BudgetService {
   }
   async create(user: string, input: any) {
     if (await this.repo.month(user, input.month))
-      throw new AppError(
-        'BUDGET_EXISTS',
-        'A budget already exists for this month.',
-        409,
-      );
+      throw new AppError('BUDGET_EXISTS', 'A budget already exists for this month.', 409);
     const t = now();
     await this.repo.run(
       'INSERT INTO budget_months (id,user_id,month,note,created_at,updated_at,version) VALUES (?,?,?,?,?,?,?)',
@@ -124,8 +116,7 @@ export class BudgetService {
         fields.push(`${db}=?`);
         vals.push(k === 'isRecurring' ? (x[k] ? 1 : 0) : x[k]);
       }
-    if (!fields.length)
-      throw new AppError('VALIDATION_ERROR', 'Provide a field to update.', 400);
+    if (!fields.length) throw new AppError('VALIDATION_ERROR', 'Provide a field to update.', 400);
     await this.repo.run(
       `UPDATE budget_income_sources SET ${fields.join(',')},updated_at=? WHERE id=?`,
       ...vals,
@@ -186,10 +177,7 @@ export class BudgetService {
   }
   async group(user: string, key: string, x: any) {
     const m = await this.check(user, key, x.monthVersion),
-      p = await this.repo.run(
-        'SELECT COALESCE(MAX(position),-1)+1 p FROM budget_groups WHERE budget_month_id=?',
-        m.id,
-      );
+      p = await this.repo.run('SELECT COALESCE(MAX(position),-1)+1 p FROM budget_groups WHERE budget_month_id=?', m.id);
     await this.repo.run(
       'INSERT INTO budget_groups VALUES (?,?,?,?,?,?)',
       id(),
@@ -211,34 +199,20 @@ export class BudgetService {
       m = r.results?.[0] as any;
     if (!m) throw new NotFoundError();
     if (m.version !== x.monthVersion) conflict();
-    const count = await this.repo.run(
-      'SELECT COUNT(*) total FROM budget_items WHERE group_id=?',
-      record,
-    );
+    const count = await this.repo.run('SELECT COUNT(*) total FROM budget_items WHERE group_id=?', record);
     if (Number((count.results?.[0] as any)?.total) > 0)
-      throw new AppError(
-        'BUDGET_GROUP_NOT_EMPTY',
-        'Remove or move all items before deleting this block.',
-        409,
-      );
+      throw new AppError('BUDGET_GROUP_NOT_EMPTY', 'Remove or move all items before deleting this block.', 409);
     await this.repo.run('DELETE FROM budget_groups WHERE id=?', record);
     await this.touch(m);
     return this.get(user, m.month);
   }
   async item(user: string, key: string, x: any) {
     const m = await this.check(user, key, x.monthVersion);
-    const g = await this.repo.run(
-      'SELECT id FROM budget_groups WHERE id=? AND budget_month_id=?',
-      x.groupId,
-      m.id,
-    );
+    const g = await this.repo.run('SELECT id FROM budget_groups WHERE id=? AND budget_month_id=?', x.groupId, m.id);
     if (!g.results?.length)
-      throw new AppError(
-        'VALIDATION_ERROR',
-        'Group must belong to this budget.',
-        400,
-        { groupId: ['Choose a group in this month.'] },
-      );
+      throw new AppError('VALIDATION_ERROR', 'Group must belong to this budget.', 400, {
+        groupId: ['Choose a group in this month.'],
+      });
     const p = await this.repo.run(
       'SELECT COALESCE(MAX(position),-1)+1 p FROM budget_items WHERE group_id=?',
       x.groupId,
@@ -269,18 +243,11 @@ export class BudgetService {
     if (!m) throw new NotFoundError();
     if (m.version !== x.monthVersion) conflict();
     if (x.groupId) {
-      const g = await this.repo.run(
-        'SELECT id FROM budget_groups WHERE id=? AND budget_month_id=?',
-        x.groupId,
-        m.id,
-      );
+      const g = await this.repo.run('SELECT id FROM budget_groups WHERE id=? AND budget_month_id=?', x.groupId, m.id);
       if (!g.results?.length)
-        throw new AppError(
-          'VALIDATION_ERROR',
-          'Group must belong to this budget.',
-          400,
-          { groupId: ['Choose a group in this month.'] },
-        );
+        throw new AppError('VALIDATION_ERROR', 'Group must belong to this budget.', 400, {
+          groupId: ['Choose a group in this month.'],
+        });
     }
     const fields: string[] = [],
       vals: any[] = [];
@@ -295,14 +262,8 @@ export class BudgetService {
         fields.push(`${db}=?`);
         vals.push(k === 'isRecurring' ? (x[k] ? 1 : 0) : x[k]);
       }
-    if (!fields.length)
-      throw new AppError('VALIDATION_ERROR', 'Provide a field to update.', 400);
-    await this.repo.run(
-      `UPDATE budget_items SET ${fields.join(',')},updated_at=? WHERE id=?`,
-      ...vals,
-      now(),
-      record,
-    );
+    if (!fields.length) throw new AppError('VALIDATION_ERROR', 'Provide a field to update.', 400);
+    await this.repo.run(`UPDATE budget_items SET ${fields.join(',')},updated_at=? WHERE id=?`, ...vals, now(), record);
     await this.touch(m);
     return this.get(user, m.month);
   }
@@ -315,16 +276,9 @@ export class BudgetService {
       m = r.results?.[0] as any;
     if (!m) throw new NotFoundError();
     if (m.version !== x.monthVersion) conflict();
-    const count = await this.repo.run(
-      'SELECT COUNT(*) total FROM budget_expenses WHERE budget_item_id=?',
-      record,
-    );
+    const count = await this.repo.run('SELECT COUNT(*) total FROM budget_expenses WHERE budget_item_id=?', record);
     if (Number((count.results?.[0] as any)?.total) > 0)
-      throw new AppError(
-        'BUDGET_ITEM_NOT_EMPTY',
-        'Items with recorded expenses cannot be deleted.',
-        409,
-      );
+      throw new AppError('BUDGET_ITEM_NOT_EMPTY', 'Items with recorded expenses cannot be deleted.', 409);
     await this.repo.run('DELETE FROM budget_items WHERE id=?', record);
     await this.touch(m);
     return this.get(user, m.month);
@@ -341,16 +295,9 @@ export class BudgetService {
     if (m.version !== x.monthVersion) conflict();
     const date = kind === 'source' ? x.receivedOn : x.spentOn;
     if (!date.startsWith(m.month))
-      throw new AppError(
-        'VALIDATION_ERROR',
-        'Activity date must be in its budget month.',
-        400,
-        {
-          [kind === 'source' ? 'receivedOn' : 'spentOn']: [
-            'Date must be in the budget month.',
-          ],
-        },
-      );
+      throw new AppError('VALIDATION_ERROR', 'Activity date must be in its budget month.', 400, {
+        [kind === 'source' ? 'receivedOn' : 'spentOn']: ['Date must be in the budget month.'],
+      });
     if (kind === 'source')
       await this.repo.run(
         'INSERT INTO budget_income_entries VALUES (?,?,?,?,?,?,?)',
@@ -379,67 +326,42 @@ export class BudgetService {
   async copy(user: string, key: string, x: any) {
     const source = await this.check(user, key, x.monthVersion);
     if (await this.repo.month(user, x.targetMonth))
-      throw new AppError(
-        'BUDGET_EXISTS',
-        'The target budget already exists.',
-        409,
-      );
+      throw new AppError('BUDGET_EXISTS', 'The target budget already exists.', 409);
     const a = await this.get(user, key);
     const t = now(),
       target = id();
-    await this.repo.run(
-      'INSERT INTO budget_months VALUES (?,?,?,?,?,?,?)',
-      target,
-      user,
-      x.targetMonth,
-      null,
-      t,
-      t,
-      1,
-    );
+    await this.repo.run('INSERT INTO budget_months VALUES (?,?,?,?,?,?,?)', target, user, x.targetMonth, null, t, t, 1);
     const groups: any[] = [];
     for (const g of a!.groups) {
       const gid = id();
       groups.push([g.id, gid]);
-      await this.repo.run(
-        'INSERT INTO budget_groups VALUES (?,?,?,?,?,?)',
-        gid,
-        target,
-        g.name,
-        g.position,
-        t,
-        t,
-      );
+      await this.repo.run('INSERT INTO budget_groups VALUES (?,?,?,?,?,?)', gid, target, g.name, g.position, t, t);
     }
-    for (const s of a!.incomeSources.filter(
-      (s) => x.mode === 'all' || s.isRecurring,
-    ))
+    for (const source of a!.incomeSources.filter((source) => x.mode === 'all' || source.isRecurring))
       await this.repo.run(
         'INSERT INTO budget_income_sources VALUES (?,?,?,?,?,?,?,?)',
         id(),
         target,
-        s.name,
-        s.plannedAmount,
-        s.isRecurring ? 1 : 0,
-        s.position,
+        source.name,
+        source.plannedAmount,
+        source.isRecurring ? 1 : 0,
+        source.position,
         t,
         t,
       );
     for (const g of a!.groups)
-      for (const i of g.items.filter(
-        (i) => x.mode === 'all' || i.isRecurring,
-      )) {
+      for (const item of g.items.filter((item) => x.mode === 'all' || item.isRecurring)) {
         const gid = groups.find((v) => v[0] === g.id)![1];
         await this.repo.run(
           'INSERT INTO budget_items VALUES (?,?,?,?,?,?,?,?,?,?)',
           id(),
           target,
           gid,
-          i.name,
-          i.plannedAmount,
-          i.isRecurring ? 1 : 0,
-          i.note,
-          i.position,
+          item.name,
+          item.plannedAmount,
+          item.isRecurring ? 1 : 0,
+          item.note,
+          item.position,
           t,
           t,
         );

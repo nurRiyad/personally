@@ -6,9 +6,7 @@ import {
 } from '@personally/validation';
 import { apiRequest } from './client';
 
-export type AuthUser = ReturnType<
-  typeof authTokenResponseSchema.parse
->['data']['user'];
+export type AuthUser = ReturnType<typeof authTokenResponseSchema.parse>['data']['user'];
 
 export async function register(input: RegisterRequest) {
   return authTokenResponseSchema.parse(

@@ -2,8 +2,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { readFile, readdir } from 'node:fs/promises';
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 import app from '../src/index';
-import { signAccessToken } from '../src/security/jwt';
-import { createAuthConfig } from '../src/config';
+import { signAccessToken } from '../src/utils/jwt';
+import { createAuthConfig } from '../src/utils/config';
 
 const runtime = new Miniflare(
   convertV4MiniflareOptions({
@@ -20,12 +20,7 @@ const secret = crypto.randomUUID();
 let userId = 'assets-owner';
 let otherId = 'assets-other';
 
-async function request(
-  path: string,
-  method = 'GET',
-  body?: unknown,
-  access = token,
-) {
+async function request(path: string, method = 'GET', body?: unknown, access = token) {
   return app.request(
     `http://localhost${path}`,
     {
@@ -51,10 +46,7 @@ async function createType(name = `Type ${crypto.randomUUID()}`) {
   expect(response.status).toBe(201);
   return (await payload(response)).data as { id: string; name: string };
 }
-async function createAsset(
-  typeId: string,
-  values: Partial<Record<string, unknown>> = {},
-) {
+async function createAsset(typeId: string, values: Partial<Record<string, unknown>> = {}) {
   const response = await request('/assets', 'POST', {
     typeId,
     name: `Holding ${crypto.randomUUID()}`,
@@ -77,13 +69,7 @@ async function createActivity(body: Record<string, unknown>) {
   const response = await request('/assets/activities', 'POST', body);
   return { response, body: await payload(response) };
 }
-const entry = (
-  kind: string,
-  source: unknown,
-  destination: unknown,
-  amount: number,
-  activityDate = '2026-09-27',
-) => ({
+const entry = (kind: string, source: unknown, destination: unknown, amount: number, activityDate = '2026-09-27') => ({
   kind,
   source,
   destination,
@@ -94,9 +80,7 @@ const entry = (
 beforeAll(async () => {
   db = await runtime.getD1Database('DB');
   const dir = new URL('../../../packages/db/migrations/', import.meta.url);
-  for (const name of (await readdir(dir))
-    .filter((file) => file.endsWith('.sql'))
-    .sort()) {
+  for (const name of (await readdir(dir)).filter((file) => file.endsWith('.sql')).sort()) {
     const sql = await readFile(new URL(name, dir), 'utf8');
     const statements = sql
       .split('--> statement-breakpoint')
@@ -114,26 +98,11 @@ beforeEach(async () => {
       .prepare(
         'INSERT INTO users (id,username,email,phone,password_hash,password_algorithm,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)',
       )
-      .bind(
-        id,
-        id,
-        `${id}@example.test`,
-        id,
-        'not-a-login-hash',
-        'test',
-        Date.now(),
-        Date.now(),
-      )
+      .bind(id, id, `${id}@example.test`, id, 'not-a-login-hash', 'test', Date.now(), Date.now())
       .run();
   }
-  token = await signAccessToken(
-    userId,
-    createAuthConfig({ JWT_SECRET: secret }),
-  );
-  otherToken = await signAccessToken(
-    otherId,
-    createAuthConfig({ JWT_SECRET: secret }),
-  );
+  token = await signAccessToken(userId, createAuthConfig({ JWT_SECRET: secret }));
+  otherToken = await signAccessToken(otherId, createAuthConfig({ JWT_SECRET: secret }));
 });
 
 describe('asset ledger API with isolated D1', () => {
@@ -171,9 +140,7 @@ describe('asset ledger API with isolated D1', () => {
     const updatedAsset = await payload(await request(`/assets/${asset.id}`));
     expect(updatedAsset.data.currentValue).toBe(1500);
 
-    const directOpening = await createActivity(
-      entry('Opening', { endpoint: 'outside' }, { assetId: asset.id }, 10),
-    );
+    const directOpening = await createActivity(entry('Opening', { endpoint: 'outside' }, { assetId: asset.id }, 10));
     expect(directOpening.response.status).toBe(400);
   });
 
@@ -219,25 +186,13 @@ describe('asset ledger API with isolated D1', () => {
       isLiquid: true,
     });
     const normal = await createAsset(type.id);
-    const invalidLending = await createActivity(
-      entry('Lending', { assetId: bank.id }, { assetId: normal.id }, 1),
-    );
+    const invalidLending = await createActivity(entry('Lending', { assetId: bank.id }, { assetId: normal.id }, 1));
     expect(invalidLending.response.status).toBe(400);
     const overdraft = await createActivity(
-      entry(
-        'External use',
-        { assetId: bank.id },
-        { endpoint: 'personal_use' },
-        101,
-      ),
+      entry('External use', { assetId: bank.id }, { endpoint: 'personal_use' }, 101),
     );
     expect(overdraft.response.status).toBe(409);
-    const other = await request(
-      `/assets/${bank.id}`,
-      'GET',
-      undefined,
-      otherToken,
-    );
+    const other = await request(`/assets/${bank.id}`, 'GET', undefined, otherToken);
     expect(other.status).toBe(404);
     const invalidEndpoint = await request(
       '/assets/activities',
@@ -255,46 +210,24 @@ describe('asset ledger API with isolated D1', () => {
     });
     const second = await createAsset(type.id);
     const moved = await createActivity(
-      entry(
-        'Transfer',
-        { assetId: bank.id },
-        { assetId: second.id },
-        800,
-        '2026-01-15',
-      ),
+      entry('Transfer', { assetId: bank.id }, { assetId: second.id }, 800, '2026-01-15'),
     );
     expect(moved.response.status).toBe(201);
     const badBackdate = await createActivity(
-      entry(
-        'External use',
-        { assetId: bank.id },
-        { endpoint: 'personal_use' },
-        500,
-        '2026-01-12',
-      ),
+      entry('External use', { assetId: bank.id }, { endpoint: 'personal_use' }, 500, '2026-01-12'),
     );
     expect(badBackdate.response.status).toBe(409);
     const activityId = moved.body.data.id as string;
     const changed = await request(
       `/assets/activities/${activityId}`,
       'PATCH',
-      entry(
-        'Transfer',
-        { assetId: bank.id },
-        { assetId: second.id },
-        700,
-        '2026-01-15',
-      ),
+      entry('Transfer', { assetId: bank.id }, { assetId: second.id }, 700, '2026-01-15'),
     );
     expect(changed.status, JSON.stringify(await payload(changed))).toBe(200);
-    expect(
-      (await payload(await request(`/assets/${bank.id}`))).data.currentValue,
-    ).toBe(300);
+    expect((await payload(await request(`/assets/${bank.id}`))).data.currentValue).toBe(300);
     const deleted = await request(`/assets/activities/${activityId}`, 'DELETE');
     expect(deleted.status).toBe(204);
-    expect(
-      (await payload(await request(`/assets/${bank.id}`))).data.currentValue,
-    ).toBe(1000);
+    expect((await payload(await request(`/assets/${bank.id}`))).data.currentValue).toBe(1000);
   });
 
   it('archives holdings, keeps their history, excludes their value, and blocks related activity changes', async () => {
@@ -304,63 +237,24 @@ describe('asset ledger API with isolated D1', () => {
     expect(archived.status).toBe(204);
     const dashboard = (await payload(await request('/assets/dashboard'))).data;
     expect(dashboard.summary.totalAssets).toBe(0);
-    const all = (await payload(await request('/assets?includeArchived=true')))
-      .data as Array<{ id: string; archivedAt: string | null }>;
-    expect(
-      all.find((asset) => asset.id === bank.id)?.archivedAt,
-    ).not.toBeNull();
-    const history = (
-      await payload(await request(`/assets/activities?assetId=${bank.id}`))
-    ).data;
-    expect(
-      history.some((activity: { kind: string }) => activity.kind === 'Opening'),
-    ).toBe(true);
-    const openingId = history.find(
-      (activity: { kind: string }) => activity.kind === 'Opening',
-    ).id;
-    expect(
-      (await request(`/assets/activities/${openingId}`, 'DELETE')).status,
-    ).toBe(409);
-    expect((await request(`/assets/types/${type.id}`, 'DELETE')).status).toBe(
-      409,
-    );
+    const all = (await payload(await request('/assets?includeArchived=true'))).data as Array<{
+      id: string;
+      archivedAt: string | null;
+    }>;
+    expect(all.find((asset) => asset.id === bank.id)?.archivedAt).not.toBeNull();
+    const history = (await payload(await request(`/assets/activities?assetId=${bank.id}`))).data;
+    expect(history.some((activity: { kind: string }) => activity.kind === 'Opening')).toBe(true);
+    const openingId = history.find((activity: { kind: string }) => activity.kind === 'Opening').id;
+    expect((await request(`/assets/activities/${openingId}`, 'DELETE')).status).toBe(409);
+    expect((await request(`/assets/types/${type.id}`, 'DELETE')).status).toBe(409);
   });
 
   it('keeps type, asset, and activity records private to their owner', async () => {
     const type = await createType();
     const asset = await createAsset(type.id, { openingValue: 10 });
-    expect(
-      (
-        await request(
-          `/assets/types/${type.id}`,
-          'PATCH',
-          { name: 'stolen' },
-          otherToken,
-        )
-      ).status,
-    ).toBe(404);
-    expect(
-      (
-        await request(
-          `/assets/${asset.id}`,
-          'PATCH',
-          { name: 'stolen' },
-          otherToken,
-        )
-      ).status,
-    ).toBe(404);
-    const opening = (
-      await payload(await request(`/assets/activities?assetId=${asset.id}`))
-    ).data[0];
-    expect(
-      (
-        await request(
-          `/assets/activities/${opening.id}`,
-          'DELETE',
-          undefined,
-          otherToken,
-        )
-      ).status,
-    ).toBe(404);
+    expect((await request(`/assets/types/${type.id}`, 'PATCH', { name: 'stolen' }, otherToken)).status).toBe(404);
+    expect((await request(`/assets/${asset.id}`, 'PATCH', { name: 'stolen' }, otherToken)).status).toBe(404);
+    const opening = (await payload(await request(`/assets/activities?assetId=${asset.id}`))).data[0];
+    expect((await request(`/assets/activities/${opening.id}`, 'DELETE', undefined, otherToken)).status).toBe(404);
   });
 });

@@ -27,8 +27,7 @@ export function EditAssetForm({
       isReceivable: asset.isReceivable,
     },
   });
-  const error = (name: keyof AssetPatchInput) =>
-    form.formState.errors[name]?.message;
+  const error = (name: keyof AssetPatchInput) => form.formState.errors[name]?.message;
   const submit = (values: AssetPatchInput) => {
     const parsed = assetPatchSchema.safeParse(values);
     if (!parsed.success) {
@@ -48,9 +47,7 @@ export function EditAssetForm({
         name="typeId"
         render={({ field }) => (
           <div>
-            <p className="mb-2 text-sm font-medium text-slate-700">
-              Asset type
-            </p>
+            <p className="mb-2 text-sm font-medium text-slate-700">Asset type</p>
             <Select
               label="Asset type"
               value={field.value ?? ''}
@@ -77,15 +74,8 @@ export function EditAssetForm({
       </label>
       <label className="block text-sm font-medium text-slate-700">
         <span className="mb-2 block">Current value</span>
-        <Input
-          value={asset.currentValue}
-          readOnly
-          tabIndex={-1}
-          className="bg-slate-50 text-slate-500"
-        />
-        <span className="mt-1 block text-xs text-slate-500">
-          Value changes are recorded through asset activity.
-        </span>
+        <Input value={asset.currentValue} readOnly tabIndex={-1} className="bg-slate-50 text-slate-500" />
+        <span className="mt-1 block text-xs text-slate-500">Value changes are recorded through asset activity.</span>
       </label>
       <label className="block text-sm font-medium text-slate-700">
         <span className="mb-2 block">Details</span>
@@ -95,30 +85,16 @@ export function EditAssetForm({
         </p>
       </label>
       <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-        <input
-          type="checkbox"
-          className="mt-0.5 size-4 accent-emerald-700"
-          {...form.register('isLiquid')}
-        />
+        <input type="checkbox" className="mt-0.5 size-4 accent-emerald-700" {...form.register('isLiquid')} />
         <span>
-          <span className="block font-medium text-slate-800">
-            This asset is liquid money
-          </span>
-          <span className="mt-1 block text-xs text-slate-500">
-            Include its current value in liquid money.
-          </span>
+          <span className="block font-medium text-slate-800">This asset is liquid money</span>
+          <span className="mt-1 block text-xs text-slate-500">Include its current value in liquid money.</span>
         </span>
       </label>
       <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-        <input
-          type="checkbox"
-          className="mt-0.5 size-4 accent-emerald-700"
-          {...form.register('isReceivable')}
-        />
+        <input type="checkbox" className="mt-0.5 size-4 accent-emerald-700" {...form.register('isReceivable')} />
         <span>
-          <span className="block font-medium text-slate-800">
-            Money is owed to me
-          </span>
+          <span className="block font-medium text-slate-800">Money is owed to me</span>
           <span className="mt-1 block text-xs text-slate-500">
             Track this as money lent and allow repayments against it.
           </span>

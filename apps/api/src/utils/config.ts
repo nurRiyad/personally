@@ -1,8 +1,4 @@
-export function createAuthConfig(env: {
-  JWT_SECRET: string;
-  JWT_ISSUER?: string;
-  JWT_AUDIENCE?: string;
-}) {
+export function createAuthConfig(env: { JWT_SECRET: string; JWT_ISSUER?: string; JWT_AUDIENCE?: string }) {
   return {
     secret: env.JWT_SECRET,
     issuer: env.JWT_ISSUER ?? 'personally-api',

@@ -33,13 +33,9 @@ export function Dialog({
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <BaseDialog.Title className="text-lg font-semibold text-slate-950">
-                {title}
-              </BaseDialog.Title>
+              <BaseDialog.Title className="text-lg font-semibold text-slate-950">{title}</BaseDialog.Title>
               {description && (
-                <BaseDialog.Description className="mt-1 text-sm text-slate-500">
-                  {description}
-                </BaseDialog.Description>
+                <BaseDialog.Description className="mt-1 text-sm text-slate-500">{description}</BaseDialog.Description>
               )}
             </div>
             <BaseDialog.Close

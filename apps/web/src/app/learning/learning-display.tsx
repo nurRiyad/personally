@@ -16,9 +16,7 @@ const statusStyles: Record<string, string> = {
 };
 export function Status({ value }: { value: string }) {
   return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[value] ?? statusStyles.Todo}`}
-    >
+    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[value] ?? statusStyles.Todo}`}>
       {value}
     </span>
   );
@@ -45,9 +43,7 @@ export function Summary({ label, value }: { label: string; value: string }) {
     <Card className="relative overflow-hidden rounded-2xl p-4 shadow-sm sm:p-5">
       <div className="absolute inset-y-0 left-0 w-1 bg-slate-950" />
       <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className="mt-2 tabular-nums text-2xl font-semibold tracking-tight text-slate-950">
-        {value}
-      </p>
+      <p className="mt-2 tabular-nums text-2xl font-semibold tracking-tight text-slate-950">{value}</p>
     </Card>
   );
 }
@@ -56,16 +52,8 @@ function CircularProgress({ value }: { value: number }) {
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (value / 100) * circumference;
   return (
-    <div
-      className="relative h-14 w-14 shrink-0"
-      aria-label={`${value}% complete`}
-      role="img"
-    >
-      <svg
-        className="h-full w-full -rotate-90"
-        viewBox="0 0 44 44"
-        aria-hidden="true"
-      >
+    <div className="relative h-14 w-14 shrink-0" aria-label={`${value}% complete`} role="img">
+      <svg className="h-full w-full -rotate-90" viewBox="0 0 44 44" aria-hidden="true">
         <circle
           cx="22"
           cy="22"
@@ -107,14 +95,10 @@ export function EpicCard({ epic }: { epic: LearningEpic }) {
           <CircularProgress value={progress} />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
-              <h3 className="truncate text-base font-semibold text-slate-950">
-                {epic.name}
-              </h3>
+              <h3 className="truncate text-base font-semibold text-slate-950">{epic.name}</h3>
               <Status value={epic.status} />
             </div>
-            <p className="mt-1 line-clamp-1 text-sm text-slate-500">
-              {epic.description}
-            </p>
+            <p className="mt-1 line-clamp-1 text-sm text-slate-500">{epic.description}</p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-5 text-sm tabular-nums lg:w-[22rem] lg:shrink-0">
@@ -126,15 +110,11 @@ export function EpicCard({ epic }: { epic: LearningEpic }) {
           </div>
           <div>
             <p className="text-xs text-slate-400 lg:sr-only">Due</p>
-            <p className="mt-1 whitespace-nowrap text-slate-600">
-              {formatDate(epic.targetDate)}
-            </p>
+            <p className="mt-1 whitespace-nowrap text-slate-600">{formatDate(epic.targetDate)}</p>
           </div>
           <div>
             <p className="text-xs text-slate-400 lg:sr-only">Tracked</p>
-            <p className="mt-1 whitespace-nowrap text-slate-600">
-              {formatMinutes(actual)}
-            </p>
+            <p className="mt-1 whitespace-nowrap text-slate-600">{formatMinutes(actual)}</p>
           </div>
         </div>
       </Link>
@@ -142,29 +122,17 @@ export function EpicCard({ epic }: { epic: LearningEpic }) {
   );
 }
 
-export function TaskRow({
-  task,
-  index,
-  epicId,
-}: {
-  task: LearningTask;
-  index: number;
-  epicId: string;
-}) {
+export function TaskRow({ task, index, epicId }: { task: LearningTask; index: number; epicId: string }) {
   return (
     <Link
       href={`/learning/epics/${epicId}/tasks/${task.id}`}
       className="flex flex-col gap-4 p-5 transition-colors hover:bg-slate-50/80 focus-visible:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-950 lg:grid lg:grid-cols-[minmax(0,1fr)_5rem_8rem_6rem_6rem] lg:items-center lg:gap-5"
     >
       <div className="flex min-w-0 flex-1 items-start gap-4">
-        <span className="mt-1 text-sm font-semibold text-slate-400">
-          {String(index + 1).padStart(2, '0')}
-        </span>
+        <span className="mt-1 text-sm font-semibold text-slate-400">{String(index + 1).padStart(2, '0')}</span>
         <div className="min-w-0">
           <span className="font-semibold text-slate-950">{task.name}</span>
-          <p className="mt-1 line-clamp-1 text-sm text-slate-500">
-            {task.description}
-          </p>
+          <p className="mt-1 line-clamp-1 text-sm text-slate-500">{task.description}</p>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3 text-sm tabular-nums sm:grid-cols-4 lg:contents">
@@ -180,15 +148,11 @@ export function TaskRow({
         </div>
         <div>
           <p className="text-xs text-slate-400 lg:sr-only">Target</p>
-          <p className="mt-1 whitespace-nowrap text-slate-600">
-            {formatMinutes(task.targetMinutes)}
-          </p>
+          <p className="mt-1 whitespace-nowrap text-slate-600">{formatMinutes(task.targetMinutes)}</p>
         </div>
         <div>
           <p className="text-xs text-slate-400 lg:sr-only">Actual</p>
-          <p className="mt-1 whitespace-nowrap text-slate-600">
-            {formatMinutes(task.actualMinutes)}
-          </p>
+          <p className="mt-1 whitespace-nowrap text-slate-600">{formatMinutes(task.actualMinutes)}</p>
         </div>
       </div>
     </Link>

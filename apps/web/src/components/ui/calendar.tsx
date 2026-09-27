@@ -17,26 +17,14 @@ type CalendarProps = {
   'aria-describedby'?: string;
 };
 
-export function Calendar({
-  value,
-  onChange,
-  disabled,
-  ...props
-}: CalendarProps) {
+export function Calendar({ value, onChange, disabled, ...props }: CalendarProps) {
   const selected = value ? parseISO(value) : undefined;
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(selected ?? new Date());
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger
-        render={
-          <Button
-            variant="secondary"
-            type="button"
-            disabled={disabled}
-            {...props}
-          />
-        }
+        render={<Button variant="secondary" type="button" disabled={disabled} {...props} />}
         className="w-full justify-start rounded-lg px-3 text-left font-normal"
       >
         <CalendarDays className="size-4 text-slate-500" aria-hidden="true" />
@@ -78,11 +66,7 @@ export function Calendar({
               }}
               components={{
                 Chevron: ({ orientation }) =>
-                  orientation === 'left' ? (
-                    <ChevronLeft className="size-4" />
-                  ) : (
-                    <ChevronRight className="size-4" />
-                  ),
+                  orientation === 'left' ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />,
               }}
             />
           </Popover.Popup>

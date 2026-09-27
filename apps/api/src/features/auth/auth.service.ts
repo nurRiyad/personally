@@ -1,16 +1,8 @@
 import type { NewUser, User } from '@personally/db/schema';
-import {
-  ConflictError,
-  InvalidCredentialsError,
-  UnauthorizedError,
-} from '../utils/errors';
-import {
-  hashPassword,
-  passwordAlgorithm,
-  verifyPassword,
-} from '../security/password-hasher';
-import { signAccessToken } from '../security/jwt';
-import type { UserRepository } from '../repositories/user.repository';
+import { ConflictError, InvalidCredentialsError, UnauthorizedError } from '../../utils/errors';
+import { hashPassword, passwordAlgorithm, verifyPassword } from '../../utils/password-hasher';
+import { signAccessToken } from '../../utils/jwt';
+import type { UserRepository } from './auth.repository';
 import type { LoginRequest, RegisterRequest } from '@personally/validation';
 
 type AuthConfig = {
@@ -19,8 +11,7 @@ type AuthConfig = {
   audience: string;
   expiresInSeconds: number;
 };
-const normalizePhone = (value: string) =>
-  value.replace(/[^\d+]/g, '').replace(/^00/, '+');
+const normalizePhone = (value: string) => value.replace(/[^\d+]/g, '').replace(/^00/, '+');
 const normalizeUsername = (value: string) => value.trim().toLowerCase();
 const normalizeEmail = (value: string) => value.trim().toLowerCase();
 const safeUser = (user: User) => ({
@@ -66,29 +57,22 @@ export class AuthService {
         tokenType: 'Bearer' as const,
       };
     } catch (error) {
-      if (error instanceof Error && /unique|constraint/i.test(error.message))
-        throw new ConflictError();
+      if (error instanceof Error && /unique|constraint/i.test(error.message)) throw new ConflictError();
       throw error;
     }
   }
 
   async login(input: LoginRequest) {
     const raw = input.identifier.trim();
-    const identifiers = [
-      normalizeUsername(raw),
-      normalizeEmail(raw),
-      normalizePhone(raw),
-    ].filter((identifier, index, all) => all.indexOf(identifier) === index);
+    const identifiers = [normalizeUsername(raw), normalizeEmail(raw), normalizePhone(raw)].filter(
+      (identifier, index, all) => all.indexOf(identifier) === index,
+    );
     let user: User | undefined;
     for (const identifier of identifiers) {
       user = await this.users.findByIdentifier(identifier);
       if (user) break;
     }
-    if (
-      !user ||
-      !user.isActive ||
-      !(await verifyPassword(input.password, user.passwordHash))
-    )
+    if (!user || !user.isActive || !(await verifyPassword(input.password, user.passwordHash)))
       throw new InvalidCredentialsError();
     return {
       user: safeUser(user),

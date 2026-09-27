@@ -16,13 +16,70 @@ export type ActivityRow = Row & {
   destination_name: string | null;
 };
 
-export class D1AssetRepository {
+export interface AssetRepository {
+  all<T extends Row = Row>(sql: string, ...args: unknown[]): Promise<T[]>;
+  first<T extends Row = Row>(sql: string, ...args: unknown[]): Promise<T | null>;
+  run(sql: string, ...args: unknown[]): Promise<D1Result>;
+  types(userId: string): Promise<Row[]>;
+  type(userId: string, id: string): Promise<Row | null>;
+  createType(values: { id: string; userId: string; name: string; normalizedName: string; now: number }): Promise<void>;
+  patchType(userId: string, id: string, name: string, normalizedName: string, now: number): Promise<D1Result>;
+  deleteType(userId: string, id: string): Promise<D1Result>;
+  asset(userId: string, id: string): Promise<Row | null>;
+  assets(userId: string, typeId?: string, includeArchived?: boolean): Promise<Row[]>;
+  createAsset(values: {
+    id: string;
+    userId: string;
+    typeId: string;
+    name: string;
+    detail: string;
+    isLiquid: boolean;
+    isReceivable: boolean;
+    openedOn: string;
+    now: number;
+    openingActivity?: { id: string; amount: number };
+  }): Promise<void>;
+  patchAsset(userId: string, id: string, values: Record<string, unknown>, now: number): Promise<D1Result>;
+  archiveAsset(userId: string, id: string, now: number): Promise<D1Result>;
+  ledger(userId: string): Promise<ActivityRow[]>;
+  activity(userId: string, id: string): Promise<ActivityRow | null>;
+  createActivity(
+    userId: string,
+    id: string,
+    input: {
+      kind: string;
+      amount: number;
+      activityDate: string;
+      sourceAssetId: string | null;
+      destinationAssetId: string | null;
+      sourceEndpoint: string | null;
+      destinationEndpoint: string | null;
+      note?: string;
+    },
+    now: number,
+  ): Promise<D1Result>;
+  patchActivity(
+    userId: string,
+    id: string,
+    input: {
+      kind: string;
+      amount: number;
+      activityDate: string;
+      sourceAssetId: string | null;
+      destinationAssetId: string | null;
+      sourceEndpoint: string | null;
+      destinationEndpoint: string | null;
+      note?: string;
+    },
+    now: number,
+  ): Promise<D1Result>;
+  deleteActivity(userId: string, id: string): Promise<D1Result>;
+}
+
+export class D1AssetRepository implements AssetRepository {
   constructor(private readonly db: D1Database) {}
 
-  async all<T extends Row = Row>(
-    sql: string,
-    ...args: unknown[]
-  ): Promise<T[]> {
+  async all<T extends Row = Row>(sql: string, ...args: unknown[]): Promise<T[]> {
     return (
       await this.db
         .prepare(sql)
@@ -52,19 +109,9 @@ export class D1AssetRepository {
     );
   }
   type(userId: string, id: string) {
-    return this.first(
-      'SELECT * FROM asset_types WHERE user_id=? AND id=?',
-      userId,
-      id,
-    );
+    return this.first('SELECT * FROM asset_types WHERE user_id=? AND id=?', userId, id);
   }
-  async createType(values: {
-    id: string;
-    userId: string;
-    name: string;
-    normalizedName: string;
-    now: number;
-  }) {
+  async createType(values: { id: string; userId: string; name: string; normalizedName: string; now: number }) {
     await this.run(
       'INSERT INTO asset_types (id,user_id,name,normalized_name,created_at,updated_at) VALUES (?,?,?,?,?,?)',
       values.id,
@@ -75,13 +122,7 @@ export class D1AssetRepository {
       values.now,
     );
   }
-  async patchType(
-    userId: string,
-    id: string,
-    name: string,
-    normalizedName: string,
-    now: number,
-  ) {
+  async patchType(userId: string, id: string, name: string, normalizedName: string, now: number) {
     return this.run(
       'UPDATE asset_types SET name=?,normalized_name=?,updated_at=? WHERE user_id=? AND id=?',
       name,
@@ -92,11 +133,7 @@ export class D1AssetRepository {
     );
   }
   async deleteType(userId: string, id: string) {
-    return this.run(
-      'DELETE FROM asset_types WHERE user_id=? AND id=?',
-      userId,
-      id,
-    );
+    return this.run('DELETE FROM asset_types WHERE user_id=? AND id=?', userId, id);
   }
 
   asset(userId: string, id: string) {
@@ -173,12 +210,7 @@ export class D1AssetRepository {
       );
     await this.db.batch(statements);
   }
-  async patchAsset(
-    userId: string,
-    id: string,
-    values: Record<string, unknown>,
-    now: number,
-  ) {
+  async patchAsset(userId: string, id: string, values: Record<string, unknown>, now: number) {
     const map: Record<string, string> = {
       typeId: 'asset_type_id',
       name: 'name',
@@ -194,10 +226,7 @@ export class D1AssetRepository {
     }
     fields.push('updated_at=?');
     args.push(now, userId, id);
-    return this.run(
-      `UPDATE assets SET ${fields.join(',')} WHERE user_id=? AND id=? AND archived_at IS NULL`,
-      ...args,
-    );
+    return this.run(`UPDATE assets SET ${fields.join(',')} WHERE user_id=? AND id=? AND archived_at IS NULL`, ...args);
   }
   async archiveAsset(userId: string, id: string, now: number) {
     return this.run(
@@ -292,10 +321,6 @@ export class D1AssetRepository {
     );
   }
   deleteActivity(userId: string, id: string) {
-    return this.run(
-      'DELETE FROM asset_activities WHERE user_id=? AND id=?',
-      userId,
-      id,
-    );
+    return this.run('DELETE FROM asset_activities WHERE user_id=? AND id=?', userId, id);
   }
 }

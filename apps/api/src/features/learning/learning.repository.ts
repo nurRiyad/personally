@@ -1,12 +1,7 @@
 import { and, eq, sql, type SQL } from 'drizzle-orm';
-import {
-  createDb,
-  learningEpics as epics,
-  learningTasks as tasks,
-  learningTaskTimes as times,
-} from '@personally/db';
+import { createDb, learningEpics as epics, learningTasks as tasks, learningTaskTimes as times } from '@personally/db';
 import type { EpicQuery, TaskQuery, PageQuery } from '@personally/validation';
-import { LearningConflictError } from '../utils/errors';
+import { LearningConflictError } from '../../utils/errors';
 
 export type EpicRow = typeof epics.$inferSelect;
 export type TaskRow = typeof tasks.$inferSelect;
@@ -36,32 +31,16 @@ export type Change =
   | { kind: 'deleteTime'; id: string };
 export interface LearningRepository {
   epic(userId: string, id: string): Promise<EpicAggregate | undefined>;
-  task(
-    userId: string,
-    epicId: string,
-    id: string,
-  ): Promise<TaskAggregate | undefined>;
-  listEpics(
-    userId: string,
-    query: EpicQuery,
-  ): Promise<{ rows: EpicAggregate[]; total: number }>;
-  listTasks(
-    userId: string,
-    epicId: string,
-    query: TaskQuery,
-  ): Promise<{ rows: TaskAggregate[]; total: number }>;
-  summary(
-    userId: string,
-  ): Promise<{ total: number; completed: number; inProgress: number }>;
+  task(userId: string, epicId: string, id: string): Promise<TaskAggregate | undefined>;
+  listEpics(userId: string, query: EpicQuery): Promise<{ rows: EpicAggregate[]; total: number }>;
+  listTasks(userId: string, epicId: string, query: TaskQuery): Promise<{ rows: TaskAggregate[]; total: number }>;
+  summary(userId: string): Promise<{ total: number; completed: number; inProgress: number }>;
   createEpic(values: typeof epics.$inferInsert): Promise<void>;
   mutate(epic: EpicRow, changes: Change[]): Promise<void>;
   taskIds(epicId: string): Promise<string[]>;
   nextTaskOrder(epicId: string): Promise<number>;
   time(taskId: string, id: string): Promise<TimeRow | undefined>;
-  times(
-    taskId: string,
-    query: PageQuery,
-  ): Promise<{ rows: TimeRow[]; total: number }>;
+  times(taskId: string, query: PageQuery): Promise<{ rows: TimeRow[]; total: number }>;
 }
 // Pre-aggregate each time source independently: joining the raw sources multiplies totals.
 const taskCTE = (userId: string) => sql`WITH owned_tasks AS (
@@ -122,9 +101,7 @@ export class D1LearningRepository implements LearningRepository {
       this.db.all<EpicAggregate>(
         sql`${epicCTE(userId)} SELECT * FROM epic_summary WHERE ${where} ORDER BY ${order}, id LIMIT ${q.pageSize} OFFSET ${(q.page - 1) * q.pageSize}`,
       ),
-      this.db.all<{ total: number }>(
-        sql`${epicCTE(userId)} SELECT COUNT(*) total FROM epic_summary WHERE ${where}`,
-      ),
+      this.db.all<{ total: number }>(sql`${epicCTE(userId)} SELECT COUNT(*) total FROM epic_summary WHERE ${where}`),
     ]);
     return { rows, total: counts[0].total };
   }
@@ -140,9 +117,7 @@ export class D1LearningRepository implements LearningRepository {
       this.db.all<TaskAggregate>(
         sql`${taskCTE(userId)} SELECT * FROM task_data WHERE ${where} ORDER BY ${order}, id LIMIT ${q.pageSize} OFFSET ${(q.page - 1) * q.pageSize}`,
       ),
-      this.db.all<{ total: number }>(
-        sql`${taskCTE(userId)} SELECT COUNT(*) total FROM task_data WHERE ${where}`,
-      ),
+      this.db.all<{ total: number }>(sql`${taskCTE(userId)} SELECT COUNT(*) total FROM task_data WHERE ${where}`),
     ]);
     return { rows, total: counts[0].total };
   }
@@ -190,10 +165,7 @@ export class D1LearningRepository implements LearningRepository {
         .select()
         .from(times)
         .where(eq(times.taskId, taskId))
-        .orderBy(
-          sql`coalesce(${times.startedAt}, unixepoch(${times.entryDate})) DESC`,
-          times.id,
-        )
+        .orderBy(sql`coalesce(${times.startedAt}, unixepoch(${times.entryDate})) DESC`, times.id)
         .limit(q.pageSize)
         .offset((q.page - 1) * q.pageSize),
       this.db
@@ -217,10 +189,7 @@ export class D1LearningRepository implements LearningRepository {
     const operations = changes.map((change) => {
       switch (change.kind) {
         case 'epic':
-          return this.db
-            .update(epics)
-            .set(change.values)
-            .where(eq(epics.id, epic.id));
+          return this.db.update(epics).set(change.values).where(eq(epics.id, epic.id));
         case 'deleteEpic':
           return this.db.delete(epics).where(eq(epics.id, epic.id));
         case 'createTask':
@@ -235,9 +204,7 @@ export class D1LearningRepository implements LearningRepository {
             })
             .where(and(eq(tasks.id, change.id), eq(tasks.epicId, epic.id)));
         case 'deleteTask':
-          return this.db
-            .delete(tasks)
-            .where(and(eq(tasks.id, change.id), eq(tasks.epicId, epic.id)));
+          return this.db.delete(tasks).where(and(eq(tasks.id, change.id), eq(tasks.epicId, epic.id)));
         case 'time':
           return this.db.insert(times).values(change.values);
         case 'editTime':
@@ -266,14 +233,8 @@ export class D1LearningRepository implements LearningRepository {
           .where(eq(epics.id, epic.id)),
       ]);
     } catch (error) {
-      const message =
-        error instanceof Error ? `${error.message} ${String(error.cause)}` : '';
-      if (
-        /CHECK constraint|UNIQUE constraint|FOREIGN KEY constraint/.test(
-          message,
-        )
-      )
-        throw new LearningConflictError();
+      const message = error instanceof Error ? `${error.message} ${String(error.cause)}` : '';
+      if (/CHECK constraint|UNIQUE constraint|FOREIGN KEY constraint/.test(message)) throw new LearningConflictError();
       throw error;
     }
   }

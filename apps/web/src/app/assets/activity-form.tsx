@@ -1,20 +1,13 @@
 'use client';
 
-import {
-  assetActivityInputSchema,
-  type AssetActivityInput,
-} from '@personally/validation';
+import { assetActivityInputSchema, type AssetActivityInput } from '@personally/validation';
 import { Controller, useForm } from 'react-hook-form';
 import { Button } from '../../components/ui/button';
 import { Calendar } from '../../components/ui/calendar';
 import { Input } from '../../components/ui/input';
 import { Select } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
-import type {
-  AssetActivity,
-  AssetRecord,
-  AssetActivityEndpoint,
-} from '../../lib/api/assets';
+import type { AssetActivity, AssetRecord, AssetActivityEndpoint } from '../../lib/api/assets';
 
 const kinds = [
   'Opening',
@@ -36,9 +29,7 @@ type FormValues = {
   note?: string;
 };
 const keyOf = (endpoint: AssetActivityEndpoint) =>
-  'assetId' in endpoint
-    ? `asset:${endpoint.assetId}`
-    : `endpoint:${endpoint.endpoint}`;
+  'assetId' in endpoint ? `asset:${endpoint.assetId}` : `endpoint:${endpoint.endpoint}`;
 const endpointOf = (key: string): AssetActivityEndpoint =>
   key.startsWith('asset:')
     ? { assetId: key.slice(6) }
@@ -78,14 +69,8 @@ export function AssetActivityForm({
   const form = useForm<FormValues>({ defaultValues: initial });
   const kind = form.watch('kind');
   const receivables = active.filter((asset) => asset.isReceivable);
-  const sourceAssets =
-    kind === 'Repayment'
-      ? receivables
-      : active.filter((asset) => !asset.isReceivable);
-  const destinationAssets =
-    kind === 'Lending'
-      ? receivables
-      : active.filter((asset) => !asset.isReceivable);
+  const sourceAssets = kind === 'Repayment' ? receivables : active.filter((asset) => !asset.isReceivable);
+  const destinationAssets = kind === 'Lending' ? receivables : active.filter((asset) => !asset.isReceivable);
   const sourceOptions =
     kind === 'Income'
       ? [{ value: 'endpoint:outside', label: 'Outside Assets' }]
@@ -141,20 +126,14 @@ export function AssetActivityForm({
     if (!result.success) {
       for (const issue of result.error.issues) {
         const field =
-          issue.path[0] === 'source'
-            ? 'sourceKey'
-            : issue.path[0] === 'destination'
-              ? 'destinationKey'
-              : issue.path[0];
-        if (field && field in values)
-          form.setError(field as keyof FormValues, { message: issue.message });
+          issue.path[0] === 'source' ? 'sourceKey' : issue.path[0] === 'destination' ? 'destinationKey' : issue.path[0];
+        if (field && field in values) form.setError(field as keyof FormValues, { message: issue.message });
       }
       return;
     }
     onSave(result.data);
   };
-  const error = (field: keyof FormValues) =>
-    form.formState.errors[field]?.message;
+  const error = (field: keyof FormValues) => form.formState.errors[field]?.message;
   const needsReceivable = kind === 'Lending' || kind === 'Repayment';
   return (
     <form className="space-y-5" onSubmit={form.handleSubmit(submit)} noValidate>
@@ -163,17 +142,11 @@ export function AssetActivityForm({
         name="kind"
         render={({ field }) => (
           <div>
-            <p className="mb-2 text-sm font-medium text-slate-700">
-              Activity type
-            </p>
+            <p className="mb-2 text-sm font-medium text-slate-700">Activity type</p>
             <Select
               label="Activity type"
               value={field.value}
-              options={
-                activity?.kind === 'Opening'
-                  ? ['Opening']
-                  : kinds.filter((item) => item !== 'Opening')
-              }
+              options={activity?.kind === 'Opening' ? ['Opening'] : kinds.filter((item) => item !== 'Opening')}
               onValueChange={(value) => switchKind(value as ActivityKind)}
               className="w-full"
             />
@@ -182,8 +155,7 @@ export function AssetActivityForm({
       />
       {needsReceivable && receivables.length === 0 && (
         <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
-          Create a holding and mark “Money is owed to me” before recording a
-          loan or repayment.
+          Create a holding and mark “Money is owed to me” before recording a loan or repayment.
         </p>
       )}
       <p className="text-sm text-slate-500">
@@ -212,9 +184,7 @@ export function AssetActivityForm({
             name="sourceKey"
             render={({ field }) => (
               <div>
-                <p className="mb-2 text-sm font-medium text-slate-700">
-                  Source
-                </p>
+                <p className="mb-2 text-sm font-medium text-slate-700">Source</p>
                 <Select
                   label="Source"
                   value={field.value}
@@ -234,9 +204,7 @@ export function AssetActivityForm({
             name="destinationKey"
             render={({ field }) => (
               <div>
-                <p className="mb-2 text-sm font-medium text-slate-700">
-                  Destination
-                </p>
+                <p className="mb-2 text-sm font-medium text-slate-700">Destination</p>
                 <Select
                   label="Destination"
                   value={field.value}
@@ -271,9 +239,7 @@ export function AssetActivityForm({
         name="activityDate"
         render={({ field }) => (
           <div>
-            <p className="mb-2 text-sm font-medium text-slate-700">
-              Activity date
-            </p>
+            <p className="mb-2 text-sm font-medium text-slate-700">Activity date</p>
             <Calendar value={field.value} onChange={field.onChange} />
             <p className="mt-1 text-xs text-red-600" role="alert">
               {error('activityDate')}

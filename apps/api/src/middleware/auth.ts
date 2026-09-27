@@ -1,6 +1,6 @@
 import type { Context, Next } from 'hono';
 import { UnauthorizedError } from '../utils/errors';
-import { verifyAccessToken } from '../security/jwt';
+import { verifyAccessToken } from '../utils/jwt';
 
 export async function requireAuth(c: Context, next: Next) {
   const header = c.req.header('Authorization');

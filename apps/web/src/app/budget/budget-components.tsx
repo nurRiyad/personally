@@ -2,21 +2,9 @@ import type { ReactNode } from 'react';
 import { Pencil, Plus } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
-import {
-  currency,
-  percentage,
-  totalSpent,
-  type BudgetItem,
-  type BudgetMonth,
-} from './budget-data';
+import { currency, percentage, totalSpent, type BudgetItem, type BudgetMonth } from './budget-data';
 
-function Progress({
-  value,
-  tone = 'emerald',
-}: {
-  value: number;
-  tone?: 'emerald' | 'amber';
-}) {
+function Progress({ value, tone = 'emerald' }: { value: number; tone?: 'emerald' | 'amber' }) {
   return (
     <div className="h-2 overflow-hidden rounded-full bg-slate-100">
       <div
@@ -38,9 +26,7 @@ export function CircularProgress({ value }: { value: number }) {
       aria-label={`${value}% of budget spent`}
     >
       <div className="flex size-[52px] items-center justify-center rounded-full bg-white">
-        <span className="text-base font-semibold leading-none text-slate-950">
-          {value}%
-        </span>
+        <span className="text-base font-semibold leading-none text-slate-950">{value}%</span>
       </div>
     </div>
   );
@@ -63,34 +49,25 @@ export function SummaryCard({
     <Card className="p-5 text-slate-950 sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm font-medium text-slate-600">{label}</p>
-        <span
-          className="rounded-xl bg-slate-100 p-2 text-slate-600 ring-1 ring-slate-200"
-          aria-hidden="true"
-        >
+        <span className="rounded-xl bg-slate-100 p-2 text-slate-600 ring-1 ring-slate-200" aria-hidden="true">
           {icon}
         </span>
       </div>
       <div className="mt-5 grid grid-cols-2 gap-4">
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-            Planned
-          </p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Planned</p>
           <p className="mt-1 whitespace-nowrap text-lg font-semibold tracking-tight tabular-nums sm:text-xl">
             {currency(plannedAmount)}
           </p>
         </div>
         <div className="min-w-0 border-l border-slate-200 pl-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-            Actual
-          </p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Actual</p>
           <p className="mt-1 whitespace-nowrap text-lg font-semibold tracking-tight tabular-nums sm:text-xl">
             {currency(actualAmount)}
           </p>
         </div>
       </div>
-      <p className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500">
-        {detail}
-      </p>
+      <p className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500">{detail}</p>
     </Card>
   );
 }
@@ -119,10 +96,7 @@ export function BudgetRow({
         >
           <div className="min-w-0 sm:shrink-0">
             <div className="flex min-w-0 items-center gap-2">
-              <p
-                className="max-w-[150px] truncate font-medium text-slate-900"
-                title={item.name}
-              >
+              <p className="max-w-[150px] truncate font-medium text-slate-900" title={item.name}>
                 {item.name}
               </p>
               {item.recurring && (
@@ -132,24 +106,16 @@ export function BudgetRow({
               )}
             </div>
             <p className="mt-1 text-xs text-slate-500">
-              {item.expenses.length}{' '}
-              {item.expenses.length === 1 ? 'expense' : 'expenses'}
+              {item.expenses.length} {item.expenses.length === 1 ? 'expense' : 'expenses'}
             </p>
             <div className="mt-3 max-w-[175px]">
-              <Progress
-                value={percentage(spent, item.planned)}
-                tone={remaining < 0 ? 'amber' : 'emerald'}
-              />
+              <Progress value={percentage(spent, item.planned)} tone={remaining < 0 ? 'amber' : 'emerald'} />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3 text-right text-sm sm:min-w-0 sm:gap-4">
             <Metric label="Planned" value={currency(item.planned)} />
             <Metric label="Spent" value={currency(spent)} />
-            <Metric
-              label="Remaining"
-              value={currency(remaining)}
-              tone={remaining < 0 ? 'amber' : 'green'}
-            />
+            <Metric label="Remaining" value={currency(remaining)} tone={remaining < 0 ? 'amber' : 'green'} />
           </div>
         </button>
         <div className="flex gap-2 sm:ml-2">
@@ -161,11 +127,7 @@ export function BudgetRow({
           >
             <Pencil className="size-4" aria-hidden="true" />
           </Button>
-          <Button
-            variant="secondary"
-            className="min-h-9 cursor-pointer px-3"
-            onClick={onExpense}
-          >
+          <Button variant="secondary" className="min-h-9 cursor-pointer px-3" onClick={onExpense}>
             <Plus className="size-4" aria-hidden="true" /> Expense
           </Button>
         </div>
@@ -185,10 +147,7 @@ export function IncomeRow({
   onEdit: () => void;
   onActivity: () => void;
 }) {
-  const received = block.income.reduce(
-    (total, entry) => total + entry.amount,
-    0,
-  );
+  const received = block.income.reduce((total, entry) => total + entry.amount, 0);
   const remaining = block.planned - received;
   return (
     <div className="border-t border-slate-100 px-5 py-4 transition-colors hover:bg-slate-50 first:border-t-0 sm:px-6">
@@ -201,10 +160,7 @@ export function IncomeRow({
         >
           <div className="min-w-0 sm:shrink-0">
             <div className="flex min-w-0 items-center gap-2">
-              <p
-                className="max-w-[150px] truncate font-medium text-slate-900"
-                title={block.name}
-              >
+              <p className="max-w-[150px] truncate font-medium text-slate-900" title={block.name}>
                 {block.name}
               </p>
               {block.recurring && (
@@ -214,24 +170,16 @@ export function IncomeRow({
               )}
             </div>
             <p className="mt-1 text-xs text-slate-500">
-              {block.income.length}{' '}
-              {block.income.length === 1 ? 'income' : 'incomes'}
+              {block.income.length} {block.income.length === 1 ? 'income' : 'incomes'}
             </p>
             <div className="mt-3 max-w-[175px]">
-              <Progress
-                value={percentage(received, block.planned)}
-                tone={remaining < 0 ? 'amber' : 'emerald'}
-              />
+              <Progress value={percentage(received, block.planned)} tone={remaining < 0 ? 'amber' : 'emerald'} />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3 text-right text-sm sm:min-w-0 sm:gap-4">
             <Metric label="Planned" value={currency(block.planned)} />
             <Metric label="Earned" value={currency(received)} />
-            <Metric
-              label="Remaining"
-              value={currency(remaining)}
-              tone={remaining < 0 ? 'amber' : 'green'}
-            />
+            <Metric label="Remaining" value={currency(remaining)} tone={remaining < 0 ? 'amber' : 'green'} />
           </div>
         </button>
         <div className="flex gap-2 sm:ml-2">
@@ -243,11 +191,7 @@ export function IncomeRow({
           >
             <Pencil className="size-4" aria-hidden="true" />
           </Button>
-          <Button
-            variant="secondary"
-            className="min-h-9 cursor-pointer px-3"
-            onClick={onIncome}
-          >
+          <Button variant="secondary" className="min-h-9 cursor-pointer px-3" onClick={onIncome}>
             <Plus className="size-4" aria-hidden="true" /> Income
           </Button>
         </div>
@@ -256,15 +200,7 @@ export function IncomeRow({
   );
 }
 
-function Metric({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone?: 'amber' | 'green';
-}) {
+function Metric({ label, value, tone }: { label: string; value: string; tone?: 'amber' | 'green' }) {
   return (
     <div>
       <p className="text-xs text-slate-400">{label}</p>

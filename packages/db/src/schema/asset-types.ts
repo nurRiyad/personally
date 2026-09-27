@@ -1,10 +1,4 @@
-import {
-  index,
-  sqliteTable,
-  text,
-  uniqueIndex,
-  integer,
-} from 'drizzle-orm/sqlite-core';
+import { index, sqliteTable, text, uniqueIndex, integer } from 'drizzle-orm/sqlite-core';
 import { users } from './users';
 
 export const assetTypes = sqliteTable(

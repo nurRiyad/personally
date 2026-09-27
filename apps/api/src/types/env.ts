@@ -1,5 +1,4 @@
-import type { AuthService } from '../services/auth.service';
-import type { createAuthConfig } from '../config';
+import type { createAuthConfig } from '../utils/config';
 
 export type Env = {
   Bindings: {
@@ -11,12 +10,8 @@ export type Env = {
     ENABLE_DEV_SEED?: string;
   };
   Variables: {
-    learningController: import('../controllers/learning.controller').LearningController;
     authConfig: ReturnType<typeof createAuthConfig>;
     authUserId: string;
-    authService: AuthService;
     validatedBody: unknown;
-    budgetController: import('../controllers/budget.controller').BudgetController;
-    assetController: import('../controllers/asset.controller').AssetController;
   };
 };

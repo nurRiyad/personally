@@ -15,10 +15,7 @@ export const assetActivities = sqliteTable(
     sourceAssetId: text('source_asset_id').references(() => assets.id, {
       onDelete: 'restrict',
     }),
-    destinationAssetId: text('destination_asset_id').references(
-      () => assets.id,
-      { onDelete: 'restrict' },
-    ),
+    destinationAssetId: text('destination_asset_id').references(() => assets.id, { onDelete: 'restrict' }),
     sourceEndpoint: text('source_endpoint'),
     destinationEndpoint: text('destination_endpoint'),
     note: text('note'),
@@ -26,23 +23,8 @@ export const assetActivities = sqliteTable(
     updatedAt: integer('updated_at').notNull(),
   },
   (t) => [
-    index('asset_activity_owner_date').on(
-      t.userId,
-      t.activityDate,
-      t.createdAt,
-      t.id,
-    ),
-    index('asset_activity_source_date').on(
-      t.sourceAssetId,
-      t.activityDate,
-      t.createdAt,
-      t.id,
-    ),
-    index('asset_activity_destination_date').on(
-      t.destinationAssetId,
-      t.activityDate,
-      t.createdAt,
-      t.id,
-    ),
+    index('asset_activity_owner_date').on(t.userId, t.activityDate, t.createdAt, t.id),
+    index('asset_activity_source_date').on(t.sourceAssetId, t.activityDate, t.createdAt, t.id),
+    index('asset_activity_destination_date').on(t.destinationAssetId, t.activityDate, t.createdAt, t.id),
   ],
 );

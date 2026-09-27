@@ -6,11 +6,9 @@ export function getAccessToken() {
 }
 
 export function setAccessToken(token: string) {
-  if (typeof window !== 'undefined')
-    window.sessionStorage.setItem(TOKEN_KEY, token);
+  if (typeof window !== 'undefined') window.sessionStorage.setItem(TOKEN_KEY, token);
 }
 
 export function clearAccessToken() {
-  if (typeof window !== 'undefined')
-    window.sessionStorage.removeItem(TOKEN_KEY);
+  if (typeof window !== 'undefined') window.sessionStorage.removeItem(TOKEN_KEY);
 }
