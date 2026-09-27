@@ -11,14 +11,16 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
   openGraph: {
     title: 'Personally | Your life, thoughtfully organized',
-    description: 'Plan monthly income and spending, track assets and activity, and organize learning goals, tasks, and study time.',
+    description:
+      'Plan monthly income and spending, track assets and activity, and organize learning goals, tasks, and study time.',
     type: 'website',
     url: '/',
   },
   twitter: {
     card: 'summary',
     title: 'Personally | Your life, thoughtfully organized',
-    description: 'Plan monthly income and spending, track assets and activity, and organize learning goals, tasks, and study time.',
+    description:
+      'Plan monthly income and spending, track assets and activity, and organize learning goals, tasks, and study time.',
   },
 };
 
@@ -33,7 +35,8 @@ const modules = [
     href: '/budget',
     eyebrow: 'Monthly Budget',
     title: 'Make room for what matters.',
-    description: 'Set up monthly income sources and spending groups, record transactions, and compare your plan with actuals.',
+    description:
+      'Set up monthly income sources and spending groups, record transactions, and compare your plan with actuals.',
     color: 'bg-emerald-50 text-emerald-800',
     icon: <path d="M5 7.5h14v9H5zM8 12h.01M16 12h.01" />,
     preview: <BudgetPreview />,

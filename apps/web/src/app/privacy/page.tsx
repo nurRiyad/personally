@@ -3,7 +3,8 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'How Personally uses account and workspace information to provide its budgeting, asset, and learning features.',
+  description:
+    'How Personally uses account and workspace information to provide its budgeting, asset, and learning features.',
   alternates: { canonical: '/privacy' },
 };
 
@@ -17,19 +18,24 @@ export default function Privacy() {
         <section>
           <h2 className="text-lg font-semibold text-slate-950">What Personally stores</h2>
           <p className="mt-2">
-            Personally stores account information and the records you create in the app, including budget plans and transactions, asset details and activity, and learning outcomes, tasks, and time entries. These records are associated with your account so they can be loaded in your workspace.
+            Personally stores account information and the records you create in the app, including budget plans and
+            transactions, asset details and activity, and learning outcomes, tasks, and time entries. These records are
+            associated with your account so they can be loaded in your workspace.
           </p>
         </section>
         <section>
           <h2 className="text-lg font-semibold text-slate-950">How information is used</h2>
           <p className="mt-2">
-            The app uses account and workspace information to provide sign-in and the features you use. Your current session token is kept in browser session storage. Do not enter information you do not want stored in your account.
+            The app uses account and workspace information to provide sign-in and the features you use. Your current
+            session token is kept in browser session storage. Do not enter information you do not want stored in your
+            account.
           </p>
         </section>
         <section>
           <h2 className="text-lg font-semibold text-slate-950">Your choices</h2>
           <p className="mt-2">
-            You can review and edit many records in the workspace, and some records can be deleted or archived. If you need help with account or data removal, use the support contact provided by the service operator.
+            You can review and edit many records in the workspace, and some records can be deleted or archived. If you
+            need help with account or data removal, use the support contact provided by the service operator.
           </p>
         </section>
       </div>

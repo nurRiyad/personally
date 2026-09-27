@@ -15,14 +15,22 @@ export default function About() {
         Practical tools for the things you want to keep organized.
       </h1>
       <div className="mt-8 space-y-5 text-base leading-7 text-slate-600">
-        <p>Personally brings three separate workspaces together: a monthly budget, an asset register, and a place to organize learning goals.</p>
         <p>
-          The budget tracks planned and recorded income and expenses by month. Asset Management groups the things you own and records balance-changing activity. Learning lets you define outcomes, break them into tasks, and track time against them.
+          Personally brings three separate workspaces together: a monthly budget, an asset register, and a place to
+          organize learning goals.
+        </p>
+        <p>
+          The budget tracks planned and recorded income and expenses by month. Asset Management groups the things you
+          own and records balance-changing activity. Learning lets you define outcomes, break them into tasks, and track
+          time against them.
         </p>
       </div>
       <div className="mt-10 grid gap-4 sm:grid-cols-3">
         {[
-          ['Budget', 'Create monthly income sources and spending groups, then compare planned amounts with recorded transactions.'],
+          [
+            'Budget',
+            'Create monthly income sources and spending groups, then compare planned amounts with recorded transactions.',
+          ],
           ['Assets', 'Organize assets by type and review balances, activity, and changes across a selected period.'],
           ['Learning', 'Set learning outcomes, add tasks, track progress, and record study time.'],
         ].map(([title, description]) => (

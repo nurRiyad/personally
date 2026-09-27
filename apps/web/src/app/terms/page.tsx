@@ -17,19 +17,25 @@ export default function Terms() {
         <section>
           <h2 className="text-lg font-semibold text-slate-950">Use the app responsibly</h2>
           <p className="mt-2">
-            Personally provides tools to record monthly income and expenses, assets and related activity, and learning goals, tasks, and time. You are responsible for keeping your sign-in credentials secure and using the service lawfully.
+            Personally provides tools to record monthly income and expenses, assets and related activity, and learning
+            goals, tasks, and time. You are responsible for keeping your sign-in credentials secure and using the
+            service lawfully.
           </p>
         </section>
         <section>
           <h2 className="text-lg font-semibold text-slate-950">Your information</h2>
           <p className="mt-2">
-            You are responsible for the information you enter and should review it for accuracy. Personally displays and organizes your records; it does not connect to financial institutions or independently verify balances or transactions. Keep any records you need outside the service as well.
+            You are responsible for the information you enter and should review it for accuracy. Personally displays and
+            organizes your records; it does not connect to financial institutions or independently verify balances or
+            transactions. Keep any records you need outside the service as well.
           </p>
         </section>
         <section>
           <h2 className="text-lg font-semibold text-slate-950">Important notice</h2>
           <p className="mt-2">
-            Personally is an organizational tool, not financial, investment, tax, legal, or other professional advice. Do not rely on its calculations or records as a substitute for professional guidance or official statements. Features may change as the service develops.
+            Personally is an organizational tool, not financial, investment, tax, legal, or other professional advice.
+            Do not rely on its calculations or records as a substitute for professional guidance or official statements.
+            Features may change as the service develops.
           </p>
         </section>
       </div>
