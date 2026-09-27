@@ -13,6 +13,7 @@ export const metadata: Metadata = {
     title: 'Personally | Your life, thoughtfully organized',
     description: 'A private workspace for your budget, assets, and learning.',
     type: 'website',
+    url: '/',
   },
   twitter: {
     card: 'summary',

@@ -39,7 +39,18 @@ export function SiteNavbar() {
     <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 sm:px-8">
         <Link href="/" className="text-lg font-semibold tracking-tight text-slate-950">
-          Personally
+          <span className="inline-flex items-center gap-2.5">
+            <span
+              aria-hidden="true"
+              className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-sm shadow-emerald-900/20"
+            >
+              <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m3.5 10 8.5-7 8.5 7v9a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 3.5 19v-9Z" />
+                <path d="M9 20.5v-6a3 3 0 0 1 6 0v6M12 11.5v.01" />
+              </svg>
+            </span>
+            <span>Personally</span>
+          </span>
         </Link>
         <nav aria-label="Primary navigation" className="hidden items-center gap-5 text-sm md:flex">
           <ButtonLink href="/dashboard" variant="ghost" className="min-h-0 px-3 py-2 text-slate-600">

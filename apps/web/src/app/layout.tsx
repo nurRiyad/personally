@@ -12,6 +12,14 @@ export const metadata: Metadata = {
   },
   description: 'A private workspace for your budget, assets, and learning.',
   applicationName: 'Personally',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://personally.app'),
+  icons: { icon: '/icon.svg', shortcut: '/icon.svg', apple: '/icon.svg' },
+  openGraph: {
+    siteName: 'Personally',
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: { card: 'summary' },
   robots: { index: true, follow: true },
 };
 
