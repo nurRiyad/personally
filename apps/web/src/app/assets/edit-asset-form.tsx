@@ -3,32 +3,24 @@
 import { assetDraftSchema, type AssetDraft } from '@personally/validation';
 import { Controller, useForm } from 'react-hook-form';
 import { Button } from '../../components/ui/button';
-import { Calendar } from '../../components/ui/calendar';
 import { Input } from '../../components/ui/input';
 import { Select } from '../../components/ui/select';
 
-export function AddAssetForm({
-  onCancel,
-  onAdd,
+export function EditAssetForm({
+  asset,
   assetTypes,
+  onCancel,
+  onSave,
 }: {
-  onCancel: () => void;
-  onAdd: (asset: AssetDraft) => void;
+  asset: AssetDraft;
   assetTypes: string[];
+  onCancel: () => void;
+  onSave: (asset: AssetDraft) => void;
 }) {
-  const form = useForm<AssetDraft>({
-    defaultValues: {
-      kind: assetTypes[0] ?? '',
-      name: '',
-      openingValue: 0,
-      openedOn: new Date().toISOString().slice(0, 10),
-      detail: '',
-      isLiquid: false,
-    },
-  });
-  const kind = form.watch('kind');
+  const form = useForm<AssetDraft>({ defaultValues: asset });
   const error = (name: keyof AssetDraft) =>
     form.formState.errors[name]?.message;
+
   const submit = (values: AssetDraft) => {
     const parsed = assetDraftSchema.safeParse(values);
     if (!parsed.success) {
@@ -39,11 +31,11 @@ export function AddAssetForm({
       );
       return;
     }
-    onAdd(parsed.data);
+    onSave(parsed.data);
   };
+
   return (
     <form className="space-y-5" onSubmit={form.handleSubmit(submit)} noValidate>
-      <p className="text-sm text-slate-600">Add the holding details below.</p>
       <Controller
         control={form.control}
         name="kind"
@@ -59,11 +51,6 @@ export function AddAssetForm({
               onValueChange={field.onChange}
               className="w-full"
             />
-            {assetTypes.length === 0 && (
-              <p className="mt-1 text-xs text-red-600">
-                Create an asset type first.
-              </p>
-            )}
             <p className="mt-1 text-xs text-red-600" role="alert">
               {error('kind')}
             </p>
@@ -72,59 +59,30 @@ export function AddAssetForm({
       />
       <label className="block text-sm font-medium text-slate-700">
         <span className="mb-2 block">Name</span>
-        <Input
-          autoComplete="off"
-          placeholder={
-            kind === 'Money lent'
-              ? 'e.g. Money lent to Rahim…'
-              : `e.g. ${kind}…`
-          }
-          {...form.register('name')}
-        />
+        <Input autoComplete="off" {...form.register('name')} />
         <p className="mt-1 text-xs text-red-600" role="alert">
           {error('name')}
         </p>
       </label>
       <label className="block text-sm font-medium text-slate-700">
-        <span className="mb-2 block">Opening value</span>
+        <span className="mb-2 block">Current value</span>
         <Input
           type="number"
-          min="0"
-          step="1"
-          inputMode="numeric"
-          autoComplete="off"
+          readOnly
+          tabIndex={-1}
+          className="bg-slate-50 text-slate-500"
           {...form.register('openingValue', { valueAsNumber: true })}
         />
-        <p className="mt-1 text-xs text-red-600" role="alert">
-          {error('openingValue')}
+        <p className="mt-1 text-xs text-slate-500">
+          Current value changes are recorded through asset activity.
         </p>
       </label>
-      <Controller
-        control={form.control}
-        name="openedOn"
-        render={({ field }) => (
-          <div>
-            <p className="mb-2 text-sm font-medium text-slate-700">Opened on</p>
-            <Calendar value={field.value} onChange={field.onChange} />
-            <p className="mt-1 text-xs text-red-600" role="alert">
-              {error('openedOn')}
-            </p>
-          </div>
-        )}
-      />
       <label className="block text-sm font-medium text-slate-700">
-        <span className="mb-2 block">
-          Details <span className="font-normal text-slate-400">(optional)</span>
-        </span>
-        <Input
-          autoComplete="off"
-          placeholder={
-            kind === 'Fixed deposit'
-              ? 'e.g. Matures 15 Dec 2026…'
-              : 'e.g. Location, borrower, or reminder…'
-          }
-          {...form.register('detail')}
-        />
+        <span className="mb-2 block">Details</span>
+        <Input autoComplete="off" {...form.register('detail')} />
+        <p className="mt-1 text-xs text-red-600" role="alert">
+          {error('detail')}
+        </p>
       </label>
       <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
         <input
@@ -145,7 +103,7 @@ export function AddAssetForm({
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit">Add holding</Button>
+        <Button type="submit">Save changes</Button>
       </div>
     </form>
   );

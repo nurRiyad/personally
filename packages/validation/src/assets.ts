@@ -47,6 +47,7 @@ export const assetDraftSchema = z.object({
     .max(999_999_999, 'Amount is too large.'),
   openedOn: isoDateSchema,
   detail: z.string().trim().max(200, 'Keep the detail under 200 characters.'),
+  isLiquid: z.boolean(),
 });
 
 export type AssetDraft = z.infer<typeof assetDraftSchema>;

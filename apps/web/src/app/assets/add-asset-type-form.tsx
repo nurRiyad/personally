@@ -8,11 +8,15 @@ import { Input } from '../../components/ui/input';
 export function AddAssetTypeForm({
   onCancel,
   onAdd,
+  initialName = '',
+  submitLabel = 'Create type',
 }: {
   onCancel: () => void;
   onAdd: (name: string) => void;
+  initialName?: string;
+  submitLabel?: string;
 }) {
-  const form = useForm({ defaultValues: { name: '' } });
+  const form = useForm({ defaultValues: { name: initialName } });
   return (
     <form
       className="space-y-4"
@@ -41,7 +45,7 @@ export function AddAssetTypeForm({
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit">Create type</Button>
+        <Button type="submit">{submitLabel}</Button>
       </div>
     </form>
   );

@@ -6,12 +6,14 @@ import {
   ArrowUpRight,
   Banknote,
   CalendarClock,
-  ChevronRight,
+  ChevronDown,
+  ChevronUp,
   CircleDollarSign,
   Landmark,
   Leaf,
+  Pencil,
   Plus,
-  ShieldCheck,
+  Trash2,
   TrendingUp,
   WalletCards,
 } from 'lucide-react';
@@ -21,6 +23,8 @@ import { Dialog } from '../../components/ui/dialog';
 import { Select } from '../../components/ui/select';
 import { AddAssetForm } from './add-asset-form';
 import { AddAssetTypeForm } from './add-asset-type-form';
+import { EditAssetForm } from './edit-asset-form';
+import { EditActivityForm } from './edit-activity-form';
 import { RecordActivityForm } from './record-activity-form';
 
 type AssetKind = string;
@@ -39,6 +43,7 @@ type Asset = {
   change: number;
   detail: string;
   tone: string;
+  isLiquid: boolean;
 };
 type Activity = {
   id: string;
@@ -61,6 +66,17 @@ const assets: Asset[] = [
     change: 11_200,
     detail: 'Available balance',
     tone: 'bg-sky-100 text-sky-700',
+    isLiquid: true,
+  },
+  {
+    id: 'brac-savings',
+    name: 'BRAC Bank Savings',
+    kind: 'Bank account',
+    value: 92_000,
+    change: 4_500,
+    detail: 'Emergency fund',
+    tone: 'bg-sky-100 text-sky-700',
+    isLiquid: true,
   },
   {
     id: 'brac-fd',
@@ -70,6 +86,17 @@ const assets: Asset[] = [
     change: 24_000,
     detail: 'Matures 15 Dec 2026',
     tone: 'bg-violet-100 text-violet-700',
+    isLiquid: false,
+  },
+  {
+    id: 'city-fd',
+    name: 'City Bank Fixed Deposit',
+    kind: 'Fixed deposit',
+    value: 250_000,
+    change: 15_000,
+    detail: 'Matures 08 Mar 2027',
+    tone: 'bg-violet-100 text-violet-700',
+    isLiquid: false,
   },
   {
     id: 'dps',
@@ -79,6 +106,17 @@ const assets: Asset[] = [
     change: 30_000,
     detail: '৳5,000 monthly · 18 months left',
     tone: 'bg-amber-100 text-amber-700',
+    isLiquid: false,
+  },
+  {
+    id: 'family-dps',
+    name: 'Family DPS',
+    kind: 'DPS',
+    value: 84_000,
+    change: 18_000,
+    detail: '৳3,000 monthly · 24 months left',
+    tone: 'bg-amber-100 text-amber-700',
+    isLiquid: false,
   },
   {
     id: 'rangpur-land',
@@ -88,6 +126,17 @@ const assets: Asset[] = [
     change: 95_000,
     detail: 'Crop income ৳76,000 this year',
     tone: 'bg-emerald-100 text-emerald-700',
+    isLiquid: false,
+  },
+  {
+    id: 'gazipur-land',
+    name: 'Gazipur family land',
+    kind: 'Land',
+    value: 780_000,
+    change: 52_000,
+    detail: 'Shared family property',
+    tone: 'bg-emerald-100 text-emerald-700',
+    isLiquid: false,
   },
   {
     id: 'rahim',
@@ -97,6 +146,17 @@ const assets: Asset[] = [
     change: -15_000,
     detail: 'Next repayment 10 Oct 2026',
     tone: 'bg-rose-100 text-rose-700',
+    isLiquid: false,
+  },
+  {
+    id: 'karim',
+    name: 'Money lent to Karim',
+    kind: 'Money lent',
+    value: 42_000,
+    change: -8_000,
+    detail: 'Next repayment 25 Nov 2026',
+    tone: 'bg-rose-100 text-rose-700',
+    isLiquid: false,
   },
 ];
 
@@ -268,6 +328,16 @@ export function AssetsWorkspace() {
   const [showAddAsset, setShowAddAsset] = useState(false);
   const [showAddType, setShowAddType] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
+  const [deletingAsset, setDeletingAsset] = useState<Asset | null>(null);
+  const [editingAssetType, setEditingAssetType] = useState<string | null>(null);
+  const [deletingAssetType, setDeletingAssetType] = useState<string | null>(
+    null,
+  );
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [deletingActivity, setDeletingActivity] = useState<Activity | null>(
+    null,
+  );
   const [assetItems, setAssetItems] = useState(assets);
   const [assetTypes, setAssetTypes] = useState(() => [
     ...new Set(assets.map((asset) => asset.kind)),
@@ -275,6 +345,12 @@ export function AssetsWorkspace() {
   const [activityItems, setActivityItems] = useState(initialActivities);
   const total = assetItems.reduce((sum, asset) => sum + asset.value, 0);
   const yearlyChange = assetItems.reduce((sum, asset) => sum + asset.change, 0);
+  const moneyLent = assetItems
+    .filter((asset) => asset.kind === 'Money lent')
+    .reduce((sum, asset) => sum + asset.value, 0);
+  const liquidMoney = assetItems
+    .filter((asset) => asset.isLiquid)
+    .reduce((sum, asset) => sum + asset.value, 0);
   const filteredActivities = useMemo(
     () =>
       activityItems.filter(
@@ -316,6 +392,7 @@ export function AssetsWorkspace() {
     openingValue: number;
     openedOn: string;
     detail: string;
+    isLiquid: boolean;
   }) => {
     setAssetItems((current) => [
       ...current,
@@ -327,10 +404,103 @@ export function AssetsWorkspace() {
         change: 0,
         detail: asset.detail || `Opened ${asset.openedOn}`,
         tone: 'bg-slate-100 text-slate-700',
+        isLiquid: asset.isLiquid,
       },
     ]);
     setShowAddAsset(false);
     setActiveTab('Assets');
+  };
+  const updateAsset = (updated: {
+    kind: string;
+    name: string;
+    openingValue: number;
+    openedOn: string;
+    detail: string;
+    isLiquid: boolean;
+  }) => {
+    if (!editingAsset) return;
+    setAssetItems((current) =>
+      current.map((asset) =>
+        asset.id === editingAsset.id
+          ? {
+              ...asset,
+              kind: updated.kind,
+              name: updated.name,
+              detail: updated.detail,
+              isLiquid: updated.isLiquid,
+            }
+          : asset,
+      ),
+    );
+    setEditingAsset(null);
+  };
+  const deleteAsset = () => {
+    if (!deletingAsset) return;
+    setAssetItems((current) =>
+      current.filter((asset) => asset.id !== deletingAsset.id),
+    );
+    setDeletingAsset(null);
+    setSelectedAsset(null);
+  };
+  const updateAssetType = (name: string) => {
+    if (!editingAssetType) return;
+    setAssetTypes((current) =>
+      current.map((type) => (type === editingAssetType ? name : type)),
+    );
+    setAssetItems((current) =>
+      current.map((asset) =>
+        asset.kind === editingAssetType ? { ...asset, kind: name } : asset,
+      ),
+    );
+    setEditingAssetType(null);
+  };
+  const deleteAssetType = () => {
+    if (!deletingAssetType) return;
+    if (assetItems.some((asset) => asset.kind === deletingAssetType)) return;
+    setAssetTypes((current) =>
+      current.filter((type) => type !== deletingAssetType),
+    );
+    setDeletingAssetType(null);
+  };
+  const activityDateInput = (date: string) => {
+    const parsed = new Date(date);
+    return Number.isNaN(parsed.getTime())
+      ? new Date().toISOString().slice(0, 10)
+      : parsed.toISOString().slice(0, 10);
+  };
+  const updateActivity = (updated: {
+    kind: ActivityKind;
+    source: string;
+    destination: string;
+    amount: number;
+    date: string;
+    note?: string;
+  }) => {
+    if (!editingActivity) return;
+    setActivityItems((current) =>
+      current.map((activity) =>
+        activity.id === editingActivity.id
+          ? {
+              ...activity,
+              kind: updated.kind,
+              title: activityTitle(updated.kind),
+              amount: updated.amount,
+              date: activityDateLabel(updated.date),
+              from: updated.source,
+              to: updated.destination,
+              note: updated.note || 'No note added',
+            }
+          : activity,
+      ),
+    );
+    setEditingActivity(null);
+  };
+  const deleteActivity = () => {
+    if (!deletingActivity) return;
+    setActivityItems((current) =>
+      current.filter((activity) => activity.id !== deletingActivity.id),
+    );
+    setDeletingActivity(null);
   };
   return (
     <main className="page-transition mx-auto w-full max-w-7xl flex-1 px-5 py-8 sm:px-8 sm:py-10">
@@ -383,7 +553,7 @@ export function AssetsWorkspace() {
             icon={<WalletCards className="size-5" />}
             label="Total assets"
             value={currency(total)}
-            detail="Across 5 tracked assets"
+            detail={`Across ${assetItems.length} tracked assets`}
             tone="!bg-slate-950 text-white"
           />
           <SummaryCard
@@ -396,16 +566,16 @@ export function AssetsWorkspace() {
           <SummaryCard
             icon={<Banknote className="size-5" />}
             label="Liquid money"
-            value={currency(186_500)}
-            detail="Ready in bank accounts"
+            value={currency(liquidMoney)}
+            detail="Available when you need it"
             tone="!bg-sky-50 text-sky-800"
           />
           <SummaryCard
-            icon={<ShieldCheck className="size-5" />}
-            label="Verified entries"
-            value="4 of 5"
-            detail="One entry needs review"
-            tone="!bg-violet-50 text-violet-800"
+            icon={<CircleDollarSign className="size-5" />}
+            label="Money lent"
+            value={currency(moneyLent)}
+            detail="Outstanding from friends"
+            tone="!bg-rose-50 text-rose-800"
           />
         </section>
       )}
@@ -421,7 +591,12 @@ export function AssetsWorkspace() {
         <section className="mt-6">
           <AssetsList
             assets={assetItems}
+            assetTypes={assetTypes}
             onSelectAsset={setSelectedAsset}
+            onEditAsset={setEditingAsset}
+            onDeleteAsset={setDeletingAsset}
+            onEditAssetType={setEditingAssetType}
+            onDeleteAssetType={setDeletingAssetType}
             onAddAsset={() => setShowAddAsset(true)}
             onAddType={() => setShowAddType(true)}
           />
@@ -432,8 +607,143 @@ export function AssetsWorkspace() {
           activities={visibleActivities}
           filter={activityFilter}
           onFilterChange={setActivityFilter}
+          onEditActivity={setEditingActivity}
+          onDeleteActivity={setDeletingActivity}
         />
       )}
+      <Dialog
+        open={editingActivity !== null}
+        onClose={() => setEditingActivity(null)}
+        title="Edit activity"
+        description="Update the movement details and save the corrected record."
+      >
+        {editingActivity && (
+          <EditActivityForm
+            activity={{
+              kind: editingActivity.kind,
+              source: editingActivity.from,
+              destination: editingActivity.to,
+              amount: editingActivity.amount,
+              date: activityDateInput(editingActivity.date),
+              note: editingActivity.note,
+            }}
+            assetNames={assetItems.map((asset) => asset.name)}
+            onCancel={() => setEditingActivity(null)}
+            onSave={updateActivity}
+          />
+        )}
+      </Dialog>
+      <Dialog
+        open={deletingActivity !== null}
+        onClose={() => setDeletingActivity(null)}
+        title="Delete activity"
+        description="This only removes the dummy activity from this screen."
+      >
+        <div className="space-y-5">
+          <p className="text-sm leading-6 text-slate-600">
+            Delete{' '}
+            <strong className="text-slate-900">
+              {deletingActivity?.title}
+            </strong>
+            ? This action cannot be undone.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => setDeletingActivity(null)}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={deleteActivity}>
+              Delete activity
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+      <Dialog
+        open={editingAssetType !== null}
+        onClose={() => setEditingAssetType(null)}
+        title="Edit asset type"
+        description="Rename this type without changing its assets."
+      >
+        {editingAssetType && (
+          <AddAssetTypeForm
+            initialName={editingAssetType}
+            submitLabel="Save changes"
+            onCancel={() => setEditingAssetType(null)}
+            onAdd={updateAssetType}
+          />
+        )}
+      </Dialog>
+      <Dialog
+        open={deletingAssetType !== null}
+        onClose={() => setDeletingAssetType(null)}
+        title="Delete asset type"
+        description="Only empty asset types can be deleted."
+      >
+        <div className="space-y-5">
+          <p className="text-sm leading-6 text-slate-600">
+            Delete{' '}
+            <strong className="text-slate-900">{deletingAssetType}</strong>?
+            This action cannot be undone.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => setDeletingAssetType(null)}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={deleteAssetType}>
+              Delete type
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+      <Dialog
+        open={editingAsset !== null}
+        onClose={() => setEditingAsset(null)}
+        title="Edit asset"
+        description="Update the asset details and current value."
+      >
+        {editingAsset && (
+          <EditAssetForm
+            asset={{
+              kind: editingAsset.kind,
+              name: editingAsset.name,
+              openingValue: editingAsset.value,
+              openedOn: '2026-09-27',
+              detail: editingAsset.detail,
+              isLiquid: editingAsset.isLiquid,
+            }}
+            assetTypes={assetTypes}
+            onCancel={() => setEditingAsset(null)}
+            onSave={updateAsset}
+          />
+        )}
+      </Dialog>
+      <Dialog
+        open={deletingAsset !== null}
+        onClose={() => setDeletingAsset(null)}
+        title="Delete asset"
+        description="This only removes the dummy asset from this screen."
+      >
+        <div className="space-y-5">
+          <p className="text-sm leading-6 text-slate-600">
+            Delete{' '}
+            <strong className="text-slate-900">{deletingAsset?.name}</strong>?
+            This action cannot be undone.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setDeletingAsset(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={deleteAsset}>
+              Delete asset
+            </Button>
+          </div>
+        </div>
+      </Dialog>
       <Dialog
         open={showNewActivity}
         onClose={() => setShowNewActivity(false)}
@@ -470,7 +780,6 @@ export function AssetsWorkspace() {
               current.includes(name) ? current : [...current, name],
             );
             setShowAddType(false);
-            setShowAddAsset(true);
           }}
         />
       </Dialog>
@@ -661,29 +970,62 @@ function Overview({
 }
 function AssetsList({
   assets,
+  assetTypes,
   onSelectAsset,
+  onEditAsset,
+  onDeleteAsset,
+  onEditAssetType,
+  onDeleteAssetType,
   onAddAsset,
   onAddType,
 }: {
   assets: Asset[];
+  assetTypes: string[];
   onSelectAsset: (asset: Asset) => void;
+  onEditAsset: (asset: Asset) => void;
+  onDeleteAsset: (asset: Asset) => void;
+  onEditAssetType: (type: string) => void;
+  onDeleteAssetType: (type: string) => void;
   onAddAsset: () => void;
   onAddType: () => void;
 }) {
+  const assetGroups = assetTypes.reduce<Map<string, Asset[]>>(
+    (groups, type) => {
+      groups.set(
+        type,
+        assets.filter((asset) => asset.kind === type),
+      );
+      return groups;
+    },
+    new Map(),
+  );
+  const [expandedTypes, setExpandedTypes] = useState(
+    () => new Set(assetGroups.keys()),
+  );
+
+  const toggleType = (kind: string) => {
+    setExpandedTypes((current) => {
+      const next = new Set(current);
+      if (next.has(kind)) next.delete(kind);
+      else next.add(kind);
+      return next;
+    });
+  };
+
   return (
     <Card className="overflow-hidden">
       <div className="flex items-center justify-between p-5 sm:p-6">
         <div>
-          <h2 className="text-base font-semibold text-slate-950">All assets</h2>
+          <h2 className="text-lg font-semibold text-slate-950">Your assets</h2>
           <p className="mt-1 text-sm text-slate-500">
-            Current value, returns, and important next steps.
+            Review what you own, grouped by asset type.
           </p>
         </div>
         <div className="flex gap-2">
           <Button
             type="button"
             variant="ghost"
-            className="px-3"
+            className="min-h-9 px-3"
             onClick={onAddType}
           >
             Create type
@@ -691,47 +1033,157 @@ function AssetsList({
           <Button
             type="button"
             variant="secondary"
-            className="px-3"
+            className="min-h-9 px-3"
             onClick={onAddAsset}
           >
-            Add asset
+            <Plus className="size-4" aria-hidden="true" /> Add asset
           </Button>
         </div>
       </div>
       <div className="border-t border-slate-100">
-        {assets.map((asset) => (
-          <button
-            key={asset.id}
-            type="button"
-            onClick={() => onSelectAsset(asset)}
-            className="group flex w-full items-center gap-3 border-b border-slate-100 px-5 py-4 text-left last:border-b-0 hover:bg-slate-50 sm:px-6"
-          >
-            <span
-              className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${asset.tone}`}
-            >
-              <AssetIcon kind={asset.kind} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold text-slate-900">
-                {asset.name}
-              </span>
-              <span className="mt-0.5 block truncate text-xs text-slate-500">
-                {asset.kind} · {asset.detail}
-              </span>
-            </span>
-            <span className="hidden text-right sm:block">
-              <span className="block text-sm font-semibold text-slate-900">
-                {currency(asset.value)}
-              </span>
-              <span
-                className={`block text-xs font-medium ${asset.change >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}
+        {[...assetGroups.entries()].map(([kind, group]) => (
+          <section key={kind}>
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/70 px-5 py-3 sm:px-6">
+              <button
+                type="button"
+                aria-expanded={expandedTypes.has(kind)}
+                onClick={() => toggleType(kind)}
+                className="flex min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:text-slate-950"
               >
-                {asset.change >= 0 ? '+' : ''}
-                {currency(asset.change)} this year
-              </span>
-            </span>
-            <ChevronRight className="size-4 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700" />
-          </button>
+                <span className="text-slate-600">
+                  <AssetIcon kind={kind} />
+                </span>
+                <span>
+                  <span className="font-semibold text-slate-800">{kind}</span>
+                  <span className="ml-3 text-xs text-slate-500">
+                    {group.length} {group.length === 1 ? 'asset' : 'assets'} ·{' '}
+                    {currency(
+                      group.reduce((sum, asset) => sum + asset.value, 0),
+                    )}
+                  </span>
+                </span>
+                {expandedTypes.has(kind) ? (
+                  <ChevronUp
+                    className="size-4 text-slate-400"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <ChevronDown
+                    className="size-4 text-slate-400"
+                    aria-hidden="true"
+                  />
+                )}
+              </button>
+              <div className="flex shrink-0 items-center gap-1 border-l border-slate-200 pl-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="min-h-8 px-2"
+                  aria-label={`Edit ${kind}`}
+                  onClick={() => onEditAssetType(kind)}
+                >
+                  <Pencil className="size-3.5" aria-hidden="true" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="min-h-8 px-2 text-rose-700 hover:bg-rose-50 hover:text-rose-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label={
+                    group.length > 0
+                      ? `${kind} cannot be deleted while it has assets`
+                      : `Delete ${kind}`
+                  }
+                  title={
+                    group.length > 0
+                      ? 'Remove all assets from this type before deleting it'
+                      : `Delete ${kind}`
+                  }
+                  disabled={group.length > 0}
+                  onClick={() => onDeleteAssetType(kind)}
+                >
+                  <Trash2 className="size-3.5" aria-hidden="true" />
+                </Button>
+              </div>
+            </div>
+            <div
+              className={`grid transition-[grid-template-rows] duration-300 ease-out ${expandedTypes.has(kind) ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+            >
+              <div className="min-h-0 overflow-hidden">
+                {group.map((asset) => (
+                  <div
+                    key={asset.id}
+                    className="group flex w-full items-center gap-4 border-b border-slate-100 px-5 py-4 transition-colors hover:bg-slate-50 sm:px-6"
+                  >
+                    <span
+                      className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${asset.tone}`}
+                    >
+                      <AssetIcon kind={asset.kind} />
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onSelectAsset(asset)}
+                      className="grid min-w-0 flex-1 grid-cols-1 gap-1 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 sm:grid-cols-[minmax(0,1fr)_230px] sm:items-center sm:gap-4"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium text-slate-900">
+                          {asset.name}
+                        </span>
+                        <span className="mt-1 block truncate text-xs text-slate-500">
+                          {asset.detail}
+                        </span>
+                      </span>
+                      <span className="grid grid-cols-2 gap-3 sm:text-right">
+                        <span>
+                          <span className="block text-[11px] text-slate-400">
+                            Value
+                          </span>
+                          <span className="mt-0.5 block text-sm font-semibold text-slate-700">
+                            {currency(asset.value)}
+                          </span>
+                        </span>
+                        <span>
+                          <span className="block text-[11px] text-slate-400">
+                            Change
+                          </span>
+                          <span
+                            className={`mt-0.5 block text-sm font-semibold ${asset.change >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}
+                          >
+                            {asset.change >= 0 ? '+' : ''}
+                            {currency(asset.change)}
+                          </span>
+                        </span>
+                      </span>
+                    </button>
+                    <div className="flex shrink-0 items-center gap-1 border-l border-slate-100 pl-3">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="min-h-9 px-2"
+                        aria-label={`Edit ${asset.name}`}
+                        onClick={() => onEditAsset(asset)}
+                      >
+                        <Pencil className="size-4" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="min-h-9 px-2 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                        aria-label={`Delete ${asset.name}`}
+                        onClick={() => onDeleteAsset(asset)}
+                      >
+                        <Trash2 className="size-4" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                {group.length === 0 && (
+                  <p className="px-5 py-4 text-sm text-slate-500 sm:px-6">
+                    No assets in this type yet. Add an asset to get started.
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
         ))}
       </div>
     </Card>
@@ -781,10 +1233,14 @@ function ActivityLog({
   activities: activityItems,
   filter,
   onFilterChange,
+  onEditActivity,
+  onDeleteActivity,
 }: {
   activities: Activity[];
   filter: string;
   onFilterChange: (value: string) => void;
+  onEditActivity: (activity: Activity) => void;
+  onDeleteActivity: (activity: Activity) => void;
 }) {
   return (
     <section className="mt-6">
@@ -845,9 +1301,29 @@ function ActivityLog({
                 </p>
                 <p className="mt-1 text-xs text-slate-400">{activity.note}</p>
               </div>
-              <p className="text-sm font-semibold text-slate-900">
-                {currency(activity.amount)}
-              </p>
+              <div className="flex shrink-0 items-center gap-1 border-l border-slate-100 pl-3">
+                <p className="min-w-20 text-right text-sm font-semibold tabular-nums text-slate-900">
+                  {currency(activity.amount)}
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="min-h-9 px-2"
+                  aria-label={`Edit ${activity.title}`}
+                  onClick={() => onEditActivity(activity)}
+                >
+                  <Pencil className="size-4" aria-hidden="true" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="min-h-9 px-2 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                  aria-label={`Delete ${activity.title}`}
+                  onClick={() => onDeleteActivity(activity)}
+                >
+                  <Trash2 className="size-4" aria-hidden="true" />
+                </Button>
+              </div>
             </div>
           ))}
           {activityItems.length === 0 && (
