@@ -14,6 +14,10 @@ import { budgetRoutes } from './budget.routes';
 import { BudgetController } from '../controllers/budget.controller';
 import { BudgetService } from '../services/budget.service';
 import { D1BudgetRepository } from '../repositories/budget.repository';
+import { assetRoutes } from './asset.routes';
+import { AssetController } from '../controllers/asset.controller';
+import { AssetService } from '../services/asset.service';
+import { D1AssetRepository } from '../repositories/asset.repository';
 
 export const routes = new Hono<Env>();
 routes.use('/auth/*', async (c, next) => {
@@ -51,3 +55,20 @@ routes.use('/budget/*', async (c, next) => {
   await next();
 });
 routes.route('/budget', budgetRoutes);
+routes.use('/assets/*', async (c, next) => {
+  c.set('authConfig', createAuthConfig(c.env));
+  c.set(
+    'assetController',
+    new AssetController(new AssetService(new D1AssetRepository(c.env.DB))),
+  );
+  await next();
+});
+routes.use('/assets', async (c, next) => {
+  c.set('authConfig', createAuthConfig(c.env));
+  c.set(
+    'assetController',
+    new AssetController(new AssetService(new D1AssetRepository(c.env.DB))),
+  );
+  await next();
+});
+routes.route('/assets', assetRoutes);

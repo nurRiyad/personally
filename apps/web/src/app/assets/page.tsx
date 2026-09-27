@@ -1,10 +1,10 @@
-import { ProtectedRoute } from '../../components/auth';
+import { AssetsProvider } from './assets-provider';
 import { AssetsWorkspace } from './assets-ui';
 
 export default function Assets() {
   return (
-    <ProtectedRoute>
+    <AssetsProvider>
       <AssetsWorkspace />
-    </ProtectedRoute>
+    </AssetsProvider>
   );
 }

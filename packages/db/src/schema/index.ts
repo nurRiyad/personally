@@ -4,3 +4,6 @@ export * from './learning-epics';
 export * from './learning-tasks';
 export * from './learning-task-times';
 export * from './budget';
+export * from './asset-types';
+export * from './assets';
+export * from './asset-activities';

@@ -1,507 +1,293 @@
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowDownLeft,
   ArrowUpRight,
   Banknote,
-  CalendarClock,
-  ChevronDown,
-  ChevronUp,
   CircleDollarSign,
-  Landmark,
   Leaf,
-  Pencil,
+  Landmark,
   Plus,
-  Trash2,
-  TrendingUp,
   WalletCards,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { Dialog } from '../../components/ui/dialog';
 import { Select } from '../../components/ui/select';
+import { ApiError } from '../../lib/api/client';
+import {
+  archiveAsset,
+  assetsKey,
+  createAsset,
+  createAssetActivity,
+  createAssetType,
+  deleteAssetActivity,
+  deleteAssetType,
+  getAsset,
+  getAssetActivities,
+  getAssetDashboard,
+  getAssets,
+  getAssetTypes,
+  patchAsset,
+  patchAssetActivity,
+  patchAssetType,
+  type AssetActivity,
+  type AssetCreateInput,
+  type AssetDashboard,
+  type AssetPatchInput,
+  type AssetRecord,
+  type AssetType,
+  type AssetActivityInput,
+} from '../../lib/api/assets';
 import { AddAssetForm } from './add-asset-form';
 import { AddAssetTypeForm } from './add-asset-type-form';
 import { EditAssetForm } from './edit-asset-form';
 import { EditActivityForm } from './edit-activity-form';
 import { RecordActivityForm } from './record-activity-form';
 
-type AssetKind = string;
-type ActivityKind =
-  | 'Income'
-  | 'Transfer'
-  | 'Contribution'
-  | 'Lending'
-  | 'Repayment'
-  | 'External use';
-type Asset = {
-  id: string;
-  name: string;
-  kind: AssetKind;
-  value: number;
-  change: number;
-  detail: string;
-  tone: string;
-  isLiquid: boolean;
-};
-type Activity = {
-  id: string;
-  date: string;
-  title: string;
-  kind: ActivityKind;
-  amount: number;
-  from: string;
-  to: string;
-  note: string;
-  status: 'Recorded' | 'Verified';
-};
-
-const assets: Asset[] = [
-  {
-    id: 'city-bank',
-    name: 'City Bank Savings',
-    kind: 'Bank account',
-    value: 186_500,
-    change: 11_200,
-    detail: 'Available balance',
-    tone: 'bg-sky-100 text-sky-700',
-    isLiquid: true,
-  },
-  {
-    id: 'brac-savings',
-    name: 'BRAC Bank Savings',
-    kind: 'Bank account',
-    value: 92_000,
-    change: 4_500,
-    detail: 'Emergency fund',
-    tone: 'bg-sky-100 text-sky-700',
-    isLiquid: true,
-  },
-  {
-    id: 'brac-fd',
-    name: 'BRAC Bank Fixed Deposit',
-    kind: 'Fixed deposit',
-    value: 400_000,
-    change: 24_000,
-    detail: 'Matures 15 Dec 2026',
-    tone: 'bg-violet-100 text-violet-700',
-    isLiquid: false,
-  },
-  {
-    id: 'city-fd',
-    name: 'City Bank Fixed Deposit',
-    kind: 'Fixed deposit',
-    value: 250_000,
-    change: 15_000,
-    detail: 'Matures 08 Mar 2027',
-    tone: 'bg-violet-100 text-violet-700',
-    isLiquid: false,
-  },
-  {
-    id: 'dps',
-    name: 'Monthly DPS',
-    kind: 'DPS',
-    value: 148_000,
-    change: 30_000,
-    detail: '৳5,000 monthly · 18 months left',
-    tone: 'bg-amber-100 text-amber-700',
-    isLiquid: false,
-  },
-  {
-    id: 'family-dps',
-    name: 'Family DPS',
-    kind: 'DPS',
-    value: 84_000,
-    change: 18_000,
-    detail: '৳3,000 monthly · 24 months left',
-    tone: 'bg-amber-100 text-amber-700',
-    isLiquid: false,
-  },
-  {
-    id: 'rangpur-land',
-    name: 'Rangpur agricultural land',
-    kind: 'Land',
-    value: 1_240_000,
-    change: 95_000,
-    detail: 'Crop income ৳76,000 this year',
-    tone: 'bg-emerald-100 text-emerald-700',
-    isLiquid: false,
-  },
-  {
-    id: 'gazipur-land',
-    name: 'Gazipur family land',
-    kind: 'Land',
-    value: 780_000,
-    change: 52_000,
-    detail: 'Shared family property',
-    tone: 'bg-emerald-100 text-emerald-700',
-    isLiquid: false,
-  },
-  {
-    id: 'rahim',
-    name: 'Money lent to Rahim',
-    kind: 'Money lent',
-    value: 65_000,
-    change: -15_000,
-    detail: 'Next repayment 10 Oct 2026',
-    tone: 'bg-rose-100 text-rose-700',
-    isLiquid: false,
-  },
-  {
-    id: 'karim',
-    name: 'Money lent to Karim',
-    kind: 'Money lent',
-    value: 42_000,
-    change: -8_000,
-    detail: 'Next repayment 25 Nov 2026',
-    tone: 'bg-rose-100 text-rose-700',
-    isLiquid: false,
-  },
-];
-
-const initialActivities: Activity[] = [
-  {
-    id: 'a1',
-    date: '18 Sep 2026',
-    title: 'Fixed-deposit interest received',
-    kind: 'Income',
-    amount: 6_000,
-    from: 'BRAC Bank Fixed Deposit',
-    to: 'City Bank Savings',
-    note: 'Quarterly interest payment',
-    status: 'Verified',
-  },
-  {
-    id: 'a2',
-    date: '11 Sep 2026',
-    title: 'Crop sale recorded',
-    kind: 'Income',
-    amount: 28_000,
-    from: 'Rangpur agricultural land',
-    to: 'City Bank Savings',
-    note: 'Aman rice sale',
-    status: 'Verified',
-  },
-  {
-    id: 'a3',
-    date: '05 Sep 2026',
-    title: 'DPS contribution',
-    kind: 'Contribution',
-    amount: 5_000,
-    from: 'City Bank Savings',
-    to: 'Monthly DPS',
-    note: 'September instalment',
-    status: 'Verified',
-  },
-  {
-    id: 'a4',
-    date: '02 Sep 2026',
-    title: 'Loan repayment received',
-    kind: 'Repayment',
-    amount: 10_000,
-    from: 'Money lent to Rahim',
-    to: 'City Bank Savings',
-    note: 'Partial repayment',
-    status: 'Recorded',
-  },
-  {
-    id: 'a5',
-    date: '15 Aug 2026',
-    title: 'Land value reviewed',
-    kind: 'Transfer',
-    amount: 60_000,
-    from: 'Rangpur agricultural land',
-    to: 'Asset value',
-    note: 'Annual estimated market-value update',
-    status: 'Verified',
-  },
-];
-
-const tabs = ['Overview', 'Assets', 'Activity'] as const;
-const currency = (value: number) =>
+type Tab = 'Overview' | 'Assets' | 'Activity';
+const money = (value: number) =>
   `৳${new Intl.NumberFormat('en-BD').format(value)}`;
-
-const activityTitle = (kind: ActivityKind) => {
-  switch (kind) {
-    case 'Income':
-      return 'Income received';
-    case 'Transfer':
-      return 'Transfer between holdings';
-    case 'Contribution':
-      return 'Contribution recorded';
-    case 'Lending':
-      return 'Money lent';
-    case 'Repayment':
-      return 'Repayment received';
-    case 'External use':
-      return 'Personal use recorded';
-  }
-};
-
-const activityDateLabel = (date: string) =>
+const assetMixColors = [
+  '#10b981',
+  '#8b5cf6',
+  '#38bdf8',
+  '#f59e0b',
+  '#f43f5e',
+  '#6366f1',
+  '#14b8a6',
+  '#f97316',
+];
+const dateLabel = (date: string) =>
   new Intl.DateTimeFormat('en-GB', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
   }).format(new Date(`${date}T00:00:00`));
-
-function AssetIcon({ kind }: { kind: AssetKind }) {
-  const className = 'size-5';
-  if (kind === 'Land') return <Leaf className={className} />;
-  if (kind === 'Fixed deposit') return <Landmark className={className} />;
-  if (kind === 'DPS') return <WalletCards className={className} />;
-  if (kind === 'Money lent') return <CircleDollarSign className={className} />;
-  return <Banknote className={className} />;
-}
-
-function GrowthChart() {
-  return (
-    <div
-      className="mt-7 h-52 w-full"
-      aria-label="Asset value growth from January to September 2026"
-    >
-      <svg
-        viewBox="0 0 680 210"
-        className="h-full w-full overflow-visible"
-        role="img"
-      >
-        <defs>
-          <linearGradient id="asset-growth" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#0f766e" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#0f766e" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {[34, 78, 122, 166].map((y) => (
-          <line
-            key={y}
-            x1="0"
-            x2="680"
-            y1={y}
-            y2={y}
-            stroke="#e2e8f0"
-            strokeDasharray="3 6"
-          />
-        ))}
-        <path
-          d="M0 155 C46 145 64 150 96 141 S155 132 184 130 S236 119 269 123 S321 102 354 104 S411 96 438 85 S497 82 524 69 S583 52 616 48 S658 40 680 27 L680 188 L0 188 Z"
-          fill="url(#asset-growth)"
-        />
-        <path
-          d="M0 155 C46 145 64 150 96 141 S155 132 184 130 S236 119 269 123 S321 102 354 104 S411 96 438 85 S497 82 524 69 S583 52 616 48 S658 40 680 27"
-          fill="none"
-          stroke="#0f766e"
-          strokeLinecap="round"
-          strokeWidth="3"
-        />
-        <circle
-          cx="680"
-          cy="27"
-          r="5"
-          fill="#0f766e"
-          stroke="white"
-          strokeWidth="3"
-        />
-        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'].map(
-          (month, index) => (
-            <text
-              key={month}
-              x={index * 85}
-              y="208"
-              fill="#64748b"
-              fontSize="11"
-            >
-              {month}
-            </text>
-          ),
-        )}
-      </svg>
-    </div>
-  );
-}
+const fromFor = (year: string) =>
+  year === 'All time' ? '1970-01-01' : `${year}-01-01`;
+const errorText = (error: unknown) =>
+  error instanceof ApiError
+    ? error.message
+    : error instanceof Error
+      ? error.message
+      : 'Unable to save. Please try again.';
 
 export function AssetsWorkspace() {
-  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('Overview');
-  const [year, setYear] = useState('2026');
-  const [activityFilter, setActivityFilter] = useState('All activity');
-  const [showNewActivity, setShowNewActivity] = useState(false);
-  const [showAddAsset, setShowAddAsset] = useState(false);
-  const [showAddType, setShowAddType] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
-  const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
-  const [deletingAsset, setDeletingAsset] = useState<Asset | null>(null);
-  const [editingAssetType, setEditingAssetType] = useState<string | null>(null);
-  const [deletingAssetType, setDeletingAssetType] = useState<string | null>(
+  const queryClient = useQueryClient();
+  const currentYear = String(new Date().getFullYear());
+  const [tab, setTab] = useState<Tab>('Overview');
+  const [year, setYear] = useState(currentYear);
+  const [dialog, setDialog] = useState<'activity' | 'asset' | 'type' | null>(
     null,
   );
-  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
-  const [deletingActivity, setDeletingActivity] = useState<Activity | null>(
+  const [editingType, setEditingType] = useState<AssetType | null>(null);
+  const [deletingType, setDeletingType] = useState<AssetType | null>(null);
+  const [editingAsset, setEditingAsset] = useState<AssetRecord | null>(null);
+  const [archivingAsset, setArchivingAsset] = useState<AssetRecord | null>(
     null,
   );
-  const [assetItems, setAssetItems] = useState(assets);
-  const [assetTypes, setAssetTypes] = useState(() => [
-    ...new Set(assets.map((asset) => asset.kind)),
-  ]);
-  const [activityItems, setActivityItems] = useState(initialActivities);
-  const total = assetItems.reduce((sum, asset) => sum + asset.value, 0);
-  const yearlyChange = assetItems.reduce((sum, asset) => sum + asset.change, 0);
-  const moneyLent = assetItems
-    .filter((asset) => asset.kind === 'Money lent')
-    .reduce((sum, asset) => sum + asset.value, 0);
-  const liquidMoney = assetItems
-    .filter((asset) => asset.isLiquid)
-    .reduce((sum, asset) => sum + asset.value, 0);
-  const filteredActivities = useMemo(
-    () =>
-      activityItems.filter(
-        (activity) =>
-          activityFilter === 'All activity' || activity.kind === activityFilter,
-      ),
-    [activityFilter, activityItems],
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+  const [editingActivity, setEditingActivity] = useState<AssetActivity | null>(
+    null,
   );
-  const visibleActivities =
-    activeTab === 'Activity' ? filteredActivities : activityItems.slice(0, 4);
-  const recordActivity = (activity: {
-    kind: ActivityKind;
-    source: string;
-    destination: string;
-    amount: number;
-    date: string;
-    note?: string;
-  }) => {
-    setActivityItems((current) => [
-      {
-        id: `activity-${Date.now()}`,
-        date: activityDateLabel(activity.date),
-        title: activityTitle(activity.kind),
-        kind: activity.kind,
-        amount: activity.amount,
-        from: activity.source,
-        to: activity.destination,
-        note: activity.note || 'No note added',
-        status: 'Recorded',
-      },
-      ...current,
-    ]);
-    setShowNewActivity(false);
-    setActiveTab('Activity');
+  const [deletingActivity, setDeletingActivity] =
+    useState<AssetActivity | null>(null);
+  const range = {
+    from: fromFor(year),
+    to: new Date().toISOString().slice(0, 10),
   };
-  const addAsset = (asset: {
-    kind: AssetKind;
-    name: string;
-    openingValue: number;
-    openedOn: string;
-    detail: string;
-    isLiquid: boolean;
-  }) => {
-    setAssetItems((current) => [
-      ...current,
-      {
-        id: `asset-${Date.now()}`,
-        name: asset.name,
-        kind: asset.kind,
-        value: asset.openingValue,
-        change: 0,
-        detail: asset.detail || `Opened ${asset.openedOn}`,
-        tone: 'bg-slate-100 text-slate-700',
-        isLiquid: asset.isLiquid,
-      },
-    ]);
-    setShowAddAsset(false);
-    setActiveTab('Assets');
+  const typesQuery = useQuery({
+    queryKey: [...assetsKey, 'types'],
+    queryFn: getAssetTypes,
+  });
+  const assetsQuery = useQuery({
+    queryKey: [...assetsKey, 'list', range],
+    queryFn: () => getAssets({ ...range, includeArchived: true }),
+  });
+  const dashboardQuery = useQuery({
+    queryKey: [...assetsKey, 'dashboard', range],
+    queryFn: () => getAssetDashboard(range),
+  });
+  const activitiesQuery = useQuery({
+    queryKey: [...assetsKey, 'activities', range],
+    queryFn: () => getAssetActivities({ ...range, pageSize: 100 }),
+  });
+  const detailQuery = useQuery({
+    queryKey: [...assetsKey, 'detail', selectedAssetId, range],
+    queryFn: () => getAsset(selectedAssetId!, range),
+    enabled: Boolean(selectedAssetId),
+  });
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: assetsKey });
+  const createTypeMutation = useMutation({
+    mutationFn: createAssetType,
+    onSuccess: invalidate,
+  });
+  const patchTypeMutation = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: { name: string } }) =>
+      patchAssetType(id, input),
+    onSuccess: invalidate,
+  });
+  const deleteTypeMutation = useMutation({
+    mutationFn: deleteAssetType,
+    onSuccess: invalidate,
+  });
+  const createAssetMutation = useMutation({
+    mutationFn: createAsset,
+    onSuccess: invalidate,
+  });
+  const patchAssetMutation = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: AssetPatchInput }) =>
+      patchAsset(id, input),
+    onSuccess: invalidate,
+  });
+  const archiveMutation = useMutation({
+    mutationFn: archiveAsset,
+    onSuccess: invalidate,
+  });
+  const createActivityMutation = useMutation({
+    mutationFn: createAssetActivity,
+    onSuccess: invalidate,
+  });
+  const patchActivityMutation = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: AssetActivityInput }) =>
+      patchAssetActivity(id, input),
+    onSuccess: invalidate,
+  });
+  const deleteActivityMutation = useMutation({
+    mutationFn: deleteAssetActivity,
+    onSuccess: invalidate,
+  });
+  const types = typesQuery.data ?? [];
+  const allAssets = assetsQuery.data ?? [];
+  const activeAssets = allAssets.filter((asset) => !asset.archivedAt);
+  const archivedAssets = allAssets.filter((asset) => asset.archivedAt);
+  const dashboard = dashboardQuery.data;
+  const activities = activitiesQuery.data ?? [];
+  const anyError = [
+    createTypeMutation.error,
+    patchTypeMutation.error,
+    deleteTypeMutation.error,
+    createAssetMutation.error,
+    patchAssetMutation.error,
+    archiveMutation.error,
+    createActivityMutation.error,
+    patchActivityMutation.error,
+    deleteActivityMutation.error,
+  ].find(Boolean);
+  const loading =
+    typesQuery.isLoading ||
+    assetsQuery.isLoading ||
+    dashboardQuery.isLoading ||
+    activitiesQuery.isLoading;
+  const retry = () => {
+    void typesQuery.refetch();
+    void assetsQuery.refetch();
+    void dashboardQuery.refetch();
+    void activitiesQuery.refetch();
   };
-  const updateAsset = (updated: {
-    kind: string;
-    name: string;
-    openingValue: number;
-    openedOn: string;
-    detail: string;
-    isLiquid: boolean;
-  }) => {
-    if (!editingAsset) return;
-    setAssetItems((current) =>
-      current.map((asset) =>
-        asset.id === editingAsset.id
-          ? {
-              ...asset,
-              kind: updated.kind,
-              name: updated.name,
-              detail: updated.detail,
-              isLiquid: updated.isLiquid,
-            }
-          : asset,
-      ),
+  const titleAsset = useMemo(
+    () => allAssets.find((asset) => asset.id === selectedAssetId),
+    [allAssets, selectedAssetId],
+  );
+
+  const saveType = (name: string) => {
+    const action = editingType
+      ? patchTypeMutation.mutateAsync({ id: editingType.id, input: { name } })
+      : createTypeMutation.mutateAsync({ name });
+    void action
+      .then(() => {
+        setEditingType(null);
+        setDialog(null);
+      })
+      .catch(() => undefined);
+  };
+  const saveAsset = (input: AssetCreateInput) =>
+    void createAssetMutation
+      .mutateAsync(input)
+      .then(() => {
+        setDialog(null);
+        setTab('Assets');
+      })
+      .catch(() => undefined);
+  const saveEditedAsset = (input: AssetPatchInput) =>
+    editingAsset &&
+    void patchAssetMutation
+      .mutateAsync({ id: editingAsset.id, input })
+      .then(() => setEditingAsset(null))
+      .catch(() => undefined);
+  const saveActivity = (input: AssetActivityInput) =>
+    void createActivityMutation
+      .mutateAsync(input)
+      .then(() => {
+        setDialog(null);
+        setTab('Activity');
+      })
+      .catch(() => undefined);
+  const saveEditedActivity = (input: AssetActivityInput) =>
+    editingActivity &&
+    void patchActivityMutation
+      .mutateAsync({ id: editingActivity.id, input })
+      .then(() => setEditingActivity(null))
+      .catch(() => undefined);
+  const confirmArchive = () =>
+    archivingAsset &&
+    void archiveMutation
+      .mutateAsync(archivingAsset.id)
+      .then(() => {
+        setArchivingAsset(null);
+        if (selectedAssetId === archivingAsset.id) setSelectedAssetId(null);
+      })
+      .catch(() => undefined);
+  const confirmDeleteType = () =>
+    deletingType &&
+    void deleteTypeMutation
+      .mutateAsync(deletingType.id)
+      .then(() => setDeletingType(null))
+      .catch(() => undefined);
+  const confirmDeleteActivity = () =>
+    deletingActivity &&
+    void deleteActivityMutation
+      .mutateAsync(deletingActivity.id)
+      .then(() => setDeletingActivity(null))
+      .catch(() => undefined);
+
+  if (loading)
+    return (
+      <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-10 sm:px-8">
+        <p className="text-sm text-slate-500">Loading your assets…</p>
+      </main>
     );
-    setEditingAsset(null);
-  };
-  const deleteAsset = () => {
-    if (!deletingAsset) return;
-    setAssetItems((current) =>
-      current.filter((asset) => asset.id !== deletingAsset.id),
+  if (
+    typesQuery.error ||
+    assetsQuery.error ||
+    dashboardQuery.error ||
+    activitiesQuery.error
+  )
+    return (
+      <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-10 sm:px-8">
+        <Card className="p-6">
+          <h1 className="text-lg font-semibold">Could not load assets</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            {errorText(
+              typesQuery.error ??
+                assetsQuery.error ??
+                dashboardQuery.error ??
+                activitiesQuery.error,
+            )}
+          </p>
+          <Button className="mt-4" onClick={retry}>
+            Try again
+          </Button>
+        </Card>
+      </main>
     );
-    setDeletingAsset(null);
-    setSelectedAsset(null);
-  };
-  const updateAssetType = (name: string) => {
-    if (!editingAssetType) return;
-    setAssetTypes((current) =>
-      current.map((type) => (type === editingAssetType ? name : type)),
-    );
-    setAssetItems((current) =>
-      current.map((asset) =>
-        asset.kind === editingAssetType ? { ...asset, kind: name } : asset,
-      ),
-    );
-    setEditingAssetType(null);
-  };
-  const deleteAssetType = () => {
-    if (!deletingAssetType) return;
-    if (assetItems.some((asset) => asset.kind === deletingAssetType)) return;
-    setAssetTypes((current) =>
-      current.filter((type) => type !== deletingAssetType),
-    );
-    setDeletingAssetType(null);
-  };
-  const activityDateInput = (date: string) => {
-    const parsed = new Date(date);
-    return Number.isNaN(parsed.getTime())
-      ? new Date().toISOString().slice(0, 10)
-      : parsed.toISOString().slice(0, 10);
-  };
-  const updateActivity = (updated: {
-    kind: ActivityKind;
-    source: string;
-    destination: string;
-    amount: number;
-    date: string;
-    note?: string;
-  }) => {
-    if (!editingActivity) return;
-    setActivityItems((current) =>
-      current.map((activity) =>
-        activity.id === editingActivity.id
-          ? {
-              ...activity,
-              kind: updated.kind,
-              title: activityTitle(updated.kind),
-              amount: updated.amount,
-              date: activityDateLabel(updated.date),
-              from: updated.source,
-              to: updated.destination,
-              note: updated.note || 'No note added',
-            }
-          : activity,
-      ),
-    );
-    setEditingActivity(null);
-  };
-  const deleteActivity = () => {
-    if (!deletingActivity) return;
-    setActivityItems((current) =>
-      current.filter((activity) => activity.id !== deletingActivity.id),
-    );
-    setDeletingActivity(null);
-  };
+
   return (
     <main className="page-transition mx-auto w-full max-w-7xl flex-1 px-5 py-8 sm:px-8 sm:py-10">
       <header className="flex flex-col gap-5 border-b border-slate-200 pb-6 lg:flex-row lg:items-end lg:justify-between">
@@ -521,10 +307,15 @@ export function AssetsWorkspace() {
           <Select
             label="Period"
             value={year}
-            options={['All time', '2026', '2025']}
+            options={[
+              'All time',
+              currentYear,
+              String(Number(currentYear) - 1),
+              String(Number(currentYear) - 2),
+            ]}
             onValueChange={setYear}
           />
-          <Button onClick={() => setShowNewActivity(true)}>
+          <Button onClick={() => setDialog('activity')}>
             <Plus className="size-4" /> Record activity
           </Button>
         </div>
@@ -533,288 +324,366 @@ export function AssetsWorkspace() {
         aria-label="Asset sections"
         className="mt-6 flex w-fit rounded-xl bg-slate-100 p-1"
       >
-        {tabs.map((tab) => (
+        {(['Overview', 'Assets', 'Activity'] as const).map((item) => (
           <button
-            key={tab}
+            key={item}
             type="button"
-            onClick={() => setActiveTab(tab)}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${activeTab === tab ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+            onClick={() => setTab(item)}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold ${tab === item ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
           >
-            {tab}
+            {item}
           </button>
         ))}
       </nav>
-      {activeTab !== 'Activity' && (
+      {anyError && (
+        <p
+          className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+          role="alert"
+        >
+          {errorText(anyError)}
+        </p>
+      )}
+      {tab !== 'Activity' && dashboard && (
         <section
           aria-label="Asset summary"
           className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
         >
           <SummaryCard
-            icon={<WalletCards className="size-5" />}
             label="Total assets"
-            value={currency(total)}
-            detail={`Across ${assetItems.length} tracked assets`}
-            tone="!bg-slate-950 text-white"
+            value={money(dashboard.summary.totalAssets)}
+            detail={`Across ${dashboard.summary.assetCount} tracked assets`}
+            tone="bg-slate-950! text-white"
+            icon={<WalletCards className="size-5" />}
           />
           <SummaryCard
-            icon={<TrendingUp className="size-5" />}
             label={`${year === 'All time' ? 'Total' : year} growth`}
-            value={`+${currency(yearlyChange)}`}
-            detail="+11.2% from opening value"
-            tone="!bg-emerald-50 text-emerald-800"
+            value={`${dashboard.summary.periodChange >= 0 ? '+' : ''}${money(dashboard.summary.periodChange)}`}
+            detail="Change during selected period"
+            tone="bg-emerald-50 text-emerald-800"
+            icon={<ArrowUpRight className="size-5" />}
           />
           <SummaryCard
-            icon={<Banknote className="size-5" />}
             label="Liquid money"
-            value={currency(liquidMoney)}
+            value={money(dashboard.summary.liquidMoney)}
             detail="Available when you need it"
-            tone="!bg-sky-50 text-sky-800"
+            tone="bg-sky-50 text-sky-800"
+            icon={<Banknote className="size-5" />}
           />
           <SummaryCard
-            icon={<CircleDollarSign className="size-5" />}
             label="Money lent"
-            value={currency(moneyLent)}
-            detail="Outstanding from friends"
-            tone="!bg-rose-50 text-rose-800"
+            value={money(dashboard.summary.moneyLent)}
+            detail="Outstanding receivables"
+            tone="bg-rose-50 text-rose-800"
+            icon={<CircleDollarSign className="size-5" />}
           />
         </section>
       )}
-      {activeTab === 'Overview' && (
+      {tab === 'Overview' && dashboard && (
         <Overview
-          total={total}
-          activities={activityItems}
-          assets={assetItems}
-          onViewAssets={() => setActiveTab('Assets')}
+          dashboard={dashboard}
+          activities={activities.slice(0, 4)}
+          onViewActivity={() => setTab('Activity')}
         />
       )}
-      {activeTab === 'Assets' && (
+      {tab === 'Assets' && (
         <section className="mt-6">
-          <AssetsList
-            assets={assetItems}
-            assetTypes={assetTypes}
-            onSelectAsset={setSelectedAsset}
-            onEditAsset={setEditingAsset}
-            onDeleteAsset={setDeletingAsset}
-            onEditAssetType={setEditingAssetType}
-            onDeleteAssetType={setDeletingAssetType}
-            onAddAsset={() => setShowAddAsset(true)}
-            onAddType={() => setShowAddType(true)}
-          />
+          <Card className="overflow-hidden">
+            <div className="flex items-center justify-between gap-3 p-5 sm:p-6">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-950">
+                  Your assets
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Review holdings grouped by asset type.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="min-h-9 px-3"
+                  onClick={() => {
+                    setEditingType(null);
+                    setDialog('type');
+                  }}
+                >
+                  Create type
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="min-h-9 px-3"
+                  onClick={() => setDialog('asset')}
+                >
+                  <Plus className="size-4" /> Add asset
+                </Button>
+              </div>
+            </div>
+            {types.length === 0 && (
+              <p className="border-t border-slate-100 p-8 text-center text-sm text-slate-500">
+                Create an asset type to start tracking a holding.
+              </p>
+            )}
+            {types.map((type) => {
+              const group = activeAssets.filter(
+                (asset) => asset.typeId === type.id,
+              );
+              return (
+                <section key={type.id} className="border-t border-slate-100">
+                  <div className="flex flex-wrap items-center gap-2 bg-slate-50/70 px-5 py-3 sm:px-6">
+                    <span className="min-w-0 flex-1 text-sm font-semibold text-slate-800">
+                      {type.name}{' '}
+                      <span className="font-normal text-slate-500">
+                        · {group.length}{' '}
+                        {group.length === 1 ? 'asset' : 'assets'} ·{' '}
+                        {money(
+                          group.reduce(
+                            (sum, asset) => sum + asset.currentValue,
+                            0,
+                          ),
+                        )}
+                      </span>
+                    </span>
+                    <Button
+                      variant="ghost"
+                      className="min-h-9 px-2"
+                      aria-label={`Rename ${type.name}`}
+                      onClick={() => {
+                        setEditingType(type);
+                        setDialog('type');
+                      }}
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="min-h-9 px-2 text-rose-700"
+                      aria-label={`Delete ${type.name}`}
+                      onClick={() => setDeletingType(type)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                  {group.length === 0 ? (
+                    <p className="px-5 py-4 text-sm text-slate-500 sm:px-6">
+                      No active assets in this type yet.
+                    </p>
+                  ) : (
+                    group.map((asset) => (
+                      <AssetRow
+                        key={asset.id}
+                        asset={asset}
+                        onOpen={() => setSelectedAssetId(asset.id)}
+                        onEdit={() => setEditingAsset(asset)}
+                        onArchive={() => setArchivingAsset(asset)}
+                      />
+                    ))
+                  )}
+                </section>
+              );
+            })}
+            {archivedAssets.length > 0 && (
+              <section className="border-t border-slate-200 bg-slate-50">
+                <div className="px-5 py-4 sm:px-6">
+                  <h3 className="text-sm font-semibold text-slate-700">
+                    Archived assets
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    History is retained; archived balances are excluded from
+                    current totals.
+                  </p>
+                </div>
+                {archivedAssets.map((asset) => (
+                  <div
+                    key={asset.id}
+                    className="flex items-center gap-4 border-t border-slate-100 px-5 py-4 opacity-70 sm:px-6"
+                  >
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-slate-200 text-slate-600">
+                      <AssetIcon type={asset.typeName} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">
+                        {asset.name}
+                      </span>
+                      <span className="block text-xs text-slate-500">
+                        {asset.typeName} · archived
+                      </span>
+                    </span>
+                    <span className="text-sm font-semibold">
+                      {money(asset.currentValue)}
+                    </span>
+                  </div>
+                ))}
+              </section>
+            )}
+          </Card>
         </section>
       )}
-      {activeTab === 'Activity' && (
-        <ActivityLog
-          activities={visibleActivities}
-          filter={activityFilter}
-          onFilterChange={setActivityFilter}
-          onEditActivity={setEditingActivity}
-          onDeleteActivity={setDeletingActivity}
+      {tab === 'Activity' && (
+        <ActivityList
+          activities={activities}
+          onEdit={setEditingActivity}
+          onDelete={setDeletingActivity}
         />
       )}
+
       <Dialog
-        open={editingActivity !== null}
-        onClose={() => setEditingActivity(null)}
-        title="Edit activity"
-        description="Update the movement details and save the corrected record."
+        open={dialog === 'type'}
+        onClose={() => {
+          setDialog(null);
+          setEditingType(null);
+        }}
+        title={editingType ? 'Edit asset type' : 'Create asset type'}
+        description={
+          editingType
+            ? 'Rename this type without changing its assets.'
+            : undefined
+        }
       >
-        {editingActivity && (
-          <EditActivityForm
-            activity={{
-              kind: editingActivity.kind,
-              source: editingActivity.from,
-              destination: editingActivity.to,
-              amount: editingActivity.amount,
-              date: activityDateInput(editingActivity.date),
-              note: editingActivity.note,
-            }}
-            assetNames={assetItems.map((asset) => asset.name)}
-            onCancel={() => setEditingActivity(null)}
-            onSave={updateActivity}
-          />
-        )}
+        <MutationError
+          error={
+            editingType ? patchTypeMutation.error : createTypeMutation.error
+          }
+        />
+        <AddAssetTypeForm
+          initialName={editingType?.name ?? ''}
+          submitLabel={editingType ? 'Save changes' : 'Create type'}
+          onCancel={() => {
+            setDialog(null);
+            setEditingType(null);
+          }}
+          onAdd={saveType}
+        />
       </Dialog>
       <Dialog
-        open={deletingActivity !== null}
-        onClose={() => setDeletingActivity(null)}
-        title="Delete activity"
-        description="This only removes the dummy activity from this screen."
+        open={dialog === 'asset'}
+        onClose={() => setDialog(null)}
+        title="Add holding"
+        description="Choose a type, then enter holding details."
       >
-        <div className="space-y-5">
-          <p className="text-sm leading-6 text-slate-600">
-            Delete{' '}
-            <strong className="text-slate-900">
-              {deletingActivity?.title}
-            </strong>
-            ? This action cannot be undone.
-          </p>
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="secondary"
-              onClick={() => setDeletingActivity(null)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={deleteActivity}>
-              Delete activity
-            </Button>
-          </div>
-        </div>
+        <MutationError error={createAssetMutation.error} />
+        <AddAssetForm
+          assetTypes={types}
+          onCancel={() => setDialog(null)}
+          onAdd={saveAsset}
+        />
       </Dialog>
       <Dialog
-        open={editingAssetType !== null}
-        onClose={() => setEditingAssetType(null)}
-        title="Edit asset type"
-        description="Rename this type without changing its assets."
+        open={dialog === 'activity'}
+        onClose={() => setDialog(null)}
+        title="Record asset activity"
+        description="Activity changes are applied to balances automatically."
       >
-        {editingAssetType && (
-          <AddAssetTypeForm
-            initialName={editingAssetType}
-            submitLabel="Save changes"
-            onCancel={() => setEditingAssetType(null)}
-            onAdd={updateAssetType}
-          />
-        )}
-      </Dialog>
-      <Dialog
-        open={deletingAssetType !== null}
-        onClose={() => setDeletingAssetType(null)}
-        title="Delete asset type"
-        description="Only empty asset types can be deleted."
-      >
-        <div className="space-y-5">
-          <p className="text-sm leading-6 text-slate-600">
-            Delete{' '}
-            <strong className="text-slate-900">{deletingAssetType}</strong>?
-            This action cannot be undone.
-          </p>
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="secondary"
-              onClick={() => setDeletingAssetType(null)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={deleteAssetType}>
-              Delete type
-            </Button>
-          </div>
-        </div>
+        <MutationError error={createActivityMutation.error} />
+        <RecordActivityForm
+          assets={activeAssets}
+          onCancel={() => setDialog(null)}
+          onRecord={saveActivity}
+        />
       </Dialog>
       <Dialog
         open={editingAsset !== null}
         onClose={() => setEditingAsset(null)}
         title="Edit asset"
-        description="Update the asset details and current value."
+        description="Update details and classification. Balances change through activity."
       >
+        <MutationError error={patchAssetMutation.error} />
         {editingAsset && (
           <EditAssetForm
-            asset={{
-              kind: editingAsset.kind,
-              name: editingAsset.name,
-              openingValue: editingAsset.value,
-              openedOn: '2026-09-27',
-              detail: editingAsset.detail,
-              isLiquid: editingAsset.isLiquid,
-            }}
-            assetTypes={assetTypes}
+            asset={editingAsset}
+            assetTypes={types}
             onCancel={() => setEditingAsset(null)}
-            onSave={updateAsset}
+            onSave={saveEditedAsset}
           />
         )}
       </Dialog>
       <Dialog
-        open={deletingAsset !== null}
-        onClose={() => setDeletingAsset(null)}
-        title="Delete asset"
-        description="This only removes the dummy asset from this screen."
+        open={editingActivity !== null}
+        onClose={() => setEditingActivity(null)}
+        title="Edit activity"
+        description="Correcting this entry recalculates the affected balances."
       >
-        <div className="space-y-5">
-          <p className="text-sm leading-6 text-slate-600">
-            Delete{' '}
-            <strong className="text-slate-900">{deletingAsset?.name}</strong>?
-            This action cannot be undone.
-          </p>
-          <div className="flex justify-end gap-3">
-            <Button variant="secondary" onClick={() => setDeletingAsset(null)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={deleteAsset}>
-              Delete asset
-            </Button>
-          </div>
-        </div>
+        <MutationError error={patchActivityMutation.error} />
+        {editingActivity && (
+          <EditActivityForm
+            activity={editingActivity}
+            assets={activeAssets}
+            onCancel={() => setEditingActivity(null)}
+            onSave={saveEditedActivity}
+          />
+        )}
       </Dialog>
       <Dialog
-        open={showNewActivity}
-        onClose={() => setShowNewActivity(false)}
-        title="Record asset activity"
-        description="Enter the movement details, then review the effect before saving."
-      >
-        <RecordActivityForm
-          assetNames={assetItems.map((asset) => asset.name)}
-          onCancel={() => setShowNewActivity(false)}
-          onRecord={recordActivity}
-        />
-      </Dialog>
-      <Dialog
-        open={showAddAsset}
-        onClose={() => setShowAddAsset(false)}
-        title="Add holding"
-        description="Choose a type, then enter the holding details."
-      >
-        <AddAssetForm
-          assetTypes={assetTypes}
-          onCancel={() => setShowAddAsset(false)}
-          onAdd={addAsset}
-        />
-      </Dialog>
-      <Dialog
-        open={showAddType}
-        onClose={() => setShowAddType(false)}
-        title="Create asset type"
-      >
-        <AddAssetTypeForm
-          onCancel={() => setShowAddType(false)}
-          onAdd={(name) => {
-            setAssetTypes((current) =>
-              current.includes(name) ? current : [...current, name],
-            );
-            setShowAddType(false);
-          }}
-        />
-      </Dialog>
-      <Dialog
-        open={selectedAsset !== null}
-        onClose={() => setSelectedAsset(null)}
-        title={selectedAsset?.name ?? ''}
+        open={selectedAssetId !== null}
+        onClose={() => setSelectedAssetId(null)}
+        title={titleAsset?.name ?? 'Asset details'}
         description={
-          selectedAsset ? `${selectedAsset.kind} · ${selectedAsset.detail}` : ''
+          titleAsset
+            ? `${titleAsset.typeName} · ${titleAsset.detail}`
+            : undefined
         }
       >
-        {selectedAsset && (
-          <AssetDetail
-            asset={selectedAsset}
-            year={year}
-            activities={activityItems}
-          />
+        {detailQuery.isLoading ? (
+          <p className="text-sm text-slate-500">Loading holding history…</p>
+        ) : (
+          detailQuery.data && <AssetDetailView asset={detailQuery.data} />
         )}
+      </Dialog>
+      <Dialog
+        open={deletingType !== null}
+        onClose={() => setDeletingType(null)}
+        title="Delete asset type"
+        description="Only types without assets can be deleted."
+      >
+        <Confirm
+          text={`Delete ${deletingType?.name}?`}
+          error={deleteTypeMutation.error}
+          onCancel={() => setDeletingType(null)}
+          onConfirm={confirmDeleteType}
+        />
+      </Dialog>
+      <Dialog
+        open={archivingAsset !== null}
+        onClose={() => setArchivingAsset(null)}
+        title="Archive asset"
+        description="Its history will stay available, and the balance will leave current totals."
+      >
+        <Confirm
+          text={`Archive ${archivingAsset?.name}?`}
+          error={archiveMutation.error}
+          onCancel={() => setArchivingAsset(null)}
+          onConfirm={confirmArchive}
+        />
+      </Dialog>
+      <Dialog
+        open={deletingActivity !== null}
+        onClose={() => setDeletingActivity(null)}
+        title="Delete activity"
+        description="This recalculates all affected balances."
+      >
+        <Confirm
+          text={`Delete ${deletingActivity?.kind} activity for ${money(deletingActivity?.amount ?? 0)}?`}
+          error={deleteActivityMutation.error}
+          onCancel={() => setDeletingActivity(null)}
+          onConfirm={confirmDeleteActivity}
+        />
       </Dialog>
     </main>
   );
 }
 
 function SummaryCard({
-  icon,
   label,
   value,
   detail,
   tone,
+  icon,
 }: {
-  icon: ReactNode;
   label: string;
   value: string;
   detail: string;
   tone: string;
+  icon: React.ReactNode;
 }) {
   return (
     <Card className={`p-5 ${tone}`}>
@@ -828,430 +697,310 @@ function SummaryCard({
   );
 }
 function Overview({
-  total,
+  dashboard,
   activities,
-  assets,
-  onViewAssets,
+  onViewActivity,
 }: {
-  total: number;
-  activities: Activity[];
-  assets: Asset[];
-  onViewAssets: () => void;
+  dashboard: AssetDashboard;
+  activities: AssetActivity[];
+  onViewActivity: () => void;
 }) {
-  const mixColors = [
-    'bg-emerald-500',
-    'bg-violet-500',
-    'bg-sky-500',
-    'bg-amber-500',
-    'bg-rose-500',
-    'bg-slate-500',
-  ];
-  const assetGroups = [...new Set(assets.map((asset) => asset.kind))]
-    .map((kind, index) => ({
-      name: kind,
-      value: assets
-        .filter((asset) => asset.kind === kind)
-        .reduce((sum, asset) => sum + asset.value, 0),
-      color: mixColors[index % mixColors.length],
-    }))
-    .toSorted((left, right) => right.value - left.value);
   return (
     <div className="mt-6 grid gap-5 xl:grid-cols-[1.5fr_0.9fr]">
-      <Card className="overflow-hidden p-5 sm:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold text-slate-900">
-              Portfolio growth
-            </p>
-            <p className="mt-1 text-sm text-slate-500">
-              Your total asset value is trending upward this year.
-            </p>
-          </div>
-          <div className="rounded-xl bg-emerald-50 px-3 py-2 text-right">
-            <p className="text-xs font-medium text-emerald-700">Sep 2026</p>
-            <p className="text-sm font-semibold text-emerald-800">
-              {currency(total)}
-            </p>
-          </div>
-        </div>
-        <GrowthChart />
-      </Card>
       <Card className="p-5 sm:p-6">
-        <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Portfolio value</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Monthly closing balances from your activity ledger.
+        </p>
+        <SeriesChart points={dashboard.series} />
+      </Card>
+      <Card className="p-5">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-slate-900">Asset mix</p>
+            <h2 className="text-sm font-semibold">Asset mix</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Where your value is held.
+              Current value by type.
             </p>
           </div>
-          <div className="size-12 rounded-full border-[9px] border-emerald-500 border-r-violet-500 border-b-sky-500 border-l-amber-500" />
+          <AssetMixChart items={dashboard.assetMix} />
         </div>
-        <div className="mt-6 space-y-3">
-          {assetGroups.map((group) => (
-            <div key={group.name} className="flex items-center gap-3">
-              <span className={`size-2.5 rounded-full ${group.color}`} />
-              <span className="min-w-0 flex-1 text-sm font-medium text-slate-700">
-                {group.name}
-              </span>
-              <span className="text-sm font-semibold text-slate-900">
-                {currency(group.value)}
-              </span>
-              <span className="w-8 text-right text-xs text-slate-500">
-                {Math.round((group.value / total) * 100)}%
-              </span>
-            </div>
-          ))}
+        <div className="mt-5 space-y-3">
+          {dashboard.assetMix.length ? (
+            dashboard.assetMix.map((item, index) => (
+              <div key={item.typeId} className="flex items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  className="size-2.5 shrink-0 rounded-full"
+                  style={{
+                    backgroundColor:
+                      assetMixColors[index % assetMixColors.length],
+                  }}
+                />
+                <span className="min-w-0 flex-1 truncate text-sm">
+                  {item.typeName}
+                </span>
+                <span className="text-sm font-semibold">
+                  {money(item.value)}
+                </span>
+                <span className="w-10 text-right text-xs text-slate-500">
+                  {item.percentage}%
+                </span>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-slate-500">
+              Add an asset to see your mix.
+            </p>
+          )}
         </div>
       </Card>
       <section className="grid gap-5 xl:col-span-2 lg:grid-cols-[0.9fr_1.1fr]">
         <Card className="p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-base font-semibold text-slate-950">
-                Top growing assets
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Your 5 strongest assets by yearly growth rate.
-              </p>
-            </div>
-            <span className="rounded-lg bg-amber-50 p-2 text-amber-700">
-              <CalendarClock className="size-4" />
-            </span>
-          </div>
+          <h2 className="text-base font-semibold text-slate-950">
+            Top growing assets
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Your strongest assets by growth during the selected period.
+          </p>
           <div className="mt-5 space-y-3">
-            <TopGrowingAssets assets={assets} />
+            {dashboard.topGrowingAssets.length ? (
+              dashboard.topGrowingAssets.map((asset) => (
+                <div
+                  key={asset.id}
+                  className="flex items-center gap-3 rounded-lg border border-slate-100 p-3"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">
+                      {asset.name}
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      {asset.typeName} · {money(asset.currentValue)}
+                    </span>
+                  </span>
+                  <span className="text-sm font-semibold text-emerald-700">
+                    {asset.growthLabel}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-slate-500">
+                No assets grew during this period.
+              </p>
+            )}
           </div>
         </Card>
         <Card className="overflow-hidden">
-          <div className="flex items-start justify-between p-5 sm:p-6">
+          <div className="flex items-center justify-between p-5">
             <div>
-              <h2 className="text-base font-semibold text-slate-950">
-                Recent movement
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Latest recorded asset activity.
+              <h2 className="text-sm font-semibold">Recent movement</h2>
+              <p className="mt-1 text-xs text-slate-500">
+                Latest ledger activity.
               </p>
             </div>
             <button
               type="button"
-              onClick={onViewAssets}
-              className="text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+              onClick={onViewActivity}
+              className="text-sm font-semibold text-emerald-700"
             >
-              View assets
+              View all
             </button>
           </div>
           <div className="divide-y divide-slate-100 border-t border-slate-100">
-            {activities.slice(0, 3).map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-center gap-3 px-5 py-4 sm:px-6"
-              >
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
-                  <ArrowDownLeft className="size-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold text-slate-900">
-                    {activity.title}
-                  </span>
-                  <span className="block truncate text-xs text-slate-500">
-                    {activity.from} → {activity.to}
-                  </span>
-                </span>
-                <span className="text-sm font-semibold text-slate-900">
-                  {currency(activity.amount)}
-                </span>
-              </div>
+            {activities.map((activity) => (
+              <ActivityRow key={activity.id} activity={activity} />
             ))}
+            {!activities.length && (
+              <p className="p-5 text-sm text-slate-500">
+                No activity recorded yet.
+              </p>
+            )}
           </div>
         </Card>
       </section>
     </div>
   );
 }
-function AssetsList({
-  assets,
-  assetTypes,
-  onSelectAsset,
-  onEditAsset,
-  onDeleteAsset,
-  onEditAssetType,
-  onDeleteAssetType,
-  onAddAsset,
-  onAddType,
-}: {
-  assets: Asset[];
-  assetTypes: string[];
-  onSelectAsset: (asset: Asset) => void;
-  onEditAsset: (asset: Asset) => void;
-  onDeleteAsset: (asset: Asset) => void;
-  onEditAssetType: (type: string) => void;
-  onDeleteAssetType: (type: string) => void;
-  onAddAsset: () => void;
-  onAddType: () => void;
-}) {
-  const assetGroups = assetTypes.reduce<Map<string, Asset[]>>(
-    (groups, type) => {
-      groups.set(
-        type,
-        assets.filter((asset) => asset.kind === type),
-      );
-      return groups;
-    },
-    new Map(),
-  );
-  const [expandedTypes, setExpandedTypes] = useState(
-    () => new Set(assetGroups.keys()),
-  );
-
-  const toggleType = (kind: string) => {
-    setExpandedTypes((current) => {
-      const next = new Set(current);
-      if (next.has(kind)) next.delete(kind);
-      else next.add(kind);
-      return next;
-    });
-  };
+function AssetMixChart({ items }: { items: AssetDashboard['assetMix'] }) {
+  const positiveItems = items
+    .map((item, index) => ({ ...item, index }))
+    .filter((item) => item.value > 0);
+  const total = positiveItems.reduce((sum, item) => sum + item.value, 0);
+  let cursor = 0;
+  const slices = positiveItems.map((item) => {
+    const start = cursor;
+    cursor += (item.value / total) * 100;
+    return `${assetMixColors[item.index % assetMixColors.length]} ${start}% ${cursor}%`;
+  });
+  const background = slices.length
+    ? `conic-gradient(${slices.join(', ')})`
+    : '#e2e8f0';
 
   return (
-    <Card className="overflow-hidden">
-      <div className="flex items-center justify-between p-5 sm:p-6">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-950">Your assets</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Review what you own, grouped by asset type.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            className="min-h-9 px-3"
-            onClick={onAddType}
-          >
-            Create type
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="min-h-9 px-3"
-            onClick={onAddAsset}
-          >
-            <Plus className="size-4" aria-hidden="true" /> Add asset
-          </Button>
-        </div>
-      </div>
-      <div className="border-t border-slate-100">
-        {[...assetGroups.entries()].map(([kind, group]) => (
-          <section key={kind}>
-            <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/70 px-5 py-3 sm:px-6">
-              <button
-                type="button"
-                aria-expanded={expandedTypes.has(kind)}
-                onClick={() => toggleType(kind)}
-                className="flex min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:text-slate-950"
-              >
-                <span className="text-slate-600">
-                  <AssetIcon kind={kind} />
-                </span>
-                <span>
-                  <span className="font-semibold text-slate-800">{kind}</span>
-                  <span className="ml-3 text-xs text-slate-500">
-                    {group.length} {group.length === 1 ? 'asset' : 'assets'} ·{' '}
-                    {currency(
-                      group.reduce((sum, asset) => sum + asset.value, 0),
-                    )}
-                  </span>
-                </span>
-                {expandedTypes.has(kind) ? (
-                  <ChevronUp
-                    className="size-4 text-slate-400"
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <ChevronDown
-                    className="size-4 text-slate-400"
-                    aria-hidden="true"
-                  />
-                )}
-              </button>
-              <div className="flex shrink-0 items-center gap-1 border-l border-slate-200 pl-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="min-h-8 px-2"
-                  aria-label={`Edit ${kind}`}
-                  onClick={() => onEditAssetType(kind)}
-                >
-                  <Pencil className="size-3.5" aria-hidden="true" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="min-h-8 px-2 text-rose-700 hover:bg-rose-50 hover:text-rose-800 disabled:cursor-not-allowed disabled:opacity-40"
-                  aria-label={
-                    group.length > 0
-                      ? `${kind} cannot be deleted while it has assets`
-                      : `Delete ${kind}`
-                  }
-                  title={
-                    group.length > 0
-                      ? 'Remove all assets from this type before deleting it'
-                      : `Delete ${kind}`
-                  }
-                  disabled={group.length > 0}
-                  onClick={() => onDeleteAssetType(kind)}
-                >
-                  <Trash2 className="size-3.5" aria-hidden="true" />
-                </Button>
-              </div>
-            </div>
-            <div
-              className={`grid transition-[grid-template-rows] duration-300 ease-out ${expandedTypes.has(kind) ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
-            >
-              <div className="min-h-0 overflow-hidden">
-                {group.map((asset) => (
-                  <div
-                    key={asset.id}
-                    className="group flex w-full items-center gap-4 border-b border-slate-100 px-5 py-4 transition-colors hover:bg-slate-50 sm:px-6"
-                  >
-                    <span
-                      className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${asset.tone}`}
-                    >
-                      <AssetIcon kind={asset.kind} />
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => onSelectAsset(asset)}
-                      className="grid min-w-0 flex-1 grid-cols-1 gap-1 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 sm:grid-cols-[minmax(0,1fr)_230px] sm:items-center sm:gap-4"
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-medium text-slate-900">
-                          {asset.name}
-                        </span>
-                        <span className="mt-1 block truncate text-xs text-slate-500">
-                          {asset.detail}
-                        </span>
-                      </span>
-                      <span className="grid grid-cols-2 gap-3 sm:text-right">
-                        <span>
-                          <span className="block text-[11px] text-slate-400">
-                            Value
-                          </span>
-                          <span className="mt-0.5 block text-sm font-semibold text-slate-700">
-                            {currency(asset.value)}
-                          </span>
-                        </span>
-                        <span>
-                          <span className="block text-[11px] text-slate-400">
-                            Change
-                          </span>
-                          <span
-                            className={`mt-0.5 block text-sm font-semibold ${asset.change >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}
-                          >
-                            {asset.change >= 0 ? '+' : ''}
-                            {currency(asset.change)}
-                          </span>
-                        </span>
-                      </span>
-                    </button>
-                    <div className="flex shrink-0 items-center gap-1 border-l border-slate-100 pl-3">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="min-h-9 px-2"
-                        aria-label={`Edit ${asset.name}`}
-                        onClick={() => onEditAsset(asset)}
-                      >
-                        <Pencil className="size-4" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="min-h-9 px-2 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
-                        aria-label={`Delete ${asset.name}`}
-                        onClick={() => onDeleteAsset(asset)}
-                      >
-                        <Trash2 className="size-4" aria-hidden="true" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                {group.length === 0 && (
-                  <p className="px-5 py-4 text-sm text-slate-500 sm:px-6">
-                    No assets in this type yet. Add an asset to get started.
-                  </p>
-                )}
-              </div>
-            </div>
-          </section>
-        ))}
-      </div>
-    </Card>
+    <span
+      role="img"
+      aria-label={
+        total
+          ? `Asset mix chart with ${positiveItems.length} asset types`
+          : 'No asset mix data'
+      }
+      className="relative size-12 shrink-0 rounded-full"
+      style={{ background }}
+    >
+      <span
+        aria-hidden="true"
+        className="absolute inset-[9px] rounded-full bg-white"
+      />
+    </span>
   );
 }
-function TopGrowingAssets({ assets }: { assets: Asset[] }) {
-  const growingAssets = assets
-    .map((asset) => {
-      const openingValue = asset.value - asset.change;
-      const growthRate =
-        openingValue > 0 ? (asset.change / openingValue) * 100 : 0;
-      return { ...asset, growthRate };
-    })
-    .filter((asset) => asset.growthRate > 0)
-    .toSorted((left, right) => right.growthRate - left.growthRate)
-    .slice(0, 5);
+function SeriesChart({
+  points,
+}: {
+  points: Array<{ date: string; value: number }>;
+}) {
+  if (!points.length)
+    return (
+      <div className="mt-6 flex h-44 items-center justify-center rounded-xl bg-slate-50 text-sm text-slate-500">
+        Record activity to build your value trend.
+      </div>
+    );
+  const max = Math.max(...points.map((point) => point.value), 1);
+  const coords = points
+    .map(
+      (point, index) =>
+        `${points.length === 1 ? 50 : (index / (points.length - 1)) * 100},${100 - (point.value / max) * 90}`,
+    )
+    .join(' ');
   return (
-    <>
-      {growingAssets.map((asset) => (
-        <div
-          key={asset.id}
-          className="flex items-center gap-3 rounded-xl border border-slate-100 p-3"
+    <div className="mt-6 h-44 rounded-xl bg-slate-50 p-4">
+      <svg
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        className="h-full w-full"
+        role="img"
+        aria-label="Portfolio value history"
+      >
+        <polyline
+          points={coords}
+          fill="none"
+          stroke="#0f766e"
+          strokeWidth="2.5"
+          vectorEffect="non-scaling-stroke"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <div className="mt-2 flex justify-between text-[11px] text-slate-500">
+        <span>{dateLabel(points[0].date)}</span>
+        <span>{money(points[points.length - 1].value)}</span>
+        <span>{dateLabel(points[points.length - 1].date)}</span>
+      </div>
+    </div>
+  );
+}
+function AssetRow({
+  asset,
+  onOpen,
+  onEdit,
+  onArchive,
+}: {
+  asset: AssetRecord;
+  onOpen: () => void;
+  onEdit: () => void;
+  onArchive: () => void;
+}) {
+  return (
+    <div className="group flex items-center gap-4 border-b border-slate-100 px-5 py-4 hover:bg-slate-50 sm:px-6">
+      <span
+        className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${asset.isReceivable ? 'bg-rose-100 text-rose-700' : asset.isLiquid ? 'bg-sky-100 text-sky-700' : 'bg-emerald-100 text-emerald-700'}`}
+      >
+        <AssetIcon type={asset.typeName} receivable={asset.isReceivable} />
+      </span>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="min-w-0 flex-1 text-left"
+      >
+        <span className="block truncate text-sm font-medium text-slate-900">
+          {asset.name}
+        </span>
+        <span className="mt-1 block truncate text-xs text-slate-500">
+          {asset.detail ||
+            (asset.isReceivable
+              ? 'Money owed to you'
+              : asset.isLiquid
+                ? 'Liquid holding'
+                : 'Tracked holding')}
+        </span>
+      </button>
+      <span className="text-right">
+        <span className="block text-[11px] text-slate-400">Current value</span>
+        <span className="mt-0.5 block text-sm font-semibold">
+          {money(asset.currentValue)}
+        </span>
+      </span>
+      <span
+        className={`hidden text-right text-sm font-semibold sm:block ${asset.periodChange >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}
+      >
+        {asset.periodChange >= 0 ? '+' : ''}
+        {money(asset.periodChange)}
+      </span>
+      <div className="flex items-center gap-1 border-l border-slate-100 pl-3">
+        <Button
+          variant="ghost"
+          className="min-h-9 px-2"
+          aria-label={`Edit ${asset.name}`}
+          onClick={onEdit}
         >
-          <span className="size-2 rounded-full bg-emerald-500" />
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-semibold text-slate-800">
-              {asset.name}
-            </span>
-            <span className="block text-xs text-slate-500">
-              {asset.kind} · {currency(asset.value)}
-            </span>
-          </span>
-          <span className="text-sm font-semibold text-emerald-700">
-            +{asset.growthRate.toFixed(1)}%
-          </span>
-        </div>
-      ))}
-      {growingAssets.length === 0 && (
-        <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
-          Add a holding with positive yearly growth to see it here.
-        </p>
-      )}
-    </>
+          <Pencil className="size-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          className="min-h-9 px-2 text-rose-700"
+          aria-label={`Archive ${asset.name}`}
+          onClick={onArchive}
+        >
+          <Trash2 className="size-4" />
+        </Button>
+      </div>
+    </div>
   );
 }
-function ActivityLog({
-  activities: activityItems,
-  filter,
-  onFilterChange,
-  onEditActivity,
-  onDeleteActivity,
+function AssetIcon({
+  type,
+  receivable = false,
 }: {
-  activities: Activity[];
-  filter: string;
-  onFilterChange: (value: string) => void;
-  onEditActivity: (activity: Activity) => void;
-  onDeleteActivity: (activity: Activity) => void;
+  type: string;
+  receivable?: boolean;
 }) {
+  const className = 'size-5';
+  if (receivable) return <CircleDollarSign className={className} />;
+  if (/land|property/i.test(type)) return <Leaf className={className} />;
+  if (/fixed deposit/i.test(type)) return <Landmark className={className} />;
+  if (/dps|deposit/i.test(type)) return <WalletCards className={className} />;
+  return <Banknote className={className} />;
+}
+function ActivityList({
+  activities,
+  onEdit,
+  onDelete,
+}: {
+  activities: AssetActivity[];
+  onEdit: (activity: AssetActivity) => void;
+  onDelete: (activity: AssetActivity) => void;
+}) {
+  const [filter, setFilter] = useState('All activity');
+  const shown = activities.filter(
+    (activity) => filter === 'All activity' || activity.kind === filter,
+  );
   return (
     <section className="mt-6">
       <Card className="overflow-hidden">
         <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div>
-            <h2 className="text-base font-semibold text-slate-950">
-              Movement history
-            </h2>
+            <h2 className="text-base font-semibold">Movement history</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Every entry has a source, destination, and record status.
+              Every entry has a source, destination, and date.
             </p>
           </div>
           <Select
@@ -1259,74 +1008,71 @@ function ActivityLog({
             value={filter}
             options={[
               'All activity',
+              'Opening',
               'Income',
+              'Growth',
               'Transfer',
               'Contribution',
               'Lending',
               'Repayment',
               'External use',
             ]}
-            onValueChange={onFilterChange}
+            onValueChange={setFilter}
           />
         </div>
         <div className="divide-y divide-slate-100">
-          {activityItems.map((activity) => (
+          {shown.map((activity) => (
             <div
               key={activity.id}
-              className="flex flex-col gap-3 px-5 py-5 sm:flex-row sm:items-center sm:px-6"
+              className="flex items-center gap-3 px-5 py-4 sm:px-6"
             >
               <span
-                className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${activity.kind === 'Income' || activity.kind === 'Repayment' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}
+                className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${['Income', 'Growth', 'Repayment', 'Opening'].includes(activity.kind) ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}
               >
-                {activity.kind === 'Income' || activity.kind === 'Repayment' ? (
+                {['Income', 'Growth', 'Repayment', 'Opening'].includes(
+                  activity.kind,
+                ) ? (
                   <ArrowDownLeft className="size-5" />
                 ) : (
                   <ArrowUpRight className="size-5" />
                 )}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <p className="text-sm font-semibold text-slate-900">
-                    {activity.title}
-                  </p>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${activity.status === 'Verified' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}
-                  >
-                    {activity.status}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-slate-500">
-                  {activity.date} · {activity.from}{' '}
-                  <span aria-hidden="true">→</span> {activity.to}
+                <p className="text-sm font-semibold">
+                  {activity.kind === 'Opening'
+                    ? 'Opening balance'
+                    : activity.kind}
                 </p>
-                <p className="mt-1 text-xs text-slate-400">{activity.note}</p>
-              </div>
-              <div className="flex shrink-0 items-center gap-1 border-l border-slate-100 pl-3">
-                <p className="min-w-20 text-right text-sm font-semibold tabular-nums text-slate-900">
-                  {currency(activity.amount)}
+                <p className="mt-1 truncate text-xs text-slate-500">
+                  {dateLabel(activity.activityDate)} · {activity.sourceName} →{' '}
+                  {activity.destinationName}
                 </p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="min-h-9 px-2"
-                  aria-label={`Edit ${activity.title}`}
-                  onClick={() => onEditActivity(activity)}
-                >
-                  <Pencil className="size-4" aria-hidden="true" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="min-h-9 px-2 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
-                  aria-label={`Delete ${activity.title}`}
-                  onClick={() => onDeleteActivity(activity)}
-                >
-                  <Trash2 className="size-4" aria-hidden="true" />
-                </Button>
+                <p className="mt-1 truncate text-xs text-slate-400">
+                  {activity.note || 'No note added'}
+                </p>
               </div>
+              <span className="text-sm font-semibold">
+                {money(activity.amount)}
+              </span>
+              <Button
+                variant="ghost"
+                className="min-h-9 px-2"
+                aria-label={`Edit ${activity.kind}`}
+                onClick={() => onEdit(activity)}
+              >
+                <Pencil className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                className="min-h-9 px-2 text-rose-700"
+                aria-label={`Delete ${activity.kind}`}
+                onClick={() => onDelete(activity)}
+              >
+                <Trash2 className="size-4" />
+              </Button>
             </div>
           ))}
-          {activityItems.length === 0 && (
+          {!shown.length && (
             <p className="p-8 text-center text-sm text-slate-500">
               No matching activity found.
             </p>
@@ -1336,103 +1082,55 @@ function ActivityLog({
     </section>
   );
 }
-function DetailMetric({ label, value }: { label: string; value: string }) {
+function ActivityRow({ activity }: { activity: AssetActivity }) {
   return (
-    <div className="rounded-xl bg-slate-50 p-4">
-      <p className="text-xs font-medium text-slate-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-slate-950">{value}</p>
+    <div className="flex items-center gap-3 px-5 py-3">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+        <ArrowDownLeft className="size-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-semibold">
+          {activity.kind === 'Opening' ? 'Opening balance' : activity.kind}
+        </span>
+        <span className="block truncate text-xs text-slate-500">
+          {activity.sourceName} → {activity.destinationName}
+        </span>
+      </span>
+      <span className="text-sm font-semibold">{money(activity.amount)}</span>
     </div>
   );
 }
-
-function AssetDetail({
+function AssetDetailView({
   asset,
-  year,
-  activities,
 }: {
-  asset: Asset;
-  year: string;
-  activities: Activity[];
+  asset: Awaited<ReturnType<typeof getAsset>>;
 }) {
-  const relatedActivity = activities.filter(
-    (activity) => activity.from === asset.name || activity.to === asset.name,
-  );
-  const isDeclining = asset.change < 0;
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-3">
-        <DetailMetric label="Current value" value={currency(asset.value)} />
-        <DetailMetric
-          label={`${year} change`}
-          value={`${isDeclining ? '' : '+'}${currency(asset.change)}`}
+        <Metric label="Current value" value={money(asset.currentValue)} />
+        <Metric
+          label="Period change"
+          value={`${asset.periodChange >= 0 ? '+' : ''}${money(asset.periodChange)}`}
         />
-        <DetailMetric
+        <Metric
           label="Recorded activity"
-          value={`${relatedActivity.length} entries`}
+          value={`${asset.activityCount} entries`}
         />
       </div>
       <section>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-sm font-semibold text-slate-950">
-              Value trend
-            </h3>
-            <p className="mt-1 text-xs text-slate-500">
-              {isDeclining
-                ? 'The outstanding value is decreasing as money is repaid.'
-                : 'This asset has grown over the selected period.'}
-            </p>
-          </div>
-          <span
-            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${isDeclining ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`}
-          >
-            {isDeclining ? 'Declining' : 'Growing'}
-          </span>
-        </div>
-        <AssetGrowthChart declining={isDeclining} />
+        <h3 className="text-sm font-semibold">Value trend</h3>
+        <SeriesChart points={asset.series} />
       </section>
       <section>
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-slate-950">
-              All activity
-            </h3>
-            <p className="mt-1 text-xs text-slate-500">
-              Every movement linked to this asset.
-            </p>
-          </div>
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
-            Traceable history
-          </span>
-        </div>
+        <h3 className="text-sm font-semibold">All activity</h3>
         <div className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200">
-          {relatedActivity.map((activity) => (
-            <div key={activity.id} className="flex items-center gap-3 p-3">
-              <span
-                className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${activity.kind === 'Income' || activity.kind === 'Repayment' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}
-              >
-                {activity.kind === 'Income' || activity.kind === 'Repayment' ? (
-                  <ArrowDownLeft className="size-4" />
-                ) : (
-                  <ArrowUpRight className="size-4" />
-                )}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold text-slate-800">
-                  {activity.title}
-                </span>
-                <span className="block truncate text-xs text-slate-500">
-                  {activity.date} · {activity.from} → {activity.to}
-                </span>
-              </span>
-              <span className="text-sm font-semibold text-slate-900">
-                {currency(activity.amount)}
-              </span>
-            </div>
+          {asset.activities.map((activity) => (
+            <ActivityRow key={activity.id} activity={activity} />
           ))}
-          {relatedActivity.length === 0 && (
+          {!asset.activities.length && (
             <p className="p-5 text-center text-sm text-slate-500">
-              No activity recorded for this asset yet.
+              No activity recorded yet.
             </p>
           )}
         </div>
@@ -1440,51 +1138,54 @@ function AssetDetail({
     </div>
   );
 }
-
-function AssetGrowthChart({ declining }: { declining: boolean }) {
-  const color = declining ? '#e11d48' : '#059669';
-  const path = declining
-    ? 'M0 34 C38 37 62 42 94 45 S152 51 185 57 S245 60 278 70 S335 77 370 81 S430 92 460 97'
-    : 'M0 102 C40 97 65 100 98 91 S156 86 190 80 S246 76 278 62 S335 57 370 49 S428 35 460 27';
+function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="mt-3 h-28 rounded-xl bg-slate-50 p-3">
-      <svg
-        viewBox="0 0 460 100"
-        className="h-full w-full"
-        role="img"
-        aria-label={
-          declining
-            ? 'Declining asset value chart'
-            : 'Growing asset value chart'
-        }
-      >
-        {[20, 50, 80].map((y) => (
-          <line
-            key={y}
-            x1="0"
-            x2="460"
-            y1={y}
-            y2={y}
-            stroke="#e2e8f0"
-            strokeDasharray="3 5"
-          />
-        ))}
-        <path
-          d={path}
-          fill="none"
-          stroke={color}
-          strokeLinecap="round"
-          strokeWidth="3"
-        />
-        <circle
-          cx="460"
-          cy={declining ? 97 : 27}
-          r="4"
-          fill={color}
-          stroke="white"
-          strokeWidth="2"
-        />
-      </svg>
+    <div className="rounded-xl bg-slate-50 p-4">
+      <p className="text-xs font-medium text-slate-500">{label}</p>
+      <p className="mt-1 text-lg font-semibold">{value}</p>
     </div>
   );
+}
+function Confirm({
+  text,
+  error,
+  onCancel,
+  onConfirm,
+}: {
+  text: string;
+  error: unknown;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-slate-600">
+        {text} This action cannot be undone.
+      </p>
+      {error ? (
+        <p className="text-sm text-red-700" role="alert">
+          {errorText(error)}
+        </p>
+      ) : null}
+      <div className="flex justify-end gap-3">
+        <Button variant="secondary" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button variant="destructive" onClick={onConfirm}>
+          Confirm
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function MutationError({ error }: { error: unknown }) {
+  return error ? (
+    <p
+      className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-800"
+      role="alert"
+    >
+      {errorText(error)}
+    </p>
+  ) : null;
 }

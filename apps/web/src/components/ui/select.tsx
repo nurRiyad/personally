@@ -6,6 +6,7 @@ type SelectProps = {
   label: string;
   value: string;
   options: string[];
+  items?: Array<{ value: string; label: string }>;
   onValueChange: (value: string) => void;
   className?: string;
 };
@@ -46,10 +47,13 @@ export function Select({
   label,
   value,
   options,
+  items: providedItems,
   onValueChange,
   className = '',
 }: SelectProps) {
-  const items = options.map((option) => ({ label: option, value: option }));
+  const items =
+    providedItems ??
+    options.map((option) => ({ label: option, value: option }));
   return (
     <BaseSelect.Root
       items={items}
@@ -71,16 +75,16 @@ export function Select({
         <BaseSelect.Positioner sideOffset={6} className="z-[120] outline-none">
           <BaseSelect.Popup className="min-w-[var(--anchor-width)] overflow-hidden rounded-xl border border-slate-200 bg-white p-1 text-slate-700 shadow-xl shadow-slate-950/10 outline-none data-[side=bottom]:animate-in data-[side=top]:animate-in">
             <BaseSelect.List>
-              {options.map((option) => (
+              {items.map((option) => (
                 <BaseSelect.Item
-                  key={option}
-                  value={option}
+                  key={option.value}
+                  value={option.value}
                   className="relative flex cursor-default select-none items-center rounded-lg py-2 pl-8 pr-3 text-sm text-slate-600 outline-none data-[highlighted]:bg-slate-100 data-[highlighted]:text-slate-950 data-[selected]:font-semibold"
                 >
                   <BaseSelect.ItemIndicator className="absolute left-2 flex items-center text-slate-950">
                     <CheckIcon />
                   </BaseSelect.ItemIndicator>
-                  <BaseSelect.ItemText>{option}</BaseSelect.ItemText>
+                  <BaseSelect.ItemText>{option.label}</BaseSelect.ItemText>
                 </BaseSelect.Item>
               ))}
             </BaseSelect.List>

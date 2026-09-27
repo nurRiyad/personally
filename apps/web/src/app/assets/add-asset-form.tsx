@@ -1,7 +1,11 @@
 'use client';
 
-import { assetDraftSchema, type AssetDraft } from '@personally/validation';
+import {
+  assetCreateSchema,
+  type AssetCreateInput,
+} from '@personally/validation';
 import { Controller, useForm } from 'react-hook-form';
+import type { AssetType } from '../../lib/api/assets';
 import { Button } from '../../components/ui/button';
 import { Calendar } from '../../components/ui/calendar';
 import { Input } from '../../components/ui/input';
@@ -13,27 +17,27 @@ export function AddAssetForm({
   assetTypes,
 }: {
   onCancel: () => void;
-  onAdd: (asset: AssetDraft) => void;
-  assetTypes: string[];
+  onAdd: (asset: AssetCreateInput) => void;
+  assetTypes: AssetType[];
 }) {
-  const form = useForm<AssetDraft>({
+  const form = useForm<AssetCreateInput>({
     defaultValues: {
-      kind: assetTypes[0] ?? '',
+      typeId: assetTypes[0]?.id ?? '',
       name: '',
       openingValue: 0,
       openedOn: new Date().toISOString().slice(0, 10),
       detail: '',
       isLiquid: false,
+      isReceivable: false,
     },
   });
-  const kind = form.watch('kind');
-  const error = (name: keyof AssetDraft) =>
+  const error = (name: keyof AssetCreateInput) =>
     form.formState.errors[name]?.message;
-  const submit = (values: AssetDraft) => {
-    const parsed = assetDraftSchema.safeParse(values);
+  const submit = (values: AssetCreateInput) => {
+    const parsed = assetCreateSchema.safeParse(values);
     if (!parsed.success) {
       parsed.error.issues.forEach((issue) =>
-        form.setError(issue.path[0] as keyof AssetDraft, {
+        form.setError(issue.path[0] as keyof AssetCreateInput, {
           message: issue.message,
         }),
       );
@@ -43,10 +47,12 @@ export function AddAssetForm({
   };
   return (
     <form className="space-y-5" onSubmit={form.handleSubmit(submit)} noValidate>
-      <p className="text-sm text-slate-600">Add the holding details below.</p>
+      <p className="text-sm text-slate-600">
+        A positive opening balance is saved as an activity in the ledger.
+      </p>
       <Controller
         control={form.control}
-        name="kind"
+        name="typeId"
         render={({ field }) => (
           <div>
             <p className="mb-2 text-sm font-medium text-slate-700">
@@ -55,44 +61,34 @@ export function AddAssetForm({
             <Select
               label="Asset type"
               value={field.value}
-              options={assetTypes}
+              options={[]}
+              items={assetTypes.map((type) => ({
+                value: type.id,
+                label: type.name,
+              }))}
               onValueChange={field.onChange}
               className="w-full"
             />
-            {assetTypes.length === 0 && (
-              <p className="mt-1 text-xs text-red-600">
-                Create an asset type first.
-              </p>
-            )}
             <p className="mt-1 text-xs text-red-600" role="alert">
-              {error('kind')}
+              {error('typeId')}
             </p>
           </div>
         )}
       />
       <label className="block text-sm font-medium text-slate-700">
         <span className="mb-2 block">Name</span>
-        <Input
-          autoComplete="off"
-          placeholder={
-            kind === 'Money lent'
-              ? 'e.g. Money lent to Rahim…'
-              : `e.g. ${kind}…`
-          }
-          {...form.register('name')}
-        />
+        <Input autoComplete="off" {...form.register('name')} />
         <p className="mt-1 text-xs text-red-600" role="alert">
           {error('name')}
         </p>
       </label>
       <label className="block text-sm font-medium text-slate-700">
-        <span className="mb-2 block">Opening value</span>
+        <span className="mb-2 block">Opening balance</span>
         <Input
           type="number"
           min="0"
           step="1"
           inputMode="numeric"
-          autoComplete="off"
           {...form.register('openingValue', { valueAsNumber: true })}
         />
         <p className="mt-1 text-xs text-red-600" role="alert">
@@ -113,18 +109,8 @@ export function AddAssetForm({
         )}
       />
       <label className="block text-sm font-medium text-slate-700">
-        <span className="mb-2 block">
-          Details <span className="font-normal text-slate-400">(optional)</span>
-        </span>
-        <Input
-          autoComplete="off"
-          placeholder={
-            kind === 'Fixed deposit'
-              ? 'e.g. Matures 15 Dec 2026…'
-              : 'e.g. Location, borrower, or reminder…'
-          }
-          {...form.register('detail')}
-        />
+        <span className="mb-2 block">Details (optional)</span>
+        <Input autoComplete="off" {...form.register('detail')} />
       </label>
       <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
         <input
@@ -136,16 +122,38 @@ export function AddAssetForm({
           <span className="block font-medium text-slate-800">
             This asset is liquid money
           </span>
-          <span className="mt-1 block text-xs leading-5 text-slate-500">
-            Include its current value in the liquid money summary.
+          <span className="mt-1 block text-xs text-slate-500">
+            Include its balance in your liquid money total.
           </span>
         </span>
       </label>
+      <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+        <input
+          type="checkbox"
+          className="mt-0.5 size-4 accent-emerald-700"
+          {...form.register('isReceivable')}
+        />
+        <span>
+          <span className="block font-medium text-slate-800">
+            Money is owed to me
+          </span>
+          <span className="mt-1 block text-xs text-slate-500">
+            Track this holding as money lent and allow repayments against it.
+          </span>
+        </span>
+      </label>
+      {error('isReceivable') && (
+        <p className="text-xs text-red-600" role="alert">
+          {error('isReceivable')}
+        </p>
+      )}
       <div className="flex justify-end gap-3">
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit">Add holding</Button>
+        <Button type="submit" disabled={!assetTypes.length}>
+          Add holding
+        </Button>
       </div>
     </form>
   );

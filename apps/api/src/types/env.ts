@@ -17,5 +17,6 @@ export type Env = {
     authService: AuthService;
     validatedBody: unknown;
     budgetController: import('../controllers/budget.controller').BudgetController;
+    assetController: import('../controllers/asset.controller').AssetController;
   };
 };

@@ -92,8 +92,8 @@ beforeAll(async () => {
     .filter((n) => n.endsWith('.sql'))
     .sort()) {
     const statements = (await readFile(new URL(name, dir), 'utf8'))
-      .split(';')
-      .map((v) => v.replace(/--> statement-breakpoint/g, '').trim())
+      .split('--> statement-breakpoint')
+      .map((v) => v.trim())
       .filter(Boolean);
     await db.batch(statements.map((sql) => db.prepare(sql)));
   }
