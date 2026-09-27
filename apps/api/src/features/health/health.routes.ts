@@ -1,14 +1,10 @@
 import { Hono } from 'hono';
 import type { Env } from '../../types/env';
+import { D1HealthRepository } from './health.repository';
+import { HealthService } from './health.service';
 
-const healthService = {
-  status: () => ({ status: 'ok' as const }),
-  async database(db: D1Database) {
-    const result = await db.prepare('SELECT 1 AS ok').first<{ ok: number }>();
-    return { status: result?.ok === 1 ? ('ok' as const) : ('error' as const) };
-  },
-};
+const serviceFor = (db: D1Database) => new HealthService(new D1HealthRepository(db));
 
 export const healthRoutes = new Hono<Env>();
-healthRoutes.get('/', (c) => c.json({ data: healthService.status() }));
-healthRoutes.get('/db', async (c) => c.json({ data: await healthService.database(c.env.DB) }));
+healthRoutes.get('/', (c) => c.json({ data: serviceFor(c.env.DB).status() }));
+healthRoutes.get('/db', async (c) => c.json({ data: await serviceFor(c.env.DB).databaseStatus() }));
