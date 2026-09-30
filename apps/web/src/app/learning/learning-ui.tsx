@@ -160,7 +160,7 @@ export function EpicDetail({ id }: { id: string }) {
     mutation = useLearningMutation();
   const epic = useLearningQuery(['epic', id], () => learningRecord(epicPath(id), s.epicResponseSchema));
   const [status, setStatus] = useState('All'),
-    [sort, setSort] = useState('Weight (high to low)'),
+    [sort, setSort] = useState('Manual order'),
     [page, setPage] = useState(1),
     [dialog, setDialog] = useState<'edit' | 'delete' | 'add' | 'order' | null>(null);
   const params = { status, sort: taskSort[sort], page, pageSize: 10 };
