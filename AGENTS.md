@@ -27,6 +27,8 @@ If `nvm` is still unavailable after this, report the environment issue and conti
 - Keep one Git repository at the project root; do not create nested repositories.
 - Keep product modules inside `apps/web` and `apps/api`; shared database and validation code belongs in `packages/db` and `packages/validation`.
 - Use Wrangler local D1 for local database work. Never connect local development to production D1.
+- In `packages/db/src/schema/`, define exactly one database table per file. When adding or splitting tables, update `schema/index.ts` exports and preserve existing table definitions and inferred exports; do not group multiple tables in one schema file.
+- For D1 triggers, parenthesize every `CASE ... END` expression inside the trigger body. Validate migrations with triggers or D1-specific SQL against a disposable remote D1 before production; see `docs/DEVELOPMENT.md`.
 - Phase 0 does not define product functionality; preserve the current route/UI implementation and do not add speculative product features unless explicitly requested.
 - Do not introduce Nx, Turborepo, Docker, Kubernetes, Redis, queues, microservices, or separate repositories at this stage.
 - Use shadcn/ui when a suitable component exists for frontend UI; otherwise prefer native HTML or small local components.
