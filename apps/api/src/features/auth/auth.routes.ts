@@ -27,6 +27,12 @@ authRoutes.post('/login', validateBody(loginRequestSchema), async (c) =>
   }),
 );
 authRoutes.post('/logout', (c) => c.body(null, 204));
-authRoutes.get('/me', requireAuth, async (c) =>
-  c.json({ data: { user: await serviceFor(c).me(c.get('authUserId')) } }),
+authRoutes.get(
+  '/me',
+  async (c, next) => {
+    c.set('authConfig', createAuthConfig(c.env));
+    await next();
+  },
+  requireAuth,
+  async (c) => c.json({ data: { user: await serviceFor(c).me(c.get('authUserId')) } }),
 );
