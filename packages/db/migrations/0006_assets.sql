@@ -60,7 +60,7 @@ CREATE INDEX asset_activity_destination_date ON asset_activities(destination_ass
 --> statement-breakpoint
 CREATE TRIGGER asset_activity_nonnegative_insert AFTER INSERT ON asset_activities
 BEGIN
-  SELECT CASE WHEN EXISTS (
+  SELECT (CASE WHEN EXISTS (
     SELECT 1 FROM assets a WHERE a.user_id=NEW.user_id AND EXISTS (
       SELECT 1 FROM (
         SELECT asset_id, SUM(delta) OVER (PARTITION BY asset_id ORDER BY activity_date, created_at, activity_id ROWS UNBOUNDED PRECEDING) AS balance
@@ -73,12 +73,12 @@ BEGIN
         ) postings WHERE asset_id=a.id
       ) running WHERE balance < 0
     )
-  ) THEN RAISE(ABORT, 'ASSET_NEGATIVE_BALANCE') END;
+  ) THEN RAISE(ABORT, 'ASSET_NEGATIVE_BALANCE') END);
 END;
 --> statement-breakpoint
 CREATE TRIGGER asset_activity_nonnegative_update AFTER UPDATE ON asset_activities
 BEGIN
-  SELECT CASE WHEN EXISTS (
+  SELECT (CASE WHEN EXISTS (
     SELECT 1 FROM assets a WHERE a.user_id=NEW.user_id AND EXISTS (
       SELECT 1 FROM (
         SELECT asset_id, SUM(delta) OVER (PARTITION BY asset_id ORDER BY activity_date, created_at, activity_id ROWS UNBOUNDED PRECEDING) AS balance
@@ -93,12 +93,12 @@ BEGIN
         ) postings WHERE asset_id=a.id
       ) running WHERE balance < 0
     )
-  ) THEN RAISE(ABORT, 'ASSET_NEGATIVE_BALANCE') END;
+  ) THEN RAISE(ABORT, 'ASSET_NEGATIVE_BALANCE') END);
 END;
 --> statement-breakpoint
 CREATE TRIGGER asset_activity_nonnegative_delete BEFORE DELETE ON asset_activities
 BEGIN
-  SELECT CASE WHEN EXISTS (
+  SELECT (CASE WHEN EXISTS (
     SELECT 1 FROM assets a WHERE a.user_id=OLD.user_id AND EXISTS (
       SELECT 1 FROM (
         SELECT asset_id, SUM(delta) OVER (PARTITION BY asset_id ORDER BY activity_date, created_at, activity_id ROWS UNBOUNDED PRECEDING) AS balance
@@ -111,5 +111,5 @@ BEGIN
         ) postings WHERE asset_id=a.id
       ) running WHERE balance < 0
     )
-  ) THEN RAISE(ABORT, 'ASSET_NEGATIVE_BALANCE') END;
+  ) THEN RAISE(ABORT, 'ASSET_NEGATIVE_BALANCE') END);
 END;
