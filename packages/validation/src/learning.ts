@@ -158,8 +158,6 @@ export const epicResponseSchema = epicInputSchema.extend({
   differenceMinutes: z.number(),
   percentageUsed: z.number(),
   progress: z.number(),
-  completedPoints: z.number(),
-  eligiblePoints: z.number(),
   taskCount: z.number().int(),
 });
 export const taskResponseSchema = taskInputSchema.extend({

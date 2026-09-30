@@ -86,7 +86,7 @@ Calculated values are not stored as writable aggregates:
 
 - Task actual minutes = stopwatch minutes + manual minutes.
 - Epic actual minutes = total Task actual minutes.
-- Weighted progress = Done weight / non-Cancelled weight × 100; it is 0 when there are no eligible points.
+- Epic progress = actual minutes / target minutes × 100, rounded to a whole percent and capped at 100%. It is 0 when target minutes are unavailable. Actual time and remaining/over-target time remain visible separately.
 - Difference = actual minutes − target minutes.
 - Percentage used = actual minutes / target minutes × 100.
 - Average session minutes uses stopwatch sessions only; manual time is excluded.

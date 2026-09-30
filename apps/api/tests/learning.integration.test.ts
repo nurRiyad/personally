@@ -257,7 +257,7 @@ describe('learning API with local D1', () => {
     ).toBe(204);
     expect((await record(path, s.taskResponseSchema)).actualMinutes).toBe(0);
   });
-  it('uses weighted progress, blocked rules, cancellation, completion timestamps, and reopening', async () => {
+  it('uses time-based progress, blocked rules, cancellation, completion timestamps, and reopening', async () => {
     const epic = await newEpic();
     let first = await newTask(epic.id),
       second = await newTask(epic.id);
@@ -269,12 +269,20 @@ describe('learning API with local D1', () => {
       version: second.version,
       status: 'Blocked',
     });
+    await record(`${tp(epic.id, first.id)}/times`, s.timeResponseSchema, 'POST', {
+      id: crypto.randomUUID(),
+      version: first.version,
+      type: 'manual',
+      date: '2026-09-29',
+      minutes: 600,
+    });
+    first = await record(tp(epic.id, first.id), s.taskResponseSchema);
     first = await record(`${tp(epic.id, first.id)}/complete`, s.taskResponseSchema, 'POST', {
       version: first.version,
       comment: 'Learned it',
     });
     let aggregate = await record(ep(epic.id), s.epicResponseSchema);
-    expect(aggregate.progress).toBe(20);
+    expect(aggregate.progress).toBe(50);
     expect(aggregate.status).toBe('Todo');
     expect(aggregate.completedAt).toBeNull();
     expect(
@@ -289,7 +297,7 @@ describe('learning API with local D1', () => {
       status: 'Cancelled',
     });
     aggregate = await record(ep(epic.id), s.epicResponseSchema);
-    expect(aggregate.progress).toBe(100);
+    expect(aggregate.progress).toBe(50);
     expect(aggregate.status).toBe('Done');
     expect(aggregate.completedAt).not.toBeNull();
     expect(

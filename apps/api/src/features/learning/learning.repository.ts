@@ -9,8 +9,6 @@ export type TimeRow = typeof times.$inferSelect;
 export type EpicAggregate = EpicRow & {
   status: 'Todo' | 'In progress' | 'Done';
   actualMinutes: number;
-  completedPoints: number;
-  eligiblePoints: number;
   taskCount: number;
   progress: number;
 };
@@ -64,13 +62,11 @@ const epicCTE = (userId: string) => sql`${taskCTE(userId)}, epic_data AS (
  e.created_at AS createdAt, e.updated_at AS updatedAt, e.version,
  COUNT(t.id) AS taskCount,
  COALESCE(SUM(t.timerMinutes + t.manualMinutes),0) AS actualMinutes,
- COALESCE(SUM(CASE WHEN t.status='Done' THEN t.weight ELSE 0 END),0) AS completedPoints,
- COALESCE(SUM(CASE WHEN t.status!='Cancelled' THEN t.weight ELSE 0 END),0) AS eligiblePoints,
  CASE WHEN SUM(CASE WHEN t.status='In progress' THEN 1 ELSE 0 END)>0 THEN 'In progress'
  WHEN SUM(CASE WHEN t.status='Done' THEN 1 ELSE 0 END)>0 AND SUM(CASE WHEN t.status NOT IN ('Done','Cancelled') THEN 1 ELSE 0 END)=0 THEN 'Done'
  ELSE 'Todo' END AS status
  FROM learning_epics e LEFT JOIN task_data t ON t.epicId=e.id WHERE e.user_id=${userId} GROUP BY e.id
-), epic_summary AS (SELECT *, CASE WHEN eligiblePoints=0 THEN 0 ELSE ROUND(100.0 * completedPoints / eligiblePoints) END AS progress FROM epic_data)`;
+), epic_summary AS (SELECT *, CASE WHEN targetMinutes<=0 THEN 0 ELSE MIN(100, ROUND(100.0 * actualMinutes / targetMinutes)) END AS progress FROM epic_data)`;
 
 export class D1LearningRepository implements LearningRepository {
   constructor(private readonly db: ReturnType<typeof createDb>) {}

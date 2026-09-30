@@ -218,10 +218,7 @@ export function EpicDetail({ id }: { id: string }) {
           value={formatMinutes(value.differenceMinutes)}
         />
       </div>
-      <p className="mt-3 text-sm text-slate-500">
-        {Math.round(value.percentageUsed)}% of target time used · {value.completedPoints}/{value.eligiblePoints}{' '}
-        eligible points completed
-      </p>
+      <p className="mt-3 text-sm text-slate-500">{Math.round(value.percentageUsed)}% of target time used</p>
       <section className="mt-9">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
